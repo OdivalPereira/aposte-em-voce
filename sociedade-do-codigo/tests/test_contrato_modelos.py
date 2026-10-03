@@ -11,6 +11,7 @@ Analisadores:
   ordem-modelo.md     -> sociedade-do-codigo/scripts/sc_conferir.py (bloco ```entregas)
   avaliacao-modelo.md -> nenhum script o lê (documento de orientação); ver SEM_ANALISADOR.
 """
+import hashlib
 import json
 import os
 import re
@@ -173,8 +174,17 @@ def repositorio_ordem(raiz):
     git(raiz, 'remote', 'add', 'origin', str(origem))
     git(raiz, 'push', '-q', 'origin', 'etapa/etapa-sintetica')
     (raiz / 'sociedade' / 'pareceres').mkdir(parents=True)
-    (raiz / 'sociedade' / 'pareceres' / 'atestado-etapa-sintetica.json').write_text(
-        json.dumps({'status': 'APROVADO', 'commit': final, 'total_arquivos_inspecionados': 1}), encoding='utf-8')
+    perfil = 'perfil sintético\n'
+    (raiz / 'sociedade' / 'perfil.md').write_text(perfil, encoding='utf-8')
+    at = {'status': 'APROVADO', 'commit': final, 'base': base, 'papel': 'Coordenador', 'etapa_id': 'etapa-sintetica', 'fatia_id': 'N/A',
+          'verificacoes': {}, 'erros': [], 'hashes_artefatos': {'src/x.py': 'a' * 64}, 'arquivos_inspecionados': ['src/x.py'],
+          'total_arquivos_inspecionados': 1,
+          'portao': {'modo': 'por_area', 'commit': final, 'perfil_sha256': hashlib.sha256(perfil.encode('utf-8')).hexdigest(),
+                     'areas_tocadas': ['p'], 'cobertura_completa': True, 'areas': [{'area': 'p', 'ok': True}]}}
+    at['atestado_hash'] = hashlib.sha256(json.dumps({k: at.get(k) for k in (
+        'commit', 'base', 'papel', 'etapa_id', 'fatia_id', 'status', 'verificacoes', 'hashes_artefatos', 'portao', 'erros')},
+        sort_keys=True).encode('utf-8')).hexdigest()  # B15: o atestado tem o hash que a conferência recalcula
+    (raiz / 'sociedade' / 'pareceres' / 'atestado-etapa-sintetica.json').write_text(json.dumps(at), encoding='utf-8')
     SHA_FINAL_BASE[:] = [base, final]
     return base, final
 

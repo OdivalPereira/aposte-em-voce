@@ -32,6 +32,11 @@ def atestado(commit, **extra):
                        'perfil_sha256': hashlib.sha256(PERFIL_TEXTO.encode('utf-8')).hexdigest(),
                        'areas': [{'area': 'p', 'ok': True, 'testes': {'total': 1, 'pulados': 0, 'falhos': 0}}]}}
     base.update(extra)
+    # B15: o atestado do `entregar` traz o hash dos campos e os totais coerentes com `hashes_artefatos`
+    base.setdefault('hashes_artefatos', {'src/a.py': 'a' * 64})
+    base.setdefault('arquivos_inspecionados', sorted(base['hashes_artefatos']))
+    base['total_arquivos_inspecionados'] = len(base['hashes_artefatos']) if 'total_arquivos_inspecionados' not in extra else extra['total_arquivos_inspecionados']
+    base.setdefault('atestado_hash', sc_status.hash_do_atestado(base))
     return base
 
 
@@ -271,7 +276,8 @@ class TestAceite(Repo):
         pasta = self.r / 'sociedade'
         reg = Registro.inicializar(pasta, 'projeto-teste', str(self.r))
         reg.abrir_etapa(ETAPA, 'objetivo', 'plano', 'aut', self.base[:7], ['C1'])
-        evento = {'tipo': 'decisao_registrada', 'dados': decisao(commit=self.p)['dados']}
+        hash_do_atestado = json.loads((self.r / ATESTADO).read_text(encoding='utf-8'))['atestado_hash']
+        evento = {'tipo': 'decisao_registrada', 'dados': decisao(commit=self.p, atestado_hash=hash_do_atestado)['dados']}
         reg.aplicar_mutacao(lambda dados: [evento], autor='Odival Teste')
         head = self.commit({'sociedade/_marca': 'ok\n'}, 'sociedade: registro')
         r = sc_status.verificar_aceite(self.r, RAMO, head)

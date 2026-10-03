@@ -1,4 +1,5 @@
 """Ferramentas do pipeline 3.0.0: medição de sessão, conferência da ordem, estado, sc.py e validador."""
+import hashlib
 import json
 import subprocess
 import sys
@@ -136,7 +137,17 @@ class TestConferenciaDaOrdem(unittest.TestCase):
 
     def test_marca_feito_nao_feito_e_nao_preenchido(self):
         at = self.repo / 'sociedade' / 'pareceres' / 'atestado-E1.json'
-        at.write_text(json.dumps({'status': 'APROVADO', 'commit': self.head, 'total_arquivos_inspecionados': 1}), encoding='utf-8')
+        perfil = 'perfil sintético\n'
+        (self.repo / 'sociedade' / 'perfil.md').write_text(perfil, encoding='utf-8')
+        dados = {'status': 'APROVADO', 'commit': self.head, 'base': self.base, 'papel': 'Coordenador', 'etapa_id': 'E1',
+                 'fatia_id': 'N/A', 'verificacoes': {}, 'erros': [], 'hashes_artefatos': {'pacote/a.py': 'a' * 64},
+                 'arquivos_inspecionados': ['pacote/a.py'], 'total_arquivos_inspecionados': 1,
+                 'portao': {'modo': 'por_area', 'commit': self.head, 'areas_tocadas': ['p'], 'cobertura_completa': True,
+                            'perfil_sha256': hashlib.sha256(perfil.encode('utf-8')).hexdigest(), 'areas': [{'area': 'p', 'ok': True}]}}
+        dados['atestado_hash'] = hashlib.sha256(json.dumps({k: dados.get(k) for k in (
+            'commit', 'base', 'papel', 'etapa_id', 'fatia_id', 'status', 'verificacoes', 'hashes_artefatos', 'portao', 'erros')},
+            sort_keys=True).encode('utf-8')).hexdigest()  # B15: atestado do `entregar`: forma 1.3.0 e hash conferidos
+        at.write_text(json.dumps(dados), encoding='utf-8')
         vazio = self.repo / 'sociedade' / 'pareceres' / 'atestado-vazio.json'
         vazio.write_text(json.dumps({'status': 'APROVADO', 'commit': self.head, 'total_arquivos_inspecionados': 0}), encoding='utf-8')
         arq = self.ordem([

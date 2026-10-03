@@ -10,7 +10,8 @@ Tipos:
   commit_existe <ref>
   arquivos_em <base>..<head> | <prefixo> [| <prefixo>...]   todos os arquivos alterados começam por um prefixo
   arquivo_existe <caminho>
-  atestado_aprovado <arquivo> | <commit>                     status APROVADO e commit do atestado igual ao informado
+  atestado_aprovado <arquivo> | <commit>                     do `sc.py entregar` (forma 1.3.0 completa, perfil de hoje e
+                                                             `atestado_hash` conferido), APROVADO, commit igual ao informado
   parecer_valido <arquivo>                                   lint do parecer sem erro e com veredito
   hash_confere <arquivo> | <sha256>
   push_feito <ramo>                                          ramo remoto (origin) igual ao local; sem rede: não verificado
@@ -36,6 +37,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import sc_status  # noqa: E402
 from sc_registro import localizar_sociedade_da_etapa  # noqa: E402
 
 FEITO, NAO_FEITO, NAO_VERIFICADO, NAO_PREENCHIDO = 'feito', 'não feito', 'não verificado', 'não preenchido'
@@ -113,8 +115,15 @@ def conferir_item(item, raiz):
             at = json.loads(arq.read_text(encoding='utf-8'))
         except ValueError:
             return NAO_FEITO, 'atestado não é JSON válido'
-        if at.get('status') != 'APROVADO':
-            return NAO_FEITO, f'status {at.get("status")}'
+        if not isinstance(at, dict) or at.get('status') != 'APROVADO':
+            return NAO_FEITO, f'status {at.get("status") if isinstance(at, dict) else "?"}'
+        ok, motivo = sc_status.hash_do_atestado_confere(at)  # B15: atestado escrito à mão ou alterado não vale
+        if not ok:
+            return NAO_FEITO, motivo
+        perfil = raiz / 'sociedade' / 'perfil.md'  # B17b: a mesma forma que o `decidir` exige (avulso e --area parcial caem)
+        ok, motivo = sc_status.forma_do_atestado(at, hashlib.sha256(perfil.read_bytes()).hexdigest() if perfil.is_file() else None)
+        if not ok:
+            return NAO_FEITO, motivo
         if len(args) > 1:
             esperado = git(raiz, 'rev-parse', '--verify', f'{args[1]}^{{commit}}') or args[1]
             if not at.get('commit'):

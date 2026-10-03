@@ -12,7 +12,9 @@ este script. Cada job fica verde apenas se o script sair com 0.
           sociedade/ (cauda de governança, Q149).
   aceite  lê, no head do PR, sociedade/registro.json e exige que a última decisão da etapa seja
           `aceitar`, com quem decidiu e com o SHA revisado (dados.commit) ancestral do head, e a
-          mesma cauda só de sociedade/. Sem decisão, vermelho.
+          mesma cauda só de sociedade/. Sem decisão, vermelho. Confere ainda (B15): o atestado do head é o do
+          `sc.py entregar` (forma 1.3.0 e `atestado_hash` refeito) e é o que a decisão registrou (`atestado_hash`);
+          e, se o PR altera `.github/workflows/`, a ordem da abertura (hash conferido) lista o caminho no escreva-só.
 
 Uso:
   sc_status.py portao --ramo etapa/<ID> --head <sha> [--raiz <repo>]
@@ -102,6 +104,30 @@ def forma_do_atestado(at, sha256_perfil_atual):
     if sha != sha256_perfil_atual:
         return False, 'o perfil mudou depois do portão (SHA-256 do atestado diferente do de sociedade/perfil.md)'
     return True, 'portão por área completo e do perfil atual'
+
+
+CAMPOS_DO_HASH = ('commit', 'base', 'papel', 'etapa_id', 'fatia_id', 'status', 'verificacoes', 'hashes_artefatos', 'portao', 'erros')
+
+
+def hash_do_atestado(at):
+    """SHA-256 que o `sc_pre_devolucao` grava em `atestado_hash`: o JSON canônico dos campos de `CAMPOS_DO_HASH`."""
+    return hashlib.sha256(json.dumps({k: at.get(k) for k in CAMPOS_DO_HASH}, sort_keys=True).encode('utf-8')).hexdigest()
+
+
+def hash_do_atestado_confere(at):
+    """(ok, motivo) B15: o atestado traz o `atestado_hash` e ele é o dos campos que o `entregar` gravou.
+
+    O hash não cobre `total_arquivos_inspecionados`; por isso ele tem de ser o nº de arquivos com hash em
+    `hashes_artefatos`, e `arquivos_inspecionados` a lista deles (o `entregar` grava os três juntos)."""
+    if not isinstance(at, dict) or not at.get('atestado_hash'):
+        return False, 'atestado sem atestado_hash: só vale o gerado por `sc.py entregar`'
+    if at['atestado_hash'] != hash_do_atestado(at):
+        return False, 'atestado adulterado: o atestado_hash não é o dos campos do atestado'
+    hashes = at.get('hashes_artefatos')
+    if not isinstance(hashes, dict) or at.get('arquivos_inspecionados') != sorted(hashes) \
+            or at.get('total_arquivos_inspecionados') != len(hashes):
+        return False, 'atestado adulterado: o total de arquivos inspecionados não é o dos hashes gravados'
+    return True, 'atestado_hash confere'
 
 
 def verificar_cauda(raiz, sha_revisado, head):
@@ -213,7 +239,77 @@ def verificar_aceite(raiz, ramo, head, registro=None):
     if not sha:
         return _res(False, 'decisão sem o SHA revisado (dados.commit)')
     ok, motivo = verificar_cauda(raiz, sha, head)
+    if ok and registro is None:  # `registro=` é só para teste; no uso real as provas saem do head do PR
+        ok, motivo = _provas_no_head(raiz, head, etapa, dec, dados)
     return _res(ok, f'decisão aceitar de {dec["quem"]}; {motivo}' if ok else motivo, None, sha)
+
+
+def _provas_no_head(raiz, head, etapa, dec, dados):
+    """(ok, motivo) B15: atestado oficial e íntegro no head, o mesmo da decisão; workflow só se a ordem o lista."""
+    caminho = atestado_caminho(etapa)
+    bruto = _arquivo_em(raiz, head, caminho)
+    if bruto is None:
+        return False, f'sem {caminho} no head: decisão sem o atestado do `sc.py entregar`'
+    try:
+        at = json.loads(bruto)
+    except ValueError:
+        return False, 'atestado não é JSON válido'
+    ok, motivo = hash_do_atestado_confere(at)
+    if not ok:
+        return False, motivo
+    ok, motivo = forma_do_atestado(at, sha256_do_perfil_em(raiz, head))
+    if not ok:
+        return False, motivo
+    if at.get('status') != 'APROVADO' or at.get('etapa_id') != etapa or not _mesmo_sha(at.get('commit'), dec.get('commit')):
+        return False, 'o atestado do head não é APROVADO, desta etapa e do SHA que a decisão revisou'
+    if dec.get('atestado_hash') != at['atestado_hash']:
+        return False, 'o atestado do head não é o que a decisão registrou (atestado_hash): alterado depois da decisão'
+    return verificar_workflows(raiz, head, etapa, dados)
+
+
+def _ordem_da_abertura(dados, etapa):
+    for ev in dados.get('eventos', []):
+        d = ev.get('dados') or {}
+        if ev.get('tipo') == 'etapa_aberta' and d.get('etapa_id') == etapa:
+            return d.get('base_efetiva'), str(d.get('autorizacao_ref') or '')
+    return None, ''
+
+
+def _escreva_so(texto):
+    """Caminhos entre crases das linhas de escreva-só da ordem, sem o que vem depois de "Proibido"."""
+    achados = []
+    for linha in texto.splitlines():
+        m = re.search(r'escreva[\s-]*s[óo]\b', linha, re.I)
+        if m:
+            resto = re.split(r'proibid', linha[m.end():], maxsplit=1, flags=re.I)[0]
+            achados += re.findall(r'`([^`]+)`', resto)
+    return achados
+
+
+def verificar_workflows(raiz, head, etapa, dados):
+    """(ok, motivo) B15 (c): o PR (base da abertura..head) só altera `.github/workflows/` se a ordem o lista no
+    escreva-só; a ordem lida no head tem de ser a da abertura (`autorizacao_ref` = ordem_sha256:<16 hex>)."""
+    base, ref = _ordem_da_abertura(dados, etapa)
+    base = _resolver(raiz, base)
+    if not base:
+        return False, 'a base da abertura da etapa não resolve a um commit: não dá para conferir o que o PR altera'
+    rc, saida, erro = _git(raiz, '-c', 'core.quotepath=off', 'diff', '--name-only', '-z', '--no-renames', base, head)
+    if rc != 0:
+        return False, f'git diff falhou: {erro[:100]}'
+    tocados = [c for c in saida.split('\0') if c.startswith('.github/workflows/')]
+    if not tocados:
+        return True, 'o PR não altera .github/workflows/'
+    ordem = _arquivo_em(raiz, head, f'sociedade/ordens/{etapa}.md')
+    m = re.fullmatch(r'ordem_sha256:([0-9a-f]{16})', ref)
+    if ordem is None or not m:
+        return False, f'o PR altera {tocados[0]} e a ordem da etapa não está no head com o hash da abertura'
+    if hashlib.sha256(ordem.encode('utf-8')).hexdigest()[:16] != m.group(1):
+        return False, f'o PR altera {tocados[0]} e a ordem foi editada depois da abertura (hash diferente)'
+    listados = [t.strip() for t in _escreva_so(ordem)]
+    fora = [c for c in tocados if not any(c == t or (t.endswith('/') and c.startswith(t)) for t in listados)]
+    if fora:
+        return False, f'o PR altera {", ".join(fora[:3])} sem que a ordem o liste no escreva-só (.github/workflows/)'
+    return True, 'workflows alterados estão no escreva-só da ordem'
 
 
 def main(argv=None):

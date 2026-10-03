@@ -14,6 +14,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 from util import RAIZ, SKILLS, NUCLEO, rodar, carregar
+from adversarial._cenario import parecer_texto
 
 PAPEIS = (
     'gandalf', 'aragorn', 'elrond', 'galadriel', 'legolas',
@@ -302,14 +303,19 @@ Nenhum
                           '--base', 'a1b2c3d', '--aceite', 'C1', '--nivel', '2', '--aplicar')
             self.assertEqual(r_ini.returncode, 0, r_ini.stderr)
 
-            # Registra parecer com --nivel-independencia B e justificativa
-            r_par = rodar(sc_rodada, 'parecer', '--pasta', str(pasta), '--etapa', 'R1',
-                          '--revisor', 'Gemini Pro', '--fornecedor', 'Google',
-                          '--implementador', 'Gandalf:Google', '--versao', 'a1b2c3d',
-                          '--veredito', 'aceitar', '--criterio-ok', 'C1',
-                          '--nivel-independencia', 'B',
-                          '--justificativa-independencia', 'Modelo distinto em sessao isolada',
-                          '--aplicar')
+            # Registra parecer de um arquivo (B15): nível B e justificativa vêm do texto da seção Independência
+            (pasta / 'perfil.md').write_text(
+                '# Perfil sintético\n\n## Papel × ferramenta\n'
+                '| Papel | Nome | Plataforma | Fornecedor | Modelo | Esforço | Estado (ativo/reserva/espera) | Desde | Motivo |\n'
+                '|---|---|---|---|---|---|---|---|---|\n'
+                '| Coordenador | Gandalf | Antigravity | Google | Modelo G | high | ativo | 2026-10-03 | teste |\n', encoding='utf-8')
+            texto = parecer_texto('a1b2c3d', 'a1b2c3d', nivel='Nível B (sessão distinta)', etapa='R1',
+                                  revisor='Gemini Pro (revisor)', fornecedor='Google').replace(
+                'Não implementei nem corrigi nada desta entrega.', 'Modelo distinto em sessao isolada. Não implementei nem corrigi nada desta entrega.')
+            arq = pasta / 'parecer-r1.md'
+            arq.write_text(texto, encoding='utf-8')
+            r_par = rodar(sc_rodada, 'parecer', '--pasta', str(pasta), '--etapa', 'R1', '--arquivo', str(arq),
+                          '--versao', 'a1b2c3d', '--aplicar')
             self.assertEqual(r_par.returncode, 0, f'cmd_parecer falhou: {r_par.stderr}')
             self.assertIn('registrado para etapa R1', r_par.stdout)
 

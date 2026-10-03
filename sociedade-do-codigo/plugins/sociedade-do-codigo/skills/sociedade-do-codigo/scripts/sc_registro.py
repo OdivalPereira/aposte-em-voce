@@ -1163,6 +1163,22 @@ class Registro:
             if reg_impl['fornecedor'] or perfil_ativo is not None:
                 implementadores.append({'agente': reg_impl['agente'], 'fornecedor': reg_impl['fornecedor'] or ''})
 
+        # B15 (a, R-1): o fornecedor do perfil vale; a declaração só preenche o que o perfil não sabe, nunca o contradiz.
+        def _do_perfil(nome):
+            for tentativa in (nome, re.sub(r'\s*\(.*?\)\s*', ' ', nome).strip()):
+                try:
+                    forn = perfil_ativo.obter_fornecedor(tentativa) if perfil_ativo is not None and tentativa else None
+                except Exception:  # perfil ambíguo para este nome: não conta como conhecido
+                    forn = None
+                if forn:
+                    return forn
+            return None
+        forn_perfil_revisor = _do_perfil(revisor)
+        if forn_perfil_revisor and forn_perfil_revisor.strip().lower() != forn_rev_norm:
+            raise ErroValidacaoRegistro(
+                f'O perfil põe o revisor "{revisor}" no fornecedor "{forn_perfil_revisor}", não em "{fornecedor_revisor}": '
+                'o fornecedor declarado pelo revisor não confere com o perfil.')
+
         # Segregação estrita: revisor não pode ser implementador e fornecedor deve ser diferente
         for impl in implementadores:
             if isinstance(impl, str):
@@ -1180,11 +1196,14 @@ class Registro:
                 impl_agente = str(impl).strip()
                 impl_forn = ''
 
-            # Preenchimento de fornecedor pelo perfil se não fornecido
-            if (not impl_forn or impl_forn.strip().lower() in ('', 'desconhecido')) and perfil_ativo:
-                forn_p = perfil_ativo.obter_fornecedor(impl_agente)
-                if forn_p:
-                    impl_forn = forn_p
+            # O perfil manda: fornecedor declarado diferente do do perfil é recusado (B15, a); sem declaração, vale o do perfil
+            forn_p = _do_perfil(impl_agente)
+            if forn_p:
+                if impl_forn and impl_forn.strip().lower() not in ('desconhecido', forn_p.strip().lower()):
+                    raise ErroValidacaoRegistro(
+                        f'O perfil põe o implementador "{impl_agente}" no fornecedor "{forn_p}", não em "{impl_forn}": '
+                        'a declaração não sobrepõe o perfil.')
+                impl_forn = forn_p
 
             implementadores_processados.append({
                 'agente': impl_agente,
@@ -1291,8 +1310,10 @@ class Registro:
 
     def registrar_decisao(self, etapa_id, decisao_id, quem, referencia, acao, alcance='etapa',
                           autor='Gandalf', aplicar=True, aceite_em_emulacao=False, independencia=None,
-                          perfil=None, commit=None, consumo=None):
+                          perfil=None, commit=None, consumo=None, atestado_hash=None):
         extra = {'commit': commit} if commit else {}
+        if atestado_hash:  # B15: o hash do atestado em que o aceite se apoia; o status `aceite` o confere no head
+            extra['atestado_hash'] = atestado_hash
         if consumo is not None:  # contagens do log da sessão (sc_sessao.consumo_claude), nunca estimativa
             extra['consumo'] = consumo
         if independencia is not None:

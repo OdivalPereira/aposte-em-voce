@@ -3,8 +3,9 @@
 Achado original: o aceite de uma etapa se forjava com argumentos declarativos e com arquivos escritos à mão.
 
 - Parte fechada pela B01 (`sc.py decidir aceitar`): verde nesta etapa (classe `SondaDG02ParteB01`).
-- Resto, que fecha na B15: `@expectedFailure` até lá (classe `SondaDG02RestoB15`). Cada teste diz no docstring o que
-  ainda é aceito e o que a B15 muda. Quando a B15 chegar, o teste passa a "unexpected success": tire o decorador.
+- Resto, fechado na B15 (F3 de fechamento-nuvem): classe `SondaDG02RestoB15`, hoje verde. Cada teste diz no docstring o
+  que era aceito e o que a B15 mudou (a evidência do legado executa o comando; o parecer vem de arquivo; o `encerrar`
+  exige a decisão; o atestado tem o hash conferido; o fornecedor do perfil prevalece).
 """
 import json
 import sys
@@ -193,7 +194,7 @@ class SondaDG02ParteB01(Base):
 
 
 class SondaDG02RestoB15(Base):
-    """O que ainda se forja. Cada teste afirma o comportamento desejado (B15) e falha hoje, de propósito."""
+    """O que se forjava antes da B15. Cada teste afirma o comportamento desejado e hoje passa."""
     emulacao = 'não'
 
     def abrir_legado(self, fatias=True):
@@ -203,71 +204,72 @@ class SondaDG02RestoB15(Base):
             args += ['--fatia', 'fatia inicial']
         self.ok(self.p.rodada(*args))
 
-    @unittest.expectedFailure
+    def parecer_legado(self, **kw):
+        kw.setdefault('nivel', 'Nível A (fornecedor diferente)')
+        kw.setdefault('revisor', 'Revisor Externo (outra casa)')
+        kw.setdefault('fornecedor', 'OutraEmpresa')
+        return self.p.escrever_parecer(etapa='leg', **kw)
+
     def test_DG02_sc_rodada_encerrar_fecha_a_etapa_sem_evento_de_decisao(self):
-        """Achado (B15): `sc_rodada encerrar` fecha a etapa sem nenhum evento `decisao_registrada` (ninguém decidiu).
-        Hoje: evidência declarada, parecer declarado e `encerrar` passam, e a etapa fica encerrada sem decisão.
-        B15 muda: o `encerrar` do legado passa a exigir o evento `decisao`. Esperado: sem decisão, a etapa não encerra."""
+        """Achado (B15): `sc_rodada encerrar` fechava a etapa sem nenhum evento `decisao_registrada` (ninguém decidiu).
+        Antes: evidência declarada, parecer declarado e `encerrar` passavam, e a etapa ficava encerrada sem decisão.
+        B15 mudou: o `encerrar` do legado exige o evento `decisao`. Esperado: sem decisão, a etapa não encerra."""
         p = self.p
         self.abrir_legado()
-        self.ok(p.rodada('evidencia', '--criterio', 'C1', '--comando', 'conferido a olho', '--saida', 'ok', '--versao', p.head))
-        self.ok(p.rodada('parecer', '--revisor', 'Revisor Externo', '--fornecedor', 'OutraEmpresa', '--implementador',
-                         'Coordenador:Anthropic', '--versao', p.head, '--veredito', 'aceitar', '--criterio-ok', 'C1'))
+        self.ok(p.rodada('evidencia', '--criterio', 'C1', '--comando', f'{sys.executable} -c "print(1)"', '--versao', p.head))
+        self.ok(p.rodada('parecer', '--arquivo', self.parecer_legado()))
         self.ok(p.rodada('fatia', '1', '--fechar', '--prova', 'sem prova real'))
         p.rodada('encerrar', '--resumo', 'fechada sem decisão')
         fechada_sem_decisao = p.etapa('leg')['estado'] == 'encerrada' and not p.eventos('decisao_registrada')
         self.assertFalse(fechada_sem_decisao, 'etapa encerrada sem nenhum evento de decisão de quem decide')
 
-    @unittest.expectedFailure
     def test_DG02_exit_code_declarado_vale_como_evidencia_sem_rodar_nada(self):
-        """Achado (B15): `sc_rodada evidencia --exit-code 0` é um argumento declarativo; nenhum comando é executado.
-        Hoje: o critério fica atendido por um comando que nunca rodou. B15 muda: sai o argumento declarativo do legado.
-        Esperado: evidência sem execução verificada não atende o critério."""
+        """Achado (B15): `sc_rodada evidencia --exit-code 0` era um argumento declarativo; nenhum comando era executado.
+        Antes: o critério ficava atendido por um comando que nunca rodou. B15 mudou: o argumento saiu do legado e o
+        comando é executado de verdade. Esperado: o critério não fica atendido por declaração."""
         p = self.p
         self.abrir_legado()
         p.rodada('evidencia', '--criterio', 'C1', '--comando', 'comando-que-nunca-rodou', '--saida', 'tudo verde',
                  '--exit-code', '0', '--versao', p.head)
         self.assertFalse(p.etapa('leg')['criterios']['C1']['atendido'], 'critério atendido por exit-code declarado')
 
-    @unittest.expectedFailure
     def test_DG02_veredito_declarado_sem_arquivo_de_parecer_e_registrado(self):
-        """Achado (B15): `sc_rodada parecer --veredito aceitar` registra parecer sem arquivo e sem `lint_parecer`.
-        Hoje: um revisor inventado, sem sessão nem texto, vira parecer registrado. B15 muda: `--veredito` sem arquivo sai
-        do legado. Esperado: nenhum parecer entra no registro sem passar pelo lint de um arquivo."""
+        """Achado (B15): `sc_rodada parecer --veredito aceitar` registrava parecer sem arquivo e sem `lint_parecer`.
+        Antes: um revisor inventado, sem sessão nem texto, virava parecer registrado. B15 mudou: o parecer vem de um
+        arquivo com lint e `--veredito` saiu. Esperado: nenhum parecer entra no registro por declaração."""
         p = self.p
         self.abrir_legado()
         p.rodada('parecer', '--revisor', 'Revisor Inventado', '--fornecedor', 'OutraEmpresa', '--implementador',
                  'Coordenador:Anthropic', '--versao', p.head, '--veredito', 'aceitar', '--criterio-ok', 'C1')
+        p.rodada('parecer', '--arquivo', self.parecer_legado(), '--veredito', 'aceitar')
+        vazio = p.tmp / 'inventado.md'
+        vazio.write_text('veredito: aceitar\n', encoding='utf-8')
+        p.rodada('parecer', '--arquivo', vazio)
         self.assertEqual(p.eventos('parecer_registrado'), [], 'parecer registrado sem arquivo e sem lint')
 
     def test_DG02_controle_implementador_honesto_do_mesmo_fornecedor_e_recusado(self):
-        """Controle da sonda seguinte (verde): declarando a verdade, o revisor da Anthropic contra o implementador
-        da Anthropic é recusado pela independência, com a chave de emulação desligada."""
+        """Controle da sonda seguinte (verde): o revisor da Anthropic contra o implementador da Anthropic (linha do
+        perfil) é recusado pela independência, com a chave de emulação desligada."""
         p = self.p
         self.abrir_legado()
-        r = p.rodada('parecer', '--revisor', 'Barbárvore', '--fornecedor', 'Anthropic', '--implementador',
-                     'Coordenador:Anthropic', '--versao', p.head, '--veredito', 'aceitar', '--criterio-ok', 'C1')
+        r = p.rodada('parecer', '--arquivo', self.parecer_legado(revisor='Barbárvore (Claude Code)', fornecedor='Anthropic'))
         self.recusa(r, 'Independência violada')
         self.assertEqual(p.eventos('parecer_registrado'), [])
 
-    @unittest.expectedFailure
     def test_DG02_implementador_declarado_com_fornecedor_falso_compra_independencia(self):
-        """Achado (B15): `--implementador Coordenador:OtherCo` sobrepõe o fornecedor real do implementador (a linha do
-        perfil diz Anthropic) e o parecer da Anthropic sai com independência "sim". Hoje: aceito. B15 muda: sai
-        `--implementador` do legado. Esperado: o fornecedor do implementador vem do perfil, não do argumento."""
+        """Achado (B15): `--implementador Coordenador:OtherCo` sobrepunha o fornecedor real do implementador (a linha do
+        perfil diz Anthropic) e o parecer da Anthropic saía com independência "sim". B15 mudou: o fornecedor do
+        implementador vem do perfil e a declaração que o contradiz é recusada (`sc.py revisar --implementador`)."""
         p = self.p
-        self.abrir_legado()
-        p.rodada('parecer', '--revisor', 'Barbárvore', '--fornecedor', 'Anthropic', '--implementador',
-                 'Coordenador:OutraEmpresa', '--versao', p.head, '--veredito', 'aceitar', '--criterio-ok', 'C1')
-        registrados = p.eventos('parecer_registrado')
-        independencia = p.etapa('leg')['independencia'] if registrados else None
-        self.assertNotEqual(independencia, 'sim', 'independência "sim" comprada com fornecedor de implementador falso')
+        self.ok(p.abrir())
+        self.recusa(p.revisar(p.escrever_parecer(nivel='Nível A (fornecedor diferente)'), p.head, '--implementador',
+                              'Coordenador:OutraEmpresa'), 'perfil')
+        self.assertEqual(p.eventos('parecer_registrado'), [], 'parecer registrado com fornecedor de implementador falso')
 
-    @unittest.expectedFailure
     def test_DG02_conferencia_aceita_atestado_escrito_a_mao(self):
         """Achado (B15): a conferência `atestado_aprovado` lê status, commit e contagem de um JSON qualquer; não confere
-        o `atestado_hash`. Hoje: um atestado escrito à mão, sem nenhum teste rodado, marca a entrega como "feito".
-        B15 muda: a conferência verifica o hash dos atestados. Esperado: "não feito"."""
+        o `atestado_hash`. Antes: um atestado escrito à mão, sem nenhum teste rodado, marca a entrega como "feito".
+        B15 mudou: a conferência verifica o hash dos atestados. Esperado: "não feito"."""
         p = self.p
         (p.soc / 'pareceres').mkdir(parents=True, exist_ok=True)
         (p.soc / 'pareceres' / 'atestado-soma.json').write_text(
@@ -279,10 +281,9 @@ class SondaDG02RestoB15(Base):
         itens = {i['id']: i for i in json.loads(r.stdout)['itens']}
         self.assertEqual(itens['E1']['estado'], 'não feito', itens['E1'])
 
-    @unittest.expectedFailure
     def test_DG02_conferencia_aceita_atestado_gerado_e_depois_adulterado(self):
         """Achado (B15): trocar o conteúdo de um atestado verdadeiro (aqui, o número de arquivos) não é detectado.
-        Hoje: o `atestado_hash` do arquivo não é recalculado pela conferência. B15 muda: a conferência o verifica.
+        Antes: o `atestado_hash` do arquivo não é recalculado pela conferência. B15 mudou: a conferência o verifica.
         Esperado: "não feito"."""
         p = self.p
         self.ok(p.abrir())
@@ -298,11 +299,10 @@ class SondaDG02RestoB15(Base):
         itens = {i['id']: i for i in json.loads(r.stdout)['itens']}
         self.assertEqual(itens['E1']['estado'], 'não feito', itens['E1'])
 
-    @unittest.expectedFailure
     def test_DG02_decidir_aceita_atestado_escrito_a_mao(self):
-        """Achado (B15): o `decidir aceitar` lê o atestado como um JSON qualquer. Hoje: sem nenhum `entregar`, um atestado
+        """Achado (B15): o `decidir aceitar` lê o atestado como um JSON qualquer. Antes: sem nenhum `entregar`, um atestado
         escrito à mão (APROVADO, commit certo, contagem inventada) mais um parecer registrado bastam para o aceite.
-        B15 muda: o `decidir` exige o atestado oficial do SHA (hash conferido). Esperado: recusa."""
+        B15 mudou: o `decidir` exige o atestado oficial do SHA (hash conferido). Esperado: recusa."""
         p = self.p
         self.ok(p.abrir())
         p.atestado().parent.mkdir(parents=True, exist_ok=True)
@@ -311,10 +311,9 @@ class SondaDG02RestoB15(Base):
         r = p.decidir('aceitar', *POR)
         self.assertNotEqual(r.returncode, 0, 'aceite concedido com atestado escrito à mão')
 
-    @unittest.expectedFailure
     def test_DG02_status_aceite_fica_verde_com_decisao_forjada_sem_atestado_nem_parecer(self):
         """Achado (B15 e B18): o job `aceite` confia no `registro.json` do head, que qualquer commit de `sociedade/`
-        pode reescrever (sem cadeia de hash). Hoje: abre-se a etapa, grava-se uma decisão "aceitar" pela API do registro,
+        pode reescrever (sem cadeia de hash). Antes: abre-se a etapa, grava-se uma decisão "aceitar" pela API do registro,
         sem atestado nem parecer, commita-se só `sociedade/` e o `aceite` fica verde. Esperado: vermelho."""
         p = self.p
         self.ok(p.abrir())
