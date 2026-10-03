@@ -1,0 +1,22 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "sociedade-do-codigo",
+  "version": "3.0.0",
+  "description": "Método comum de equipe multiagente: ativação explícita, níveis, rodada em fatias com prova, passagem entre ferramentas por dois arquivos curtos, revisão de outro fornecedor, executores locais sem custo de nuvem e economia sem medir consumo. O projeto fornece só o perfil e a rodada.",
+  "author": {
+    "name": "Odival Pereira"
+  },
+  "repository": "https://github.com/OdivalPereira/sociedade-do-codigo",
+  "license": "UNLICENSED",
+  "keywords": [
+    "sociedade-do-codigo",
+    "multiagente",
+    "governanca",
+    "skills",
+    "jules",
+    "local-first",
+    "antigravity",
+    "codex",
+    "claude-code"
+  ]
+}

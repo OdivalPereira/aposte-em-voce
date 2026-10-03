@@ -1,0 +1,20 @@
+{
+  "name": "sociedade",
+  "interface": {
+    "displayName": "Sociedade do Código"
+  },
+  "plugins": [
+    {
+      "name": "sociedade-do-codigo",
+      "source": {
+        "source": "local",
+        "path": "./plugins/sociedade-do-codigo"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

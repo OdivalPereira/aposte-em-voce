@@ -1,0 +1,28 @@
+{
+  "name": "sociedade",
+  "owner": {
+    "name": "Odival Pereira"
+  },
+  "description": "Marketplace do Sociedade do Código",
+  "plugins": [
+    {
+      "name": "sociedade-do-codigo",
+      "source": "./plugins/sociedade-do-codigo",
+      "description": "Método comum de equipe multiagente: ativação explícita, níveis, rodada em fatias com prova, passagem entre ferramentas por dois arquivos curtos, revisão de outro fornecedor, executores locais sem custo de nuvem e economia sem medir consumo. O projeto fornece só o perfil e a rodada.",
+      "version": "3.0.0",
+      "license": "UNLICENSED",
+      "keywords": [
+        "sociedade-do-codigo",
+        "multiagente",
+        "governanca",
+        "skills",
+        "jules",
+        "local-first",
+        "antigravity",
+        "codex",
+        "claude-code"
+      ],
+      "category": "productivity"
+    }
+  ]
+}

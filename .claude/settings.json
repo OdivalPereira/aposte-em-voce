@@ -1,0 +1,24 @@
+{
+  "_comentario": "Travas da Sociedade (Q154, C25): push só de ramos de etapa; a main é integrada por Odival pelo merge do PR. Valem só em sessão com um repositório (documentação do Claude Code, 03/10/2026).",
+  "permissions": {
+    "deny": [
+      "Bash(git push*main*)",
+      "Bash(git push*HEAD:refs/heads/main*)",
+      "Bash(git push*--force*)",
+      "Bash(git push*-f *)",
+      "Bash(git push*--delete*)",
+      "Bash(git push*--mirror*)",
+      "Bash(gh pr merge*)",
+      "Bash(gh release*)",
+      "Bash(gh repo edit*)",
+      "Bash(gh repo delete*)",
+      "Bash(gh api*-X*protection*)",
+      "Bash(gh api*--method*protection*)",
+      "Bash(gh api*-X*rulesets*)",
+      "Bash(git push*producao*)",
+      "Bash(vercel*)",
+      "Read(./.env)",
+      "Read(./.env.*)"
+    ]
+  }
+}

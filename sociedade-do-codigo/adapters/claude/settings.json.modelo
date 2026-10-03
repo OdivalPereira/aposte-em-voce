@@ -1,0 +1,24 @@
+{
+  "_comentario": "Mescle em .claude/settings.json do projeto. As regras deny valem de imediato; extraKnownMarketplaces e enabledPlugins só depois que cada pessoa confia na pasta. Esforço: use /effort na sessão. Acrescente aqui o comando de publicação do seu projeto, se houver.",
+  "extraKnownMarketplaces": {
+    "sociedade": {
+      "source": {
+        "source": "github",
+        "repo": "OdivalPereira/sociedade-do-codigo"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "sociedade-do-codigo@sociedade": true
+  },
+  "permissions": {
+    "deny": [
+      "Bash(git push *)",
+      "Bash(git merge *)",
+      "Bash(gh pr merge *)",
+      "Bash(gh release *)",
+      "Read(./.env)",
+      "Read(./.env.*)"
+    ]
+  }
+}

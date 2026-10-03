@@ -1,0 +1,12 @@
+node_modules/
+dist/
+coverage/
+test-results/
+playwright-report/
+.vercel/
+__pycache__/
+*.py[cod]
+.registro.lock
+*.tmp
+.env
+.env.*

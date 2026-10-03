@@ -1,0 +1,63 @@
+# CI do Aposte em Você e da cópia do pacote da Sociedade (Q148: prova dupla; DG-13: pipefail em todo passo).
+name: ci
+
+on:
+  push:
+    branches: [main, 'etapa/**', 'jules/**']
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Pacote da Sociedade — suíte
+        working-directory: sociedade-do-codigo
+        run: |
+          set -euo pipefail
+          python3 -B -m unittest discover -s tests 2>&1 | tee ../suite-pacote.txt
+      - name: Pacote da Sociedade — validador
+        working-directory: sociedade-do-codigo
+        run: |
+          set -euo pipefail
+          python3 -B scripts/validar_pacote.py 2>&1 | tee ../validador-pacote.txt
+      - name: App existe?
+        id: app
+        run: |
+          set -euo pipefail
+          if [ -f package.json ]; then echo "existe=sim" >> "$GITHUB_OUTPUT"; else echo "existe=nao" >> "$GITHUB_OUTPUT"; fi
+      - uses: actions/setup-node@v4
+        if: steps.app.outputs.existe == 'sim'
+        with:
+          node-version: '22'
+          cache: npm
+      - name: App — instalar, lint, testes e build
+        if: steps.app.outputs.existe == 'sim'
+        run: |
+          set -euo pipefail
+          npm ci
+          npx playwright install --with-deps chromium
+          npm run lint
+          npm test
+          npm run build
+      - name: Resumo
+        if: always()
+        run: |
+          {
+            echo "## ci — commit ${GITHUB_SHA::10}"
+            echo
+            echo "| Verificação | Resultado |"
+            echo "|---|---|"
+            echo "| Suíte do pacote | $(grep -E '^(Ran|OK|FAILED)' suite-pacote.txt 2>/dev/null | tr '\n' ' ' || echo 'não executada') |"
+            echo "| Validador do pacote | $(tail -1 validador-pacote.txt 2>/dev/null || echo 'não executado') |"
+            echo "| App | ${{ steps.app.outputs.existe == 'sim' && 'executado (ver passos)' || 'ainda sem package.json' }} |"
+          } >> "$GITHUB_STEP_SUMMARY"

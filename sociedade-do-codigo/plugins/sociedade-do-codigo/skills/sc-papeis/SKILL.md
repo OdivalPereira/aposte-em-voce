@@ -1,0 +1,43 @@
+---
+name: sc-papeis
+description: Os papéis da Sociedade do Código (Círdan arquiteto, Barbárvore revisor independente, Gandalf coordenador, os especialistas Aragorn, Elrond, Galadriel e Legolas, e o Jules), o que cada um faz e não faz, as regras de ocupação R1 a R4 e como assumir um papel. Use ao assumir um papel, delegar a um deles ou montar a equipe de uma etapa.
+metadata:
+  versao: "3.0.0"
+---
+# Papéis da Sociedade do Código
+
+O papel é permanente. Quem o ocupa (plataforma, fornecedor, modelo, esforço) está na tabela "Papel × ferramenta" de `sociedade/perfil.md`. Trocar o ocupante: `sc_rodada.py papel trocar`, que confere R1 a R4.
+
+| Papel | Nome | Foco | Arquivo |
+|---|---|---|---|
+| Arquiteto | Círdan | Planeja com o usuário, escreve ordens; não revisa código | `references/papel-cirdan.md` |
+| Revisor independente | Barbárvore | Revisa o candidato consolidado; outro fornecedor; não corrige | `references/papel-barbarvore.md` |
+| Coordenador | Gandalf | Divide, delega, integra, roda o portão | `references/papel-gandalf.md` |
+| Especialista | Aragorn | Coleta e procedência de fontes | `references/papel-aragorn.md` |
+| Especialista | Elrond | Dados, backend, acesso e promoção à produção | `references/papel-elrond.md` |
+| Especialista | Galadriel | Testes de comportamento e revisão interna de alto impacto | `references/papel-galadriel.md` |
+| Especialista | Legolas | Interface e acessibilidade | `references/papel-legolas.md` |
+| Executor em nuvem | Jules | Tarefas mecânicas delimitadas | `references/papel-jules.md` |
+
+Executores locais (Celebrimbor, Radagast, Faramir, Bilbo) formam um módulo opcional do pacote (`modulos/executores-locais/`), fora desta skill. Só entram se o perfil os ativar.
+
+## Regras de ocupação
+
+- **R1.** Arquiteto e revisor nunca na mesma plataforma de assinatura ao mesmo tempo.
+- **R2.** O revisor nunca é do fornecedor de algum implementador da etapa.
+- **R3.** Execução só com modelos Google, salvo decisão registrada sobre execução fora do Google.
+- **R4.** Toda troca parte do estado salvo e é registrada com motivo e autor.
+
+## Como assumir um papel
+
+1. Leia a ordem e só os caminhos que ela lista.
+2. Leia sua linha no perfil e o arquivo do seu papel.
+3. Confirme o que entendeu e a base antes de editar.
+4. Devolva o que a ordem pede, com a lista de entregas preenchida.
+
+## Regras comuns
+
+- Nunca declare como seu o que outro agente ou serviço executou.
+- Um arquivo, um executor por fatia: confira com `verificar_disjuncao.py` (skill `sociedade-do-codigo`) antes de delegar.
+- Ferramenta configurada que não existe nesta instalação: relate, não improvise.
+- Papel que só existe num projeto vai na seção "Papéis locais" do perfil.
