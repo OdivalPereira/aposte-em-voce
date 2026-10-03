@@ -12,8 +12,10 @@
 - [ ] C1: entregas E1–E9 da ordem conferidas
 - [ ] C2: etapa fechada por sc.py decidir
 
+
 ## Fatias
-1. fatia inicial — pendente
+1. fatia inicial — fechada · prova: sociedade/pareceres/atestado-m0-destravar.json
+
 
 ## Para quem pega o bastão agora
 bastão está com: Coordenador
@@ -26,6 +28,7 @@ não faça:
 devolva:
 neste arquivo e uma linha no histórico
 
+
 ## Achados abertos
 
-<!-- registro_sincronia: rev=3 sha=ef0d67d0cbd8c716 -->
+<!-- registro_sincronia: rev=6 sha=6321f39c02f06922 -->

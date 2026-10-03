@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-10-03T15:37:22.727669+00:00",
+  "atualizado_em": "2026-10-03T17:16:03.445493+00:00",
   "caminho_canonico": "/home/odival/Documentos/Projetos/aposte-em-voce",
   "criado_em": "2026-10-03T13:50:17.697161+00:00",
   "eventos": [
@@ -64,10 +64,154 @@
       "simulacao": false,
       "timestamp": "2026-10-03T15:37:22.727654+00:00",
       "tipo": "excecao_registrada"
+    },
+    {
+      "autor": "Coordenador",
+      "dados": {
+        "estado": "concluida",
+        "etapa_id": "m0-destravar",
+        "nota": "",
+        "tarefa_id": "fatia_1"
+      },
+      "id": "EVT-000004",
+      "seq": 4,
+      "simulacao": false,
+      "timestamp": "2026-10-03T16:57:53.901630+00:00",
+      "tipo": "tarefa_atualizada"
+    },
+    {
+      "autor": "Coordenador",
+      "dados": {
+        "ambiente": "local",
+        "comando": "fatia 1",
+        "criterio_id": "fatia_1",
+        "etapa_id": "m0-destravar",
+        "evidencia_id": "EVD-fatia_1-20261003165753903454_0005",
+        "exit_code": 0,
+        "motivo_invalida": null,
+        "saida_hash": "aa19fa1b43545cbda1a39a5d56b28469b98ecd185dad3f266a65ae6915966452",
+        "saida_resumo": "sociedade/pareceres/atestado-m0-destravar.json",
+        "valida": true,
+        "verificador": "Coordenador",
+        "versao_entrega": ""
+      },
+      "id": "EVT-000005",
+      "seq": 5,
+      "simulacao": false,
+      "timestamp": "2026-10-03T16:57:53.903481+00:00",
+      "tipo": "evidencia_registrada"
+    },
+    {
+      "autor": "Círdan",
+      "dados": {
+        "ambiente": "local",
+        "comando": "sc.py conferir --ordem sociedade/ordens/m0-destravar.md --registrar",
+        "criterio_id": "C1: entregas E1–E9 da ordem conferidas",
+        "etapa_id": "m0-destravar",
+        "evidencia_id": "EVD-C1: entregas E1–E9 da ordem conferidas-20261003165753983282_0006",
+        "exit_code": 0,
+        "motivo_invalida": null,
+        "saida_hash": "81b3fa17dbdafd0f34e2ac9b8234b67a65b33e7be23566a6f2625eafdf84f3ad",
+        "saida_resumo": "8 de 9 feitas antes do parecer (E9 = parecer, registrado por sc.py revisar --parecer)",
+        "valida": true,
+        "verificador": "Círdan",
+        "versao_entrega": ""
+      },
+      "id": "EVT-000006",
+      "seq": 6,
+      "simulacao": false,
+      "timestamp": "2026-10-03T16:57:53.983325+00:00",
+      "tipo": "evidencia_registrada"
+    },
+    {
+      "autor": "Círdan",
+      "dados": {
+        "ambiente": "local",
+        "comando": "python3 -B -m unittest discover -s tests -p test_ciclo.py (teste de fumaça)",
+        "criterio_id": "C2: etapa fechada por sc.py decidir",
+        "etapa_id": "m0-destravar",
+        "evidencia_id": "EVD-C2: etapa fechada por sc.py decidir-20261003165754059558_0007",
+        "exit_code": 0,
+        "motivo_invalida": null,
+        "saida_hash": "1ed0cedeb20990b1992ee0ee6b7064a62aeddb155fb2e69eba6e4df5a9730bd7",
+        "saida_resumo": "teste de fumaça abrir/entregar/revisar/decidir verde no atestado final fb3ae42; o fechamento real é o próprio decidir (critério circular, atrito registrado)",
+        "valida": true,
+        "verificador": "Círdan",
+        "versao_entrega": ""
+      },
+      "id": "EVT-000007",
+      "seq": 7,
+      "simulacao": false,
+      "timestamp": "2026-10-03T16:57:54.059597+00:00",
+      "tipo": "evidencia_registrada"
+    },
+    {
+      "autor": "Barbárvore (Claude Code, subagente barbarvore, protocolo completo)",
+      "dados": {
+        "etapa_id": "m0-destravar",
+        "impacto": "desconhecido",
+        "versao": "fb3ae4265da0fc5fdd1e327d8320b579c640d3b5"
+      },
+      "id": "EVT-000008",
+      "seq": 8,
+      "simulacao": false,
+      "timestamp": "2026-10-03T17:16:03.441842+00:00",
+      "tipo": "versao_atualizada"
+    },
+    {
+      "autor": "Barbárvore (Claude Code, subagente barbarvore, protocolo completo)",
+      "dados": {
+        "achados_referenciados": [],
+        "commit": "fb3ae4265da0fc5fdd1e327d8320b579c640d3b5",
+        "criterios_verificados": {
+          "Atestado e números declarados": true,
+          "B01 ciclo abrir, revisar --parecer e decidir; sem nome padrão": true,
+          "B02 modo emulação": true,
+          "B03 delegação conferida pelo log do Claude, falha fechada": true,
+          "B04 estação 5 sem passo manual": true,
+          "B05 proteção da main exige ci, portao e aceite; PR de teste bloqueado": false,
+          "B05 status portao e aceite calculados": true,
+          "B06 cauda de governança": true,
+          "B07 CI honesto com pipefail": true,
+          "B08 ID de etapa validado só para etapas novas": true,
+          "B09 sondas DG-01 a DG-05": true,
+          "B10 linha da própria etapa 0 gravada pelo script": false,
+          "B10 métricas e linha de evolucao.md": true,
+          "Motivo C33: etapa trivial fecha só com os comandos do README": true
+        },
+        "etapa_id": "m0-destravar",
+        "fornecedor_revisor": "Anthropic",
+        "implementadores": [
+          {
+            "agente": "Coordenador",
+            "fornecedor": "Anthropic"
+          }
+        ],
+        "justificativa_independencia": "Nível C (mesmo fornecedor; aceite em emulação, Q147; revisor não calibrado, Q160)",
+        "lacunas": [
+          "O CI no GitHub para o SHA fb3ae42 e o resultado real dos jobs portao e aceite: a ordem de revisão proíbe rede.",
+          "A proteção da main (ci, portao, aceite) e se um PR de teste fica bloqueado: configuração do repositório, fora da cópia.",
+          "O registro canônico da etapa m0-destravar e como ela foi aberta: fica fora da cópia; S14 só simula a abertura pelo legado.",
+          "A linha da própria etapa 0 em evolucao.md e o status aceite no SHA final: acontecem depois deste parecer, na decisão de Odival.",
+          "A B03 com transcrições reais do Claude Code: usei só transcrições sintéticas (ler ~/.claude ficaria fora da pasta permitida).",
+          "A suíte completa do pacote: não repetida (Q70), porque o atestado existe, confere pelo hash e não diverge do HEAD.",
+          "Os testes do legado alterados (test_rodada, test_parecer e outros com uma linha) foram só lidos no diff."
+        ],
+        "nivel_independencia": "C",
+        "parecer_id": "PAR-m0-destravar-fb3ae42",
+        "revisor": "Barbárvore (Claude Code, subagente barbarvore, protocolo completo)",
+        "veredito": "aceitar_com_ressalvas",
+        "versao_examinada": "fb3ae4265da0fc5fdd1e327d8320b579c640d3b5"
+      },
+      "id": "EVT-000009",
+      "seq": 9,
+      "simulacao": false,
+      "timestamp": "2026-10-03T17:16:03.445477+00:00",
+      "tipo": "parecer_registrado"
     }
   ],
   "projeto_id": "aposte-em-voc",
   "resumos_externos": {},
-  "revisao": 4,
+  "revisao": 10,
   "versao_formato": "2.1.0"
 }
