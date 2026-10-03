@@ -1,0 +1,55 @@
+{
+  "tipo": "atestado_pre_devolucao",
+  "versao": "1.2.0",
+  "timestamp": "2026-10-03T16:53:37.621787Z",
+  "papel": "Coordenador",
+  "etapa_id": "m0-destravar",
+  "fatia_id": "6",
+  "status": "APROVADO",
+  "verificacoes": {
+    "higiene_pastas": {
+      "ok": true,
+      "erros": []
+    },
+    "compilacao": {
+      "ok": true,
+      "erros": []
+    },
+    "seguranca_antitoken": {
+      "ok": true,
+      "erros": []
+    },
+    "disjuncao": {
+      "ok": true,
+      "erros": []
+    },
+    "testes": {
+      "ok": true,
+      "detalhes": ".............................s..............................................................................................................\n----------------------------------------------------------------------\nRan 610 tests in 85.390s\n\nOK (skipped=1, expected failures=15)",
+      "comando": "python3 -B -m unittest discover -s tests",
+      "totais": {
+        "executados": 610,
+        "resultado": "OK",
+        "skipped": 1,
+        "expected failures": 15
+      }
+    }
+  },
+  "commit": "fb3ae4265da0fc5fdd1e327d8320b579c640d3b5",
+  "base": "ff15c9b93e661a138ff23815dc90341e87b72d1a",
+  "origem_arquivos": "git",
+  "total_arquivos_inspecionados": 7,
+  "arquivos_removidos": [],
+  "python": "3.11.15",
+  "hashes_artefatos": {
+    "sociedade-do-codigo/CHANGELOG.md": "d5f01c39b84a20e4fdcf8f0ba3ccba1326443e12c6db8b86b20172a4bbe6df2f",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_ciclo.py": "c857672be421190c6df00c5686c290486ac6c630da141f5f56636d39a2b82540",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_perfil.py": "bf9872243229bccf5422917d9796e7bcc87d862a9de288ae67506bb909211ba0",
+    "sociedade-do-codigo/tests/adversarial/test_achados_novos.py": "015dc26effd4cb296ee702e74464de394cf15fa1f33c047cf20f318a3c099dac",
+    "sociedade-do-codigo/tests/test_cauda.py": "9bc9720b50541b73ea879b1a20592e7736a1c641f432a914ff10ce39ba62afd2",
+    "sociedade-do-codigo/tests/test_ciclo.py": "9b4c3156d99b7ad6e6c1f76f20bb186ef9061ff00f57c62defcc599df86bb668",
+    "sociedade-do-codigo/tests/test_emulacao.py": "42d0b0e621e71c1f1a3fc36455cea3663aae0c3f9b14dc8b5df191504752d8f7"
+  },
+  "erros": [],
+  "atestado_hash": "7adfdad728ed0c13f748c87073e5143fffebf74ebcfc629e41b9aee380a6e854"
+}

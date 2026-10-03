@@ -1,0 +1,61 @@
+{
+  "tipo": "atestado_pre_devolucao",
+  "versao": "1.2.0",
+  "timestamp": "2026-10-03T16:15:28.946639Z",
+  "papel": "Coordenador",
+  "etapa_id": "m0-destravar",
+  "fatia_id": "4",
+  "status": "APROVADO",
+  "verificacoes": {
+    "higiene_pastas": {
+      "ok": true,
+      "erros": []
+    },
+    "compilacao": {
+      "ok": true,
+      "erros": []
+    },
+    "seguranca_antitoken": {
+      "ok": true,
+      "erros": []
+    },
+    "disjuncao": {
+      "ok": true,
+      "erros": []
+    },
+    "testes": {
+      "ok": true,
+      "detalhes": ".............................s..............................................................................................................\n----------------------------------------------------------------------\nRan 528 tests in 57.617s\n\nOK (skipped=1)",
+      "comando": "python3 -B -m unittest discover -s tests",
+      "totais": {
+        "executados": 528,
+        "resultado": "OK",
+        "skipped": 1
+      }
+    }
+  },
+  "commit": "86b0eab9bdfcb03a05084fce790082837aac3380",
+  "base": "a68135648202ac53c2400451297a3ba218c746a5",
+  "origem_arquivos": "git",
+  "total_arquivos_inspecionados": 14,
+  "arquivos_removidos": [],
+  "python": "3.11.15",
+  "hashes_artefatos": {
+    "sociedade-do-codigo/CHANGELOG.md": "04d46e51a27703170d82811bf4c69dcc767521e71ffc1cf0efa6e7b77936f145",
+    "sociedade-do-codigo/README.md": "df4c0b26471260e322ba6709dc6907c3f8b7006ce75fb579bb2bcc33e2ae0b3a",
+    "sociedade-do-codigo/adapters/claude/agents/barbarvore.md": "ff1482c97739226673e07f492f3ef2d0f2add86d305a2549ee3746c4abaf0cac",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/SKILL.md": "e2a26524ad6ae56b3dcff3192ae114a81dc3e6f7efd18b7b2ce9c5d09bc73d32",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/references/comandos.md": "dfb99a9d9bf3a804169c8c63bee1d68221ef2fe43879402d480854a53ef37316",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/references/contrato-nucleo-projeto.md": "f2aef325964e057b978569be86e5b03ac42302f43711eafefb5075b342f1d238",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc.py": "7cdc592a506315fca4c291180b996700b6e1bbfe2478cacef03f14f3afcdb074",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_ciclo.py": "8e3badc95b30d1d46ffe8dbdd64324285a022bbee707c3144bad5ac7cee7a9b3",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_passagem.py": "762b9e4dda0255d2a53033a9192a080352a0e4be590da08110fa0f76c87d40e6",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_registro.py": "3a6fe6fa24d50781409e0c11b46e4e47f772026d60f46f8619289a112119f40d",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_status.py": "29f61a694c3104a9f6fb560b3e40fa63318642548b20ef1784a950caa8c47911",
+    "sociedade-do-codigo/tests/test_cauda.py": "34f5531650733b41319f40c0310555f73d7440ff2bd33d147580902bd8cb9292",
+    "sociedade-do-codigo/tests/test_ciclo.py": "64b1c591c1aca5abef9e5485c1db168c7fa1255ce19e1f9feede843beca9864e",
+    "sociedade-do-codigo/tests/test_id_etapa.py": "4a2a84c4c2bb34a81888fd2da0b1dd14252f45da91963895e892a990a73a7c4e"
+  },
+  "erros": [],
+  "atestado_hash": "09d534976bcfce807ec0c1391895390a8d04595f0b6ceb8d3aa4792828a9dbc8"
+}

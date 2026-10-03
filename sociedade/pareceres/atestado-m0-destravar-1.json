@@ -1,0 +1,53 @@
+{
+  "tipo": "atestado_pre_devolucao",
+  "versao": "1.2.0",
+  "timestamp": "2026-10-03T15:53:59.871759Z",
+  "papel": "Coordenador",
+  "etapa_id": "m0-destravar",
+  "fatia_id": "1",
+  "status": "APROVADO",
+  "verificacoes": {
+    "higiene_pastas": {
+      "ok": true,
+      "erros": []
+    },
+    "compilacao": {
+      "ok": true,
+      "erros": []
+    },
+    "seguranca_antitoken": {
+      "ok": true,
+      "erros": []
+    },
+    "disjuncao": {
+      "ok": true,
+      "erros": []
+    },
+    "testes": {
+      "ok": true,
+      "detalhes": ".............................s............................................\n----------------------------------------------------------------------\nRan 359 tests in 32.104s\n\nOK (skipped=1)",
+      "comando": "python3 -B -m unittest discover -s tests",
+      "totais": {
+        "executados": 359,
+        "resultado": "OK",
+        "skipped": 1
+      }
+    }
+  },
+  "commit": "289a0b5460cd9cb1c293e3ea2ac5da1ddd8d4b29",
+  "base": "3bff553e1c47a88a4d982051b3264badda6c36b3",
+  "origem_arquivos": "git",
+  "total_arquivos_inspecionados": 6,
+  "arquivos_removidos": [],
+  "python": "3.11.15",
+  "hashes_artefatos": {
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_perfil.py": "7079cd5525f77a05b4a164e65445834a048a77dc9a61e32458ffc795e8b814c4",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_registro.py": "60aecf4f0a7f31df760c4eb7b81e58027c799e13e965ba518938d16491a90ee4",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_resumo.py": "956bbb6b7ea7404992928c92b36c960195dd30c34ced43c7c425b048932af750",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_rodada.py": "9758ae88a4266e3bcaaa6605818c13fb329213d4e3ef0ca0e26abe77e602cf91",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/validar_perfil.py": "f3e9ef5ae67cb354fb3ad7a027c76073491a4b359145b4885ceff73dc628bdd6",
+    "sociedade-do-codigo/tests/test_emulacao.py": "0127531d2c8c9984cdc56d30c422008d485744c9828a54328cc8dbb205c87a0b"
+  },
+  "erros": [],
+  "atestado_hash": "e8167b9c46a2d3857f1e8ea92ffa7c5dc9659fe8f6643186979a5d61e9b69ccc"
+}

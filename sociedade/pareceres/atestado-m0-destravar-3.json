@@ -1,0 +1,59 @@
+{
+  "tipo": "atestado_pre_devolucao",
+  "versao": "1.2.0",
+  "timestamp": "2026-10-03T15:55:42.322683Z",
+  "papel": "Coordenador",
+  "etapa_id": "m0-destravar",
+  "fatia_id": "3",
+  "status": "APROVADO",
+  "verificacoes": {
+    "higiene_pastas": {
+      "ok": true,
+      "erros": []
+    },
+    "compilacao": {
+      "ok": true,
+      "erros": []
+    },
+    "seguranca_antitoken": {
+      "ok": true,
+      "erros": []
+    },
+    "disjuncao": {
+      "ok": true,
+      "erros": []
+    },
+    "testes": {
+      "ok": true,
+      "detalhes": ".............................s..............................................................................................................\n----------------------------------------------------------------------\nRan 477 tests in 44.434s\n\nOK (skipped=1)",
+      "comando": "python3 -B -m unittest discover -s tests",
+      "totais": {
+        "executados": 477,
+        "resultado": "OK",
+        "skipped": 1
+      }
+    }
+  },
+  "commit": "a68135648202ac53c2400451297a3ba218c746a5",
+  "base": "530d9a2fdcb7cb004c2b5aa2c89b3ede12be7ee1",
+  "origem_arquivos": "git",
+  "total_arquivos_inspecionados": 12,
+  "arquivos_removidos": [],
+  "python": "3.11.15",
+  "hashes_artefatos": {
+    ".github/workflows/ci.yml": "a6bf40f7c043dbbfe89b3057f33b14a556919859ac042b2b9ff701164fc0000b",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sc-revisao/SKILL.md": "d959c3d87d8705ea2a3fcf4392368a75e8ac9a63aa76a8cb724c9757f74b4fc3",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sc-revisao/assets/parecer-modelo.md": "0f84ea97a2844b9ef2db732e4253ccae0428050887bce7f1feee072d25252183",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sc-revisao/references/protocolo-revisao.md": "69e74ad02b27947179abfdc2f66e83e97bcfba17e56fae7235923f9e19ab4a70",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sc-revisao/scripts/lint_parecer.py": "2c780f9185bd3feb1199777b521f558997500c819b03381c930bb216ece694fd",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/assets/rodada-modelo.md": "ff9b42298c95612371002032a7861f87f62eabf26a38748966b946d3aca9fdc8",
+    "sociedade-do-codigo/tests/test_ci_pipefail.py": "107186315bfa3d26f0e2cff489ade8f9581567ab8fbdebb038c44a1a279e5e7d",
+    "sociedade-do-codigo/tests/test_contrato_modelos.py": "648351f48cf9c17a6e179c3f49d426d04bdeff9a2e8bd01bc1fdfc81a66990d6",
+    "sociedade-do-codigo/tests/test_pacote2_desacoplamento_eficiencia.py": "d9d4b44570198d7ae9e0841a636f336c3a9b1e6591ee43ad95d9e82e0a4388e7",
+    "sociedade-do-codigo/tests/test_parecer.py": "6814e720f7d151c93778f6a225934fef440210c90d85bf88dcecedc61b3c8b8a",
+    "sociedade-do-codigo/tests/test_revisor_independente_operacional.py": "7eceed6d4d453c24cfb8073efb3217b70fe422c1b76c91a97a903cfbe62e0b41",
+    "sociedade-do-codigo/tests/test_rodada.py": "996aaa279c908d6ee4eca7fc152b2081d2b0960f40cd2b0706a051a0000ab924"
+  },
+  "erros": [],
+  "atestado_hash": "c18199496bb66d19e58d1105b31fad08781d4d18e84e4b765edec493fe37105c"
+}
