@@ -234,6 +234,8 @@ class TesteLeitorDeWorkflow(unittest.TestCase):
 class TesteCiReal(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        if not CI_YML.is_file():
+            raise unittest.SkipTest('projeto sem .github/workflows/ci.yml (o pacote fora de um projeto com CI)')
         cls.texto = CI_YML.read_text(encoding='utf-8')
         cls.passos = passos_run(cls.texto)
 

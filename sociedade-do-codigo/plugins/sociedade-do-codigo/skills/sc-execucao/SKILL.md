@@ -2,7 +2,7 @@
 name: sc-execucao
 description: Como o coordenador da Sociedade do Código executa uma etapa: fatias delegadas a especialistas por subagente, tarefas mecânicas para o Jules, subordem autocontida, disjunção de arquivos e portão por fatia. Use ao dividir uma etapa, delegar uma fatia ou receber o resultado de um especialista ou do Jules.
 metadata:
-  versao: "3.0.0"
+  versao: "3.1.0"
 ---
 # Execução de uma etapa
 

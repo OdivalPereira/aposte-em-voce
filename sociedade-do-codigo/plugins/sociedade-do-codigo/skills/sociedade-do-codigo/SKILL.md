@@ -2,7 +2,7 @@
 name: sociedade-do-codigo
 description: Método da Sociedade do Código, equipe de agentes com arquiteto (Círdan), coordenador e especialistas (Gandalf e equipe), revisor independente de outro fornecedor (Barbárvore) e conferência automática por script. Traz o pipeline de seis estações, as regras que valem sempre e o comando de cada estação. Use quando o usuário acionar a Sociedade do Código, pedir para abrir, executar, conferir, revisar ou decidir uma etapa, ou quando você receber uma ordem da Sociedade. Fora disso, não use: pergunta, análise e dúvida se respondem direto.
 metadata:
-  versao: "3.0.0"
+  versao: "3.1.0"
 ---
 # Sociedade do Código: núcleo
 

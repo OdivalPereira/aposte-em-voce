@@ -40,7 +40,7 @@ Recomendados: **Executores locais** (se houver), **Papéis locais**, **Regras de
 O bloco gerado por `scripts/sc_sync_agents_md.py` é a **única** declaração de adoção:
 
 ```
-<!-- sociedade-do-codigo:inicio nucleo=3.0.0 perfil=sociedade/perfil.md pasta=sociedade jules=sim sha=... -->
+<!-- sociedade-do-codigo:inicio nucleo=3.1.0 perfil=sociedade/perfil.md pasta=sociedade jules=sim sha=... -->
 ...
 <!-- sociedade-do-codigo:fim -->
 ```

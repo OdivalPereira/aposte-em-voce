@@ -180,6 +180,8 @@ class TestEvolucaoMd(unittest.TestCase):
         if not real.is_file():
             self.skipTest('sem sociedade/evolucao.md do projeto')
         texto = real.read_text(encoding='utf-8')
+        if '| Comandos |' not in texto:
+            self.skipTest('evolucao.md do projeto ainda no formato anterior à B10')
         antigo = CABECALHO.replace(' Consumo (cache lido) |', '')  # tabela ainda sem a coluna: o próximo `decidir` a migra
         self.assertTrue(CABECALHO in texto or antigo in texto)
 

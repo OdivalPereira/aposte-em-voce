@@ -2,7 +2,7 @@
   "name": "sociedade-do-codigo",
   "marketplace": "sociedade",
   "displayName": "Sociedade do Código",
-  "description": "Método comum de equipe multiagente: ativação explícita, níveis, rodada em fatias com prova, passagem entre ferramentas por dois arquivos curtos, revisão de outro fornecedor, executores locais sem custo de nuvem e economia sem medir consumo. O projeto fornece só o perfil e a rodada.",
+  "description": "Método comum de equipe multiagente: ativação explícita, níveis, rodada em fatias com prova, passagem entre ferramentas por dois arquivos curtos, revisão de outro fornecedor, executores locais sem custo de nuvem e economia de contexto, com o consumo medido pelo log. O projeto fornece só o perfil e a rodada.",
   "shortDescription": "Equipe multiagente com níveis, fatias com prova e revisão de outro fornecedor",
   "category": "productivity",
   "author": "Odival Pereira",

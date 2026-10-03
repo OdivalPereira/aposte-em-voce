@@ -1,6 +1,6 @@
 # Sociedade do Código
 
-Versão 3.0.0 · 25/09/2026
+Versão 3.1.0 · 03/10/2026
 
 Uma equipe de agentes de IA de fornecedores diferentes trabalhando no mesmo projeto, com um processo que se confere sozinho. Este pacote traz o método (quatro skills), os scripts que conferem cada passo e os adaptadores para Claude Code, Codex e Antigravity.
 

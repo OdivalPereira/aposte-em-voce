@@ -2,7 +2,9 @@
 
 Versionamento semântico. Major: muda o comportamento a ponto de exigir ajuste nos projetos.
 
-## Não lançado
+## 3.1.0 (03/10/2026)
+
+Versão de transição: o que as sessões em nuvem de 03/10/2026 mudaram no método. A 4.0.0 sai depois da revisão do diff acumulado e das regras finais (F1–F5).
 
 Etapa `fechamento-nuvem`, fatia 1: economia de contexto; o uso sai do log da sessão.
 
