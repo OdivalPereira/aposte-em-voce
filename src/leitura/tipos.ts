@@ -39,7 +39,8 @@ export type Motivo =
   | 'direcao-incerta'
   | 'colunas-incertas'
   | 'saldo-nao-fecha'
-  | 'linhas-nao-lidas';
+  | 'linhas-nao-lidas'
+  | 'total-do-dia-diverge';
 
 export interface Lancamento {
   /** aaaa-mm-dd */
@@ -78,6 +79,18 @@ export interface Periodo {
   fim: string;
 }
 
+/** Estrutura do layout (T99): sem valores, nomes nem descrições. Posições em décimos da largura (0 a 10). */
+export interface EstruturaLayout {
+  /** da esquerda para a direita; rótulo do documento só se for do vocabulário fixo (ver `layout.ts`) */
+  colunas: { rotulo: string; de: number; ate: number }[];
+  /** formatos com dígito trocado por 9 e letra por A (`99/99/9999`, `99 AAA 9999`) */
+  formatosData: string[];
+  /** formatos com o primeiro grupo de dígitos num só 9 (`9,99`, `9.999,99`, `-9,99`) */
+  formatosValor: string[];
+  /** títulos de grupo que definem a direção ("Total de entradas", "Total de saídas") */
+  grupos: string[];
+}
+
 export interface ResultadoArquivo {
   versao: 1;
   /** SHA-256 (hex) dos bytes do arquivo */
@@ -88,6 +101,10 @@ export interface ResultadoArquivo {
   mensagem: string;
   /** palavra-chave encontrada no texto do documento; `null` quando não há (não há parser por banco) */
   bancoProvavel: string | null;
+  /** identificador estrutural da conta: no máximo os 4 últimos dígitos ("final 4821"); `null` se o documento não traz. Nunca nome nem número completo */
+  contaFinal: string | null;
+  /** estrutura do layout para a assinatura (T99); `null` quando a leitura nem chegou à tabela */
+  estrutura: EstruturaLayout | null;
   /** menor e maior data dos lançamentos lidos; `null` sem lançamentos */
   periodo: Periodo | null;
   paginas: number;

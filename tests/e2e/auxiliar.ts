@@ -1,5 +1,6 @@
 import { expect, type BrowserContext, type Page } from '@playwright/test';
 import { COLUNAS_PADRAO, pagina } from '../unit/auxiliar/montar';
+import { paginasDoMes, type PedidoMes } from '../unit/auxiliar/extrato-mes';
 import { gerarPdf } from '../unit/auxiliar/pdf-sintetico';
 
 export const ORIGEM = 'http://127.0.0.1:4173';
@@ -68,6 +69,11 @@ export async function extratoSintetico(opcoes: { corte?: 'inicio' | 'fim' | 'tud
     }),
   ]);
   return Buffer.from(pdf);
+}
+
+/** PDF sintético de um extrato mensal (ver `extrato-mes.ts`). */
+export async function extratoDoMes(pedido: PedidoMes): Promise<Buffer> {
+  return Buffer.from(await gerarPdf(paginasDoMes(pedido)));
 }
 
 export function arquivoPdf(nome: string, buffer: Buffer) {

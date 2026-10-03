@@ -37,6 +37,15 @@ function PedidoDeSenha({ item, aoEnviar, aoPular }: { item: ItemArquivo; aoEnvia
 export function Extratos({ itens, aoEscolher, aoEnviarSenha, aoPular, aoContinuar }: Props) {
   const lendo = itens.some((i) => i.estado === 'lendo');
   const aguardandoSenha = itens.some((i) => i.estado === 'senha');
+  // Mesmo arquivo reenviado (mesmo hash): o segundo não conta de novo.
+  const hashesVistos = new Set<string>();
+  const repetido = new Set<number>();
+  for (const i of itens) {
+    const h = i.resultado?.hash;
+    if (!h || i.resultado?.status === 'nao-suportado') continue;
+    if (hashesVistos.has(h)) repetido.add(i.id);
+    else hashesVistos.add(h);
+  }
   return (
     <section aria-labelledby="titulo-extratos">
       <h1 id="titulo-extratos">Extratos (opcional)</h1>
@@ -57,8 +66,9 @@ export function Extratos({ itens, aoEscolher, aoEnviarSenha, aoPular, aoContinua
         }}
       />
       <label class="botao" for="escolher-pdf">
-        Escolher PDF
+        {itens.length > 0 ? 'Acrescentar mais PDFs' : 'Escolher PDF'}
       </label>
+      {itens.length > 0 && <p class="suave">Os arquivos já lidos continuam aqui; os novos entram no mesmo histórico.</p>}
 
       <ul aria-live="polite">
         {itens.map((item) => (
@@ -71,6 +81,7 @@ export function Extratos({ itens, aoEscolher, aoEnviarSenha, aoPular, aoContinua
               </p>
             )}
             {item.estado === 'pronto' && item.resultado && <p>Lido. {item.resultado.status === 'nao-suportado' ? item.resultado.mensagem : ''}</p>}
+            {repetido.has(item.id) && <p class="aviso">Este arquivo é igual a outro já lido e não conta de novo.</p>}
             {item.estado === 'senha' && <PedidoDeSenha item={item} aoEnviar={(s) => aoEnviarSenha(item.id, s)} aoPular={() => aoPular(item.id)} />}
             {(item.estado === 'pronto' || item.estado === 'lendo') && (
               <button type="button" class="secundario" onClick={() => aoPular(item.id)}>

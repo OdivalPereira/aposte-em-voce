@@ -18,6 +18,8 @@ function arquivo(nome: string, hash: string, lancamentos: Lancamento[], status: 
       motivo: null,
       mensagem: '',
       bancoProvavel: null,
+      contaFinal: null,
+      estrutura: null,
       periodo: datas.length ? { inicio: datas[0] as string, fim: datas[datas.length - 1] as string } : null,
       paginas: 1,
       linhasCandidatas: lancamentos.length,

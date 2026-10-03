@@ -1,5 +1,6 @@
 // Passos 3, 4, 5 e 7 do pipeline (seção 5.1): linhas por coordenada, cabeçalhos e colunas, lançamentos
 // reconstruídos e direção. Núcleo genérico: nenhuma regra por banco. Funções puras sobre texto posicionado.
+import { ColetorLayout, tituloDeGrupo } from './layout';
 import {
   centavosComSinal,
   descricaoNormalizada,
@@ -13,7 +14,7 @@ import {
   type PeriodoReferencia,
   type ValorLido,
 } from './normalizar';
-import type { Direcao, Lancamento, PaginaTexto } from './tipos';
+import type { Direcao, EstruturaLayout, Lancamento, PaginaTexto } from './tipos';
 
 // ---------- passo 3: linhas por coordenada ----------
 
@@ -195,6 +196,18 @@ interface Bruta {
   direcaoColuna: Direcao | undefined;
   saldo: number | null;
   dataIlegivel: boolean;
+  /** grupo "agrupado por dia" (título que define a direção) em vigor na linha */
+  grupo: GrupoDia | null;
+}
+
+/** Grupo sob um título como "Total de entradas": a direção vem do título; o total declarado confere a soma. */
+interface GrupoDia {
+  direcao: Direcao;
+  /** total declarado no título, em centavos; `null` se o título não traz valor */
+  declarado: number | null;
+  linhas: number;
+  /** soma dos lançamentos lidos do grupo, em centavos */
+  soma: number;
 }
 
 export interface Reconstrucao {
@@ -211,6 +224,10 @@ export interface Reconstrucao {
   colunasIncertas: boolean;
   /** texto das linhas fora da tabela (período, banco) */
   textoFora: string;
+  /** estrutura do layout para a assinatura (T99) */
+  estrutura: EstruturaLayout;
+  /** grupos com linhas cujo total declarado não bate com a soma lida (nenhum lançamento é alterado) */
+  totaisDivergentes: number;
 }
 
 const RUIDO = /^(pagina|pag\.?)\s*\d+(\s*(de|\/)\s*\d+)?$|^(emitido|gerado|extrato gerado)\b|^www\.|^sac\b|^ouvidoria\b|^cnpj\b|^(continua|continuacao)\b/;
@@ -255,6 +272,11 @@ export function reconstruir(paginas: PaginaTexto[]): Reconstrucao {
   let saldoFinal: number | null = null;
   let colunasIncertas = false;
   let tabelaComecou = !haCabecalho;
+  const layout = new ColetorLayout();
+  const grupos: GrupoDia[] = [];
+  let grupo: GrupoDia | null = null;
+  let larguraRef = 0;
+  for (const p of paginas) for (const i of p.itens) larguraRef = Math.max(larguraRef, i.x + i.largura);
 
   for (const linhas of porPagina) {
     const passo = mediana(linhas.slice(1).map((l, i) => (linhas[i] as Linha).y - l.y));
@@ -262,8 +284,10 @@ export function reconstruir(paginas: PaginaTexto[]): Reconstrucao {
       const cab = detectarCabecalho(linha);
       if (cab) {
         colunas = cab;
+        layout.definirCabecalho(linha, cab);
         tabelaComecou = true;
         anterior = null;
+        grupo = null;
         continue;
       }
       const textoLinha = juntar(linha.celulas.map((c) => c.texto));
@@ -288,6 +312,19 @@ export function reconstruir(paginas: PaginaTexto[]): Reconstrucao {
         if (v && marcador === 'inicial' && saldoInicial === null) saldoInicial = centavosComSinal(v);
         if (v && marcador === 'final') saldoFinal = centavosComSinal(v);
         anterior = null;
+        grupo = null;
+        fora.push(textoLinha);
+        continue;
+      }
+      // Título de grupo ("Total de entradas" / "Total de saídas"): define a direção das linhas abaixo e traz o total do dia.
+      const tituloGrupo = tituloDeGrupo(campos.desc);
+      if (tituloGrupo) {
+        const txt = campos.valor || campos.credito || campos.debito;
+        const v = txt ? lerValor(txt) : null;
+        grupo = { direcao: tituloGrupo.direcao, declarado: v ? v.centavos : null, linhas: 0, soma: 0 };
+        grupos.push(grupo);
+        layout.grupo(tituloGrupo.rotulo);
+        anterior = null;
         fora.push(textoLinha);
         continue;
       }
@@ -303,6 +340,7 @@ export function reconstruir(paginas: PaginaTexto[]): Reconstrucao {
       if (titulo && !titulo.resto) {
         ultimaData = { dia: titulo.dia, mes: titulo.mes, ano: titulo.ano };
         anterior = null;
+        grupo = null;
         fora.push(textoLinha);
         continue;
       }
@@ -322,11 +360,14 @@ export function reconstruir(paginas: PaginaTexto[]): Reconstrucao {
         // Linha só com data: título de grupo ("02 SET 2026"); vale para as linhas seguintes sem data.
         ultimaData = { dia: data.dia, mes: data.mes, ano: data.ano };
         anterior = null;
+        grupo = null;
         fora.push(textoLinha);
         continue;
       }
 
       candidatas++;
+      if (grupo) grupo.linhas++;
+      layout.candidata(linha, campos.data, [campos.valor, campos.credito, campos.debito, campos.saldo]);
       let hora: string | null = null;
       let descricao = campos.desc;
       if (data?.resto) {
@@ -379,6 +420,7 @@ export function reconstruir(paginas: PaginaTexto[]): Reconstrucao {
         direcaoColuna,
         saldo: saldoLido ? centavosComSinal(saldoLido) : null,
         dataIlegivel: candidataData === null,
+        grupo,
       };
       brutas.push(bruta);
       anterior = bruta;
@@ -394,6 +436,8 @@ export function reconstruir(paginas: PaginaTexto[]): Reconstrucao {
     colunasIncertas,
     cabecalhoEncontrado: haCabecalho,
     fora,
+    estrutura: layout.construir(larguraRef),
+    grupos,
   });
 }
 
@@ -454,6 +498,8 @@ function finalizar(
     colunasIncertas: boolean;
     cabecalhoEncontrado: boolean;
     fora: string[];
+    estrutura: EstruturaLayout;
+    grupos: GrupoDia[];
   },
 ): Reconstrucao {
   const textoFora = r.fora.join('\n');
@@ -487,7 +533,7 @@ function finalizar(
     if (!direcao) {
       if (b.valor.sinal === '-' || b.valor.dc === 'D') direcao = 'saida';
       else if (b.valor.sinal === '+' || b.valor.dc === 'C') direcao = 'entrada';
-      else direcao = semMarca;
+      else direcao = b.grupo?.direcao ?? semMarca;
     }
     if (!direcao) {
       semDirecao++;
@@ -502,6 +548,7 @@ function finalizar(
       pagina: b.pagina,
       saldoCentavos: b.saldo,
     });
+    if (b.grupo && direcao === b.grupo.direcao) b.grupo.soma += b.valor.centavos;
   }
   return {
     linhasCandidatas: r.candidatas,
@@ -513,6 +560,8 @@ function finalizar(
     cabecalhoEncontrado: r.cabecalhoEncontrado,
     colunasIncertas: r.colunasIncertas,
     textoFora,
+    estrutura: r.estrutura,
+    totaisDivergentes: r.grupos.filter((g) => g.declarado !== null && g.linhas > 0 && g.soma !== g.declarado).length,
   };
 }
 

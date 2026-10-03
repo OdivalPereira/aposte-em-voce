@@ -1,12 +1,15 @@
 // Função pública da leitura (ver LEIAME.md): bytes do PDF (e senha opcional) → resultado por arquivo.
 import { conferirSaldo, decidirStatus, MENSAGEM } from './conferir';
 import { extrairTexto, motivoDoErro } from './extrair';
+import { contaDoTexto } from './layout';
 import { semAcento } from './normalizar';
 import { reconstruir } from './reconstruir';
 import { ErroLeitura, LIMITE_BYTES, type ConferenciaSaldo, type Motivo, type PaginaTexto, type ResultadoArquivo } from './tipos';
 
 export type { ArquivoLido, Consolidado, Lancamento, ResultadoArquivo } from './tipos';
 export { consolidar } from './consolidar';
+export { agruparHistoricos } from './historico';
+export { assinaturaDoLayout } from './layout';
 export { diagnosticar } from './diagnostico';
 
 const SEM_CONFERENCIA: ConferenciaSaldo = {
@@ -90,6 +93,8 @@ function naoSuportado(hash: string, motivo: Motivo, paginas: number): ResultadoA
     motivo,
     mensagem: MENSAGEM[motivo],
     bancoProvavel: null,
+    contaFinal: null,
+    estrutura: null,
     periodo: null,
     paginas,
     linhasCandidatas: 0,
@@ -147,6 +152,7 @@ export function analisarPaginas(paginas: PaginaTexto[], hash: string, totalPagin
     lancamentos: r.lancamentos.length,
     semDirecao: r.semDirecao,
     colunasIncertas: r.colunasIncertas,
+    totaisDivergentes: r.totaisDivergentes,
     conferencia,
   });
   const datas = r.lancamentos.map((l) => l.data).sort();
@@ -158,6 +164,8 @@ export function analisarPaginas(paginas: PaginaTexto[], hash: string, totalPagin
     motivo,
     mensagem,
     bancoProvavel: bancoProvavel(r.textoFora),
+    contaFinal: contaDoTexto(r.textoFora),
+    estrutura: r.estrutura,
     periodo: datas.length > 0 ? { inicio: datas[0] as string, fim: datas[datas.length - 1] as string } : null,
     paginas: totalPaginas,
     linhasCandidatas: r.linhasCandidatas,
