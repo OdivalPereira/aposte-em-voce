@@ -21,6 +21,12 @@ RECOMENDADOS = {
     'Limites e paradas': ('limites', 'paradas'),
     'Comandos': ('comandos',),
 }
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+try:
+    from sc_perfil import valor_chave_emulacao
+except ImportError:  # validador usado sem o resto do pacote: não confere a chave
+    valor_chave_emulacao = None
+
 TITULO = re.compile(r'^\s{0,3}#{1,6}\s*(.+?)\s*#*\s*$', re.M)
 NEGRITO = re.compile(r'\*\*([^*\n]{2,60}?)\s*:?\*\*')
 MARCADOR = re.compile(r'<[A-Za-zÀ-ú][^<>\n]{1,40}>')
@@ -45,6 +51,12 @@ def validar(caminho):
     marcadores = MARCADOR.findall(sem_html)
     if marcadores:
         avisos.append(f'{len(marcadores)} marcador(es) do modelo ainda sem preencher (ex.: {marcadores[0]})')
+    if valor_chave_emulacao is not None:
+        chave = valor_chave_emulacao(texto)
+        if chave == 'sim':
+            avisos.append('modo emulação ligado: R1–R3 valem só como aviso e o aceite não conta como revisão independente')
+        elif chave is not None and chave != 'nao':
+            avisos.append('chave "Emulação" com valor inválido (use "sim" ou "não"); vale como desligada')
     return faltam, avisos
 
 

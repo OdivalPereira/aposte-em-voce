@@ -156,6 +156,62 @@ def sao_mesmo_agente(agente1: str, agente2: str, perfil=None) -> bool:
     return bool(s1 and s2 and s1 == s2)
 
 
+_TITULO_MD = re.compile(r'^\s{0,3}#{1,6}\s*(.+?)\s*#*\s*$')
+_LINHA_EMULACAO = re.compile(r'^\s*[-*+]\s*\*\*emulacao\s*:?\*\*\s*:?\s*([a-z]*)')
+
+
+def valor_chave_emulacao(texto: str) -> str | None:
+    """Valor da linha `- **Emulação:** <valor>` na seção "Modo emulação" (B02, Q147).
+
+    Devolve o primeiro termo, sem acento e em minúsculas ('sim', 'nao', ...), ou None se a
+    seção ou a linha não existirem. Só a seção "Modo emulação" conta; blocos de código são ignorados.
+    """
+    dentro, cerca = False, False
+    for linha in (texto or '').splitlines():
+        if linha.strip().startswith('```'):
+            cerca = not cerca
+            continue
+        if cerca:
+            continue
+        t = _TITULO_MD.match(linha)
+        if t:
+            dentro = 'modo emulacao' in _remover_acentos(t.group(1)).lower()
+            continue
+        if dentro:
+            m = _LINHA_EMULACAO.match(_remover_acentos(linha).lower())
+            if m:
+                return m.group(1)
+    return None
+
+
+def _texto_do_perfil(fonte) -> str:
+    if hasattr(fonte, 'texto'):
+        return fonte.texto or ''
+    if isinstance(fonte, Path) or (isinstance(fonte, str) and fonte.strip() and '\n' not in fonte):
+        caminho = Path(fonte)
+        if caminho.is_file() or caminho.is_dir():
+            return localizar_perfil(caminho).read_text(encoding='utf-8')
+    return fonte if isinstance(fonte, str) else ''
+
+
+def emulacao_ligada(perfil=None) -> bool:
+    """True só se o perfil traz `- **Emulação:** sim` na seção "Modo emulação" (B02, Q147).
+
+    Aceita um PerfilProjeto, o caminho do perfil.md (ou da pasta) ou o texto do perfil.
+    Chave ausente, valor diferente de "sim", perfil ilegível ou None: False (falha fechada).
+    """
+    try:
+        return valor_chave_emulacao(_texto_do_perfil(perfil)) == 'sim'
+    except Exception:
+        return False
+
+
+def marcar_motivo_emulacao(motivo: str = '') -> str:
+    """Motivo gravado numa troca de papel em modo emulação (R4): começa sempre por "emulação"."""
+    m = (motivo or '').strip()
+    return m if m.lower().startswith('emulação') else (f'emulação: {m}' if m else 'emulação')
+
+
 class PerfilProjeto:
     """Leitor e validador central do perfil do projeto."""
 
@@ -319,6 +375,11 @@ class PerfilProjeto:
                     'conectores': linha[idx_c] if idx_c >= 0 else '',
                     'ambiente': linha[idx_a] if idx_a >= 0 else ''
                 })
+
+    @property
+    def emulacao(self) -> bool:
+        """Chave `emulacao` do perfil (B02): True só com `- **Emulação:** sim`."""
+        return emulacao_ligada(self)
 
     def obter_papel(self, nome_ou_papel: str) -> dict | None:
         """Obtém a linha do papel por chave funcional, rótulo do papel ou nome do agente (casamento exato)."""
@@ -529,6 +590,7 @@ def main(argv=None):
     p.add_argument('--papeis', action='store_true', help='lista todos os papéis e estados')
     p.add_argument('--equipe-ativa', action='store_true', help='lista apenas papéis ativos')
     p.add_argument('--fornecedor', help='consulta o fornecedor de um agente ou papel')
+    p.add_argument('--emulacao', action='store_true', help='mostra se o modo emulação está ligado (sim/não)')
     p.add_argument('--mesmo-agente', nargs=2, metavar=('AGENTE1', 'AGENTE2'),
                    help='testa se dois nomes referem-se ao mesmo agente')
 
@@ -551,6 +613,10 @@ def main(argv=None):
     except ErroPerfil as e:
         print(f'erro: {e}', file=sys.stderr)
         return 2
+
+    if args.emulacao:
+        print('sim' if perfil.emulacao else 'não')
+        return 0
 
     if args.fornecedor:
         forn = perfil.obter_fornecedor(args.fornecedor)
