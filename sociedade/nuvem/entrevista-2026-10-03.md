@@ -158,3 +158,19 @@ Entrevista de Odival com o Claude Opus 5.5 (Claude Code, desktop, local), feita 
 | C64 | Aprovação do lote 1 | Aprovar e seguir | `backlog.md`, `regras.md` e `decisoes-q146.md` em `sociedade/preparo-nuvem/` ficam aprovados |
 | C65 | Sofrimento intenso ou risco à vida | Botão fixo de ajuda, sem pergunta de risco | "Precisa de ajuda agora?" em todas as telas e um cartão no resultado, com CVV 188, SAMU 192, UPA e CAPS. Nenhuma triagem de risco à vida |
 | C66 | O que fica guardado no aparelho | Nada; guardar é baixar os PDFs | Tudo fica só na memória da página, sem `localStorage` nem IndexedDB para dados da pessoa. Aviso explícito |
+| C67 | Aprovação do lote 2 | Aprovar e seguir | `pedidos.md` e `onda-1.md` aprovados, junto com as três escolhas novas: senha do PDF usada só no aparelho, limite de 30 MB e 200 páginas, e a stack Preact + PDF.js num worker + pdf-lib |
+
+## Lote 3 — preparo executado em 03/10/2026
+
+- **Repositório `aposte-em-voce` (local):**
+  - cópia do pacote 3.0.0 e `sc_init`;
+  - perfil com a formação emulada (Q147);
+  - 10 agentes em `.claude/agents/` (9 papéis; o Barbárvore em duas profundidades);
+  - skills por link simbólico;
+  - `settings.json` com travas;
+  - CI com `pipefail` e os testes do pacote;
+  - modelo de PR, aberturas das 6 sessões, ambiente e checklist;
+  - README e licença AGPL-3.0, com a governança fora da licença.
+- **ARR encerrada sem aceite (Q146)**, depois de ensaio numa cópia. Exigiu as exceções `criterios_gerais`, `revisao_independente` e `fatias_pendentes` com `DEC-Q146`, mais um `rodada.md` à mão. Os atritos foram registrados.
+- **Governança arquivada** em `sociedade/arquivo/` (R5).
+- **`decisoes.md` novo** (Q146–Q160) e **`regras.md`**.
