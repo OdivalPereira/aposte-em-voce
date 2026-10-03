@@ -22,7 +22,7 @@ sys.path.insert(0, str(AQUI.parent.parent / 'sc-revisao' / 'scripts'))
 import lint_parecer  # noqa: E402
 import sc_metricas  # noqa: E402
 import sc_status  # noqa: E402
-from sc_perfil import emulacao_ligada  # noqa: E402
+from sc_perfil import emulacao_ligada, nome_de_agente  # noqa: E402
 from sc_registro import ErroRegistro, Registro  # noqa: E402
 from sc_sessao import ErroSessao, localizar_claude  # noqa: E402
 
@@ -74,6 +74,13 @@ def _registro(soc):
         return Registro(soc)
     except ErroRegistro as e:
         raise ErroCiclo(f'registro ilegível ou ausente em {soc}: {e}')
+
+
+def _perfil_ou_none(reg):
+    try:
+        return reg.perfil
+    except Exception:  # perfil ilegível: vale só a lista embutida de nomes de agente (falha fechada)
+        return None
 
 
 def _etapa(reg, etapa):
@@ -147,6 +154,13 @@ def registrar_parecer(soc, etapa, arquivo, head='HEAD', implementadores=None):
     e = _etapa(reg, etapa)
     if not e or e['estado'] == 'encerrada':
         raise ErroCiclo(f'a etapa {etapa} não está aberta no registro.')
+    etapa_parecer = campos.get('rodada', '').strip().strip('`')
+    if etapa_parecer != etapa:
+        raise ErroCiclo(f'o parecer é da etapa "{etapa_parecer}", não de "{etapa}": parecer de outra etapa.')
+    base_parecer = campos.get('base..head', '').split('..')[0].strip().lower()
+    base_etapa = str(e.get('base_efetiva') or '').lower()
+    if base_etapa and not (base_etapa.startswith(base_parecer) or base_parecer.startswith(base_etapa)):
+        raise ErroCiclo(f'a base do parecer ({base_parecer[:12]}) não é a base da etapa {etapa} ({base_etapa[:12]}).')
     veredito = VEREDITO_REGISTRO[lint_parecer.norm(campos['veredito'])]
     revisor = campos['revisor'].split('·')[0].strip()
     m = re.search(r'fornecedor:\s*([^·]+)', campos['revisor'], re.I)
@@ -223,10 +237,12 @@ def provas_do_aceite(soc, reg, etapa, head):
     return at, commit
 
 
-def _usuario(por, raiz):
+def _usuario(por, raiz, perfil=None):
     nome = (por or '').strip() or _git(raiz, 'config', 'user.name')[1].strip()
     if not nome:
         raise ErroCiclo('informe quem decide: --por NOME (ou configure git config user.name). Não há nome padrão.')
+    if nome_de_agente(nome, perfil):
+        raise ErroCiclo(f'"{nome}" é nome de agente, não de pessoa. Informe quem decide com --por <nome da pessoa>.')
     return nome
 
 
@@ -251,14 +267,18 @@ def decidir(soc, etapa, acao, por=None, head=None, motivo=None, minutos=None, in
         raise ErroCiclo(f'decisão inválida: "{acao}" (use {", ".join(ACOES)}).')
     soc = Path(soc)
     raiz = soc.parent
-    quem = _usuario(por, raiz)
     reg = _registro(soc)
+    quem = _usuario(por, raiz, _perfil_ou_none(reg))
     e = _etapa(reg, etapa)
     if not e or e['estado'] == 'encerrada':
         raise ErroCiclo(f'a etapa {etapa} não está aberta no registro.')
+    ponta = resolver(raiz, f'refs/heads/etapa/{etapa}')
     topo = resolver(raiz, head or f'refs/heads/etapa/{etapa}') or resolver(raiz, 'HEAD')
     if not topo:
         raise ErroCiclo(f'não consegui resolver o head em {raiz}.')
+    if head and ponta and _git(raiz, 'merge-base', '--is-ancestor', ponta, topo)[0] != 0:
+        raise ErroCiclo(f'--head {topo[:12]} é anterior à ponta do ramo etapa/{etapa} ({ponta[:12]}): '
+                        'a ponta do ramo tem de ser ancestral do head conferido.')
     commit = at = None
     try:
         at, commit = provas_do_aceite(soc, reg, etapa, topo)
@@ -307,6 +327,7 @@ def decidir(soc, etapa, acao, por=None, head=None, motivo=None, minutos=None, in
         saida.append('A etapa segue aberta. Corrija, rode sc.py entregar e sc.py revisar de novo e decida outra vez (Q84).')
     else:
         saida += ['O status `aceite` roda no PR (Actions); esta sessão não publica status pelo gh. Faça:',
+                  f'  (o commit de sociedade/ vai no ramo etapa/{etapa}, no worktree dessa etapa, e não no checkout em que este comando rodou)',
                   f'  git add sociedade/ && git commit -m "sociedade({etapa}): decisão {acao}" && git push origin etapa/{etapa}',
                   'Só sociedade/ entra neste commit (cauda de governança, Q149).']
     return saida

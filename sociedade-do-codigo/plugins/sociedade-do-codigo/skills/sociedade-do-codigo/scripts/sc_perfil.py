@@ -156,32 +156,59 @@ def sao_mesmo_agente(agente1: str, agente2: str, perfil=None) -> bool:
     return bool(s1 and s2 and s1 == s2)
 
 
+def nome_de_agente(nome: str, perfil=None) -> bool:
+    """True se o nome é de agente (identificador ou variante do perfil, lista mínima embutida) ou "Claude".
+
+    Sem distinção de caixa e de acento. Perfil ausente: vale só a lista embutida (falha fechada).
+    """
+    s = _slug(nome)
+    if not s:
+        return False
+    if s == 'claude' or s.startswith('claude_'):
+        return True
+    conhecidos = set(AGENTES_CONHECIDOS_PADRAO)
+    if perfil is not None:
+        conhecidos |= set(perfil.identificadores) | set(perfil.identificadores.values())
+    candidatos = {s, extrair_base_agente(s, conhecidos)}
+    if perfil is not None:
+        candidatos.add(perfil.obter_id_agente(nome))
+    return bool(candidatos & conhecidos)
+
+
 _TITULO_MD = re.compile(r'^\s{0,3}#{1,6}\s*(.+?)\s*#*\s*$')
-_LINHA_EMULACAO = re.compile(r'^\s*[-*+]\s*\*\*emulacao\s*:?\*\*\s*:?\s*([a-z]*)')
+_LINHA_EMULACAO = re.compile(r'^[-*+]\s*\*\*emulacao\s*:?\*\*\s*:?\s*(.*?)\s*$')
+_VALOR_UNICO = re.compile(r'^([a-z]+)(?:\.(?:\s.*)?)?$')  # uma palavra; só ponto final e, depois dele, texto livre
+_COMENTARIO_HTML = re.compile(r'<!--.*?(?:-->|\Z)', re.S)  # comentário sem fechamento vale até o fim (falha fechada)
 
 
 def valor_chave_emulacao(texto: str) -> str | None:
     """Valor da linha `- **Emulação:** <valor>` na seção "Modo emulação" (B02, Q147).
 
-    Devolve o primeiro termo, sem acento e em minúsculas ('sim', 'nao', ...), ou None se a
-    seção ou a linha não existirem. Só a seção "Modo emulação" conta; blocos de código são ignorados.
+    Devolve o valor único, sem acento e em minúsculas ('sim', 'nao', ...); valor que não é uma palavra só
+    ('sim | não', 'sim ou não', 'sim/não') ou linhas em conflito devolvem o texto bruto (nunca 'sim'). None se a
+    seção ou a linha não existirem. Só conta a seção cujo título é "Modo emulação" (com sufixo entre parênteses);
+    comentário HTML, bloco de código com cerca e bloco indentado (4 espaços ou tab) são ignorados.
     """
-    dentro, cerca = False, False
-    for linha in (texto or '').splitlines():
+    dentro, cerca, valores = False, False, []
+    for linha in _COMENTARIO_HTML.sub('', texto or '').splitlines():
         if linha.strip().startswith('```'):
             cerca = not cerca
             continue
-        if cerca:
+        if cerca or linha.startswith(('    ', '\t')):
             continue
         t = _TITULO_MD.match(linha)
         if t:
-            dentro = 'modo emulacao' in _remover_acentos(t.group(1)).lower()
+            titulo = re.sub(r'\s*\([^)]*\)$', '', _remover_acentos(t.group(1)).lower().strip())
+            dentro = titulo == 'modo emulacao'
             continue
         if dentro:
-            m = _LINHA_EMULACAO.match(_remover_acentos(linha).lower())
+            m = _LINHA_EMULACAO.match(_remover_acentos(linha).lower().strip())
             if m:
-                return m.group(1)
-    return None
+                u = _VALOR_UNICO.match(m.group(1))
+                valores.append(u.group(1) if u else (m.group(1) or '?'))
+    if not valores:
+        return None
+    return valores[0] if len(set(valores)) == 1 else ' / '.join(valores)
 
 
 def _texto_do_perfil(fonte) -> str:

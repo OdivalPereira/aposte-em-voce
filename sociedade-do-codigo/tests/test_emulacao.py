@@ -95,6 +95,45 @@ class TesteChave(unittest.TestCase):
         self.assertFalse(emul(''))
         self.assertFalse(emul('/caminho/que/nao/existe/perfil.md'))
 
+    def test_f6_so_o_valor_unico_sim_liga(self):
+        """F6 (achado 1): a chave falha fechada; só `sim` sozinho liga (ponto final e texto depois dele valem)."""
+        emul = MOD_PERFIL.emulacao_ligada
+        for ligam in ('- **Emulação:** sim', '- **Emulação:** SIM.', '- **Emulacao:** sim', '* **Emulação**: sim',
+                      '- **Emulação:** sim. Um só fornecedor.'):
+            with self.subTest(valor=ligam):
+                self.assertTrue(emul(perfil_com(ligam)), ligam)
+        for nao_ligam in ('- **Emulação:** sim | não', '- **Emulação:** sim ou não', '- **Emulação:** sim/não',
+                          '- **Emulação:** sim, não', '- **Emulação:** sim (talvez)', '- **Emulação:**',
+                          '- **Emulação:** sim\n- **Emulação:** não'):
+            with self.subTest(valor=nao_ligam):
+                self.assertFalse(emul(perfil_com(nao_ligam)), nao_ligam)
+
+    def test_f6_comentario_html_e_codigo_indentado_sao_ignorados(self):
+        emul = MOD_PERFIL.emulacao_ligada
+        self.assertFalse(emul(perfil_com('<!--\n- **Emulação:** sim\n-->\n- **Emulação:** não')))
+        self.assertFalse(emul(perfil_com('<!-- - **Emulação:** sim -->')))
+        self.assertFalse(emul(perfil_com('<!--\n- **Emulação:** sim\n')), 'comentário sem fechamento vale até o fim')
+        self.assertTrue(emul(perfil_com('<!-- nota -->\n- **Emulação:** sim <!-- ok -->')))
+        self.assertFalse(emul(perfil_com('    - **Emulação:** sim')))
+        self.assertFalse(emul(perfil_com('\t- **Emulação:** sim')))
+
+    def test_f6_so_a_secao_modo_emulacao_conta(self):
+        emul = MOD_PERFIL.emulacao_ligada
+        self.assertFalse(emul('# P\n\n## Como desligar o modo emulação\n- **Emulação:** sim\n'))
+        self.assertFalse(emul('# P\n\n## Modo emulação ligado em testes\n- **Emulação:** sim\n'))
+        self.assertTrue(emul('# P\n\n## Modo emulação\n- **Emulação:** sim\n'))
+        self.assertTrue(emul('# P\n\n## MODO EMULAÇÃO (Q147)\n- **Emulação:** sim\n'))
+        self.assertTrue(emul('# P\n\n## Modo emulacao\n- **Emulação:** sim\n'))
+
+    def test_f6_validar_perfil_so_avisa_com_valor_ambiguo(self):
+        with tempfile.TemporaryDirectory() as t:
+            arq = Path(t) / 'perfil.md'
+            arq.write_text(perfil_com('- **Emulação:** sim | não'), encoding='utf-8')
+            faltam, avisos = MOD_VALIDAR.validar(arq)
+            self.assertEqual(faltam, [])
+            self.assertTrue(any('valor inválido' in a for a in avisos), avisos)
+            self.assertFalse(any('modo emulação ligado' in a for a in avisos), avisos)
+
     def test_aceita_texto_caminho_pasta_e_objeto(self):
         with tempfile.TemporaryDirectory() as t:
             pasta = Path(t) / 'sociedade'

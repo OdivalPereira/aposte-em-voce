@@ -12,6 +12,7 @@ Etapa `m0-destravar`: uma etapa fecha só com comandos documentados.
 - **B06 · cauda de governança**: `parecer_vale`; commit de produto depois do SHA do parecer derruba o parecer, e commits só de `sociedade/` não.
 - **B08 · ID de etapa validado** (`^[a-z0-9][a-z0-9-]{0,39}$`) em `abrir`, só para etapas novas; o ID legado segue nos demais comandos.
 - **Ligações**: `sc.py sessao` repassa `--sessao` e `--projetos`; o `conferir` aceita `delegacoes | claude` e `conversa_nova | claude` ponta a ponta; o registro grava `commit` no parecer e na decisão, e `desfecho` no encerramento sem aceite; o parecer do `sc_passagem exportar-revisao` traz `- commit:` e passa no `lint_parecer`; teste de fumaça com uma etapa trivial.
+- **Correção da revisão interna (F6)**: a chave `Emulação` falha fechada (só o valor único `sim` liga; comentário HTML, código indentado e títulos que só citam o modo são ignorados); o `decidir` recusa como decisor nome de agente do perfil e "Claude" (`--por` ou `git config user.name`), recusa `--head` anterior à ponta de `etapa/<ID>` e manda commitar `sociedade/` no ramo da etapa; o `revisar --parecer` recusa parecer de outra etapa ou de outra base.
 
 ## 3.0.0 (25/09/2026)
 

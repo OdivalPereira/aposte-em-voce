@@ -263,6 +263,54 @@ class TestDecidirRecusa(Base):
         self.ok(self.p.decidir('aceitar'))
         self.assertEqual(self.p.eventos('decisao_registrada')[-1]['quem'], 'Pessoa Configurada')
 
+    def test_decisor_nao_pode_ser_agente_nem_claude(self):
+        """F6 (achado 5): `--por` e `git config user.name` com nome de agente do perfil ou "Claude" são recusados."""
+        self.fluxo_ate_o_parecer()
+        nomes = ('Gandalf', 'gandalf', 'Círdan', 'cirdan', 'Barbárvore', 'barbarvore2', 'Aragorn', 'Elrond',
+                 'Galadriel', 'Legolas', 'Jules', 'jules_agent', 'Claude', 'CLAUDE', 'Claude Code', 'claudé')
+        for nome in nomes:
+            with self.subTest(por=nome):
+                r = self.recusa(self.p.decidir('aceitar', '--por', nome), 'nome de agente')
+                self.assertIn('--por <nome da pessoa>', r.stderr)
+        git(self.p.raiz, 'config', 'user.name', 'Elrond')
+        self.recusa(self.p.decidir('aceitar'), '--por <nome da pessoa>')
+        self.assertEqual(self.p.eventos('decisao_registrada'), [])
+        self.assertEqual(self.p.registro().estado()['etapas']['soma']['estado'], 'aberta')
+
+    def test_decisor_agente_recusado_tambem_em_corrigir_rejeitar_e_sem_aceite(self):
+        self.ok(self.p.abrir())
+        for acao in ('corrigir', 'rejeitar', 'sem-aceite'):
+            with self.subTest(acao=acao):
+                self.recusa(self.p.decidir(acao, '--por', 'Gandalf', '--motivo', 'x'), 'nome de agente')
+        self.assertEqual(self.p.eventos('decisao_registrada'), [])
+
+    def test_nomes_de_pessoa_parecidos_nao_sao_recusados(self):
+        self.ok(self.p.abrir())
+        self.ok(self.p.decidir('corrigir', '--por', 'Gandalfo Pereira', '--motivo', 'x'))
+        self.assertEqual(self.p.eventos('decisao_registrada')[-1]['quem'], 'Gandalfo Pereira')
+
+    def test_variante_da_tabela_de_identificadores_do_perfil_e_recusada(self):
+        perfil = self.p.soc / 'perfil.md'
+        perfil.write_text(perfil.read_text(encoding='utf-8') + (
+            '\n## Identificadores de agente\n\n| Identificador | Papel | Nome | Variantes reconhecidas |\n|---|---|---|---|\n'
+            '| fulano | Outro | Fulano | fulano, fulano_bot |\n'), encoding='utf-8')
+        self.ok(self.p.abrir())
+        self.recusa(self.p.decidir('corrigir', '--por', 'Fulano_Bot'), 'nome de agente')
+        self.ok(self.p.decidir('corrigir', '--por', 'Odival Sintético'))
+
+    def test_perfil_ilegivel_usa_a_lista_minima_embutida(self):
+        from sc_perfil import nome_de_agente
+        for nome in ('Gandalf', 'Claude Code', 'Jules', 'Barbárvore'):
+            self.assertTrue(nome_de_agente(nome, None), nome)
+        self.assertFalse(nome_de_agente('Odival Sintético', None))
+        self.assertFalse(nome_de_agente('', None))
+
+    def test_mensagem_final_manda_commitar_no_ramo_da_etapa(self):
+        self.fluxo_ate_o_parecer()
+        r = self.ok(self.p.decidir('aceitar', '--por', 'Odival Sintético'))
+        self.assertIn('git push origin etapa/soma', r.stdout)
+        self.assertIn('ramo etapa/soma, no worktree dessa etapa', r.stdout)
+
     def test_atestado_reprovado_nao_aceita(self):
         self.fluxo_ate_o_parecer()
         arq = self.p.soc / 'pareceres' / 'atestado-soma.json'
@@ -391,6 +439,22 @@ class TestRevisarParecer(Base):
 
     def test_exige_etapa_aberta(self):
         self.recusa(self.p.revisar(self.parecer()), 'registro ilegível ou ausente')
+
+    def test_parecer_de_outra_etapa_e_recusado_sem_gravar(self):
+        """F6 (achado 8): o campo `etapa:` do parecer tem de ser o de `--etapa`."""
+        self.ok(self.p.abrir())
+        self.ok(self.p.entregar())
+        self.recusa(self.p.revisar(self.parecer(etapa='outra-etapa')), 'parecer de outra etapa')
+        self.assertEqual(self.p.eventos('parecer_registrado'), [])
+        self.assertFalse((self.p.soc / 'pareceres' / 'parecer-soma.md').exists())
+
+    def test_parecer_com_base_diferente_da_base_da_etapa_e_recusado(self):
+        self.ok(self.p.abrir())
+        self.ok(self.p.entregar())
+        arq = Path(self._tmp.name) / 'parecer-base.md'
+        arq.write_text(parecer_texto(self.p.head, self.p.head), encoding='utf-8')  # base..head com base errada
+        self.recusa(self.p.revisar(arq), 'não é a base da etapa')
+        self.assertEqual(self.p.eventos('parecer_registrado'), [])
 
 
 class TestTemplateDoParecer(Base):

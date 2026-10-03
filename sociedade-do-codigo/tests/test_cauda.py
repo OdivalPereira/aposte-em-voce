@@ -91,6 +91,34 @@ class TestDecidirRecusaComCauda(tc.Base):
         self.ok(self.p.decidir('aceitar', '--por', 'Odival Sintético'))
         self.assertEqual(self.p.registro().estado()['etapas']['soma']['estado'], 'encerrada')
 
+    def test_head_anterior_a_ponta_do_ramo_da_etapa_e_recusado(self):
+        """F6 (achado 7): `--head` não pode ser anterior à ponta de `etapa/<ID>`; recusa antes de gravar."""
+        self.fluxo_ate_o_parecer()
+        (self.p.raiz / 'extra.py').write_text('y = 2\n', encoding='utf-8')
+        tc.git(self.p.raiz, 'add', 'extra.py')
+        tc.git(self.p.raiz, 'commit', '-q', '-m', 'feat: extra')
+        tc.git(self.p.raiz, 'branch', '-f', 'etapa/soma', 'HEAD')
+        r = self.recusa(self.p.decidir('aceitar', '--por', 'Odival Sintético', '--head', self.p.head), 'anterior à ponta do ramo')
+        self.assertIn('etapa/soma', r.stderr)
+        self.assertEqual(self.p.eventos('decisao_registrada'), [])
+        self.assertEqual(self.p.registro().estado()['etapas']['soma']['estado'], 'aberta')
+
+    def test_head_igual_ou_posterior_a_ponta_do_ramo_vale(self):
+        self.fluxo_ate_o_parecer()
+        tc.git(self.p.raiz, 'branch', '-f', 'etapa/soma', self.p.head)
+        tc.commit(self.p.raiz, 'sociedade: atestado e parecer')  # governança depois da ponta do ramo
+        self.ok(self.p.decidir('aceitar', '--por', 'Odival Sintético', '--head', 'HEAD'))
+        self.assertEqual(self.p.registro().estado()['etapas']['soma']['estado'], 'encerrada')
+
+    def test_head_igual_a_ponta_do_ramo_vale(self):
+        self.fluxo_ate_o_parecer()
+        tc.git(self.p.raiz, 'branch', '-f', 'etapa/soma', self.p.head)
+        self.ok(self.p.decidir('aceitar', '--por', 'Odival Sintético', '--head', self.p.head))
+
+    def test_sem_ramo_da_etapa_o_head_informado_segue_valendo(self):
+        self.fluxo_ate_o_parecer()
+        self.ok(self.p.decidir('aceitar', '--por', 'Odival Sintético', '--head', self.p.head))
+
 
 if __name__ == '__main__':
     unittest.main()
