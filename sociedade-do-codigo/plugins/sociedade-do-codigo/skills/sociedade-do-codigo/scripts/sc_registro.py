@@ -408,6 +408,7 @@ def derivar_estado(registro_dados):
                 'aceite_em_emulacao': bool(d.get('aceite_em_emulacao')),
                 # B02: aceite em emulação nunca é revisão independente (D-RT-001)
                 'independencia': d.get('independencia') or ('sim' if d.get('nivel_independencia', 'A') == 'A' else 'não'),
+                'commit': d.get('commit'),
                 'timestamp': ev.get('timestamp'),
             }
             etapas[e_id]['pareceres'].append(p_item)
@@ -431,6 +432,7 @@ def derivar_estado(registro_dados):
                 'alcance': d.get('alcance'),
                 'aceite_em_emulacao': bool(d.get('aceite_em_emulacao')),
                 'independencia': d.get('independencia'),
+                'commit': d.get('commit'),
                 'timestamp': ev.get('timestamp'),
             })
 
@@ -464,6 +466,7 @@ def derivar_estado(registro_dados):
             etapas[e_id]['encerrada_em'] = ev.get('timestamp')
             etapas[e_id]['resumo_encerramento'] = d.get('resumo', '')
             etapas[e_id]['elegivel_publicacao'] = d.get('elegivel_publicacao', False)
+            etapas[e_id]['desfecho'] = d.get('desfecho')
 
     for e in etapas.values():
         # B02: marca de emulação da etapa = parecer que decide (Q144) ou alguma decisão marcada.
@@ -1067,7 +1070,7 @@ class Registro:
                           versao_examinada, veredito, criterios_verificados, achados_referenciados=None,
                           lacunas=None, autor='Revisor', aplicar=True,
                           nivel_independencia='A', justificativa_independencia='',
-                          perfil=None, aceite_em_emulacao=None):
+                          perfil=None, aceite_em_emulacao=None, commit=None):
         if veredito not in VEREDITOS_PARECER:
             raise ErroValidacaoRegistro(f'Veredito de parecer inválido: {veredito}')
 
@@ -1222,6 +1225,7 @@ class Registro:
                     'lacunas': list(lacunas or []),
                     'nivel_independencia': nivel_ind,
                     'justificativa_independencia': justif_ind,
+                    **({'commit': commit} if commit else {}),
                     **({'aceite_em_emulacao': True, 'independencia': 'não'} if marcar_emulacao else {}),
                 },
             }]
@@ -1258,8 +1262,8 @@ class Registro:
 
     def registrar_decisao(self, etapa_id, decisao_id, quem, referencia, acao, alcance='etapa',
                           autor='Gandalf', aplicar=True, aceite_em_emulacao=False, independencia=None,
-                          perfil=None):
-        extra = {}
+                          perfil=None, commit=None):
+        extra = {'commit': commit} if commit else {}
         if independencia is not None:
             indep = str(independencia).strip().lower().replace('nao', 'não')
             if indep not in ('sim', 'não'):
@@ -1341,13 +1345,24 @@ class Registro:
         ok, bloqueios, elegivel_pub = verificar_condicoes_encerramento_estado(est, etapa_id)
         return ok, bloqueios
 
-    def encerrar_etapa(self, etapa_id, resumo, autor='Gandalf', aplicar=True, revisao_esperada=None):
-        """Encerra a etapa validando as condições sob trava diretamente sobre o snapshot do disco (REV-009)."""
+    def encerrar_etapa(self, etapa_id, resumo, autor='Gandalf', aplicar=True, revisao_esperada=None, desfecho=None):
+        """Encerra a etapa validando as condições sob trava diretamente sobre o snapshot do disco (REV-009).
+
+        `desfecho` ('rejeitar' ou 'sem-aceite', decididos por pessoa em `sc.py decidir`) encerra sem aceite:
+        não há o que condicionar, e a etapa nunca fica elegível à publicação."""
+        if desfecho not in (None, 'rejeitar', 'sem-aceite'):
+            raise ErroValidacaoRegistro(f'Desfecho inválido: {desfecho}')
+
         def gerador(disco):
             if not _etapa_existe_no_registro(disco, etapa_id):
                 raise ErroValidacaoRegistro(f'Etapa "{etapa_id}" não encontrada no registro.')
             est = derivar_estado(disco)
-            ok, bloqueios, elegivel_pub = verificar_condicoes_encerramento_estado(est, etapa_id)
+            if desfecho:
+                if not est['etapa_atual'] or est['etapa_atual']['id'] != etapa_id:
+                    raise ErroValidacaoRegistro(f'Etapa {etapa_id} não é a etapa ativa no registro.')
+                ok, elegivel_pub = True, False
+            else:
+                ok, bloqueios, elegivel_pub = verificar_condicoes_encerramento_estado(est, etapa_id)
             if not ok:
                 raise ErroValidacaoRegistro(f'Encerramento bloqueado: {"; ".join(bloqueios)}')
 
@@ -1357,6 +1372,7 @@ class Registro:
                     'etapa_id': etapa_id,
                     'resumo': resumo,
                     'elegivel_publicacao': elegivel_pub,
+                    **({'desfecho': desfecho} if desfecho else {}),
                 },
             }]
 

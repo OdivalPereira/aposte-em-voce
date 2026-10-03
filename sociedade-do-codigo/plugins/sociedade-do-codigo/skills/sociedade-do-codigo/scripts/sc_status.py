@@ -41,7 +41,7 @@ def atestado_caminho(etapa_id):
 def etapa_do_ramo(ramo):
     """ID da etapa a partir de `etapa/<ID>` (aceita refs/heads/ na frente); None se o ramo não for de etapa."""
     m = re.fullmatch(r'(?:refs/heads/)?etapa/(.+)', str(ramo or ''))
-    return m.group(1) if m and ID_ETAPA.match(m.group(1)) else None
+    return m.group(1) if m and ID_ETAPA.fullmatch(m.group(1)) else None
 
 
 def _git(raiz, *args):

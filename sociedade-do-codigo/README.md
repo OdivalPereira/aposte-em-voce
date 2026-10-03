@@ -58,14 +58,24 @@ O primeiro cria `sociedade/perfil.md`, `sociedade/registro.json` e o bloco no `A
 
 ## Uma etapa, na prática
 
+Uma etapa fecha só com quatro comandos do ciclo (`abrir`, `entregar`, `revisar`, `decidir`); `ordem`, `conferir`, `sessao` e `estado` completam as estações.
+
 ```
-sc.py ordem --etapa E1                             # arquiteto: cria a ordem a partir do modelo
-sc.py entregar --etapa E1 --base <commit>          # equipe: portão sobre base..HEAD, atestado
-sc.py conferir --ordem sociedade/ordens/E1.md --registrar
-sc.py sessao antigravity --conversa <id>           # delegações, releituras, passos
-sc.py revisar --etapa E1 --base <commit>           # cópia descartável para o revisor
+sc.py ordem --etapa soma                           # arquiteto: cria a ordem a partir do modelo
+sc.py abrir --etapa soma --ordem sociedade/ordens/soma.md --base <commit>   # abre a etapa no registro
+sc.py entregar --etapa soma --base <commit>        # equipe: portão sobre base..HEAD, atestado
+sc.py conferir --ordem sociedade/ordens/soma.md --registrar
+sc.py sessao claude --sessao <id>                  # delegações e conversa nova, pelo log
+sc.py revisar --etapa soma --base <commit>         # cópia descartável para o revisor
+sc.py revisar --etapa soma --parecer parecer.md --head <commit>   # registra o parecer (lint e commit conferidos)
+sc.py decidir --etapa soma aceitar --por "Seu Nome"               # decisão, métricas e encerramento
 sc.py estado                                       # sociedade/estado.md e estado.html
 ```
+
+- O ID da etapa nova usa minúsculas, números e `-` (até 40 caracteres).
+- `decidir` exige atestado aprovado e parecer válido do mesmo SHA; `--por` é obrigatório se `git config user.name` não existir (não há nome padrão). Com o modo emulação ligado no perfil, o aceite sai marcado "aceite em emulação", com independência "não".
+- Commit de produto depois do SHA revisado derruba o parecer. Commits só de `sociedade/` não.
+- `decidir` não publica status: `portao` e `aceite` são jobs do GitHub Actions no PR. O comando mostra o commit de `sociedade/` e o push que faltam.
 
 ## O que há no repositório
 

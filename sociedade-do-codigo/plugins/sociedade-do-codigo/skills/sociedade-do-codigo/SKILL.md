@@ -1,6 +1,6 @@
 ---
 name: sociedade-do-codigo
-description: Método da Sociedade do Código, equipe de agentes com arquiteto (Círdan), coordenador e especialistas (Gandalf e equipe), revisor independente de outro fornecedor (Barbárvore) e conferência automática por script. Traz o pipeline de seis estações, as regras que valem sempre e o comando de cada estação. Use quando o usuário acionar a Sociedade do Código, pedir para abrir, executar, conferir, revisar ou encerrar uma etapa, ou quando você receber uma ordem da Sociedade. Fora disso, não use: pergunta, análise e dúvida se respondem direto.
+description: Método da Sociedade do Código, equipe de agentes com arquiteto (Círdan), coordenador e especialistas (Gandalf e equipe), revisor independente de outro fornecedor (Barbárvore) e conferência automática por script. Traz o pipeline de seis estações, as regras que valem sempre e o comando de cada estação. Use quando o usuário acionar a Sociedade do Código, pedir para abrir, executar, conferir, revisar ou decidir uma etapa, ou quando você receber uma ordem da Sociedade. Fora disso, não use: pergunta, análise e dúvida se respondem direto.
 metadata:
   versao: "3.0.0"
 ---
@@ -23,7 +23,7 @@ Método comum a todos os projetos. O que é do projeto (missão, papéis ativos,
 | 3 | Execução | coordenador e especialistas | Conversa nova; o coordenador divide em fatias e delega; cada fatia passa no portão e vira commit | atestado por commit; delegações no log |
 | 4 | Conferência | script | Confere a lista de entregas contra commits, atestados e logs | relatório e estado |
 | 5 | Revisão | revisor de outro fornecedor | Uma vez, no candidato consolidado, com o protocolo | parecer com hash |
-| 6 | Decisão | usuário | Aceita, publica ou manda corrigir, olhando o estado | decisão registrada |
+| 6 | Decisão | usuário | Aceita ou manda corrigir, olhando o estado | decisão registrada |
 
 ## Regras que valem sempre
 
@@ -49,17 +49,16 @@ Método comum a todos os projetos. O que é do projeto (missão, papéis ativos,
 
 ## Comandos
 
-Todos via `scripts/sc.py`. Cada subcomando mostra a ajuda com `-h`.
+Todos via `scripts/sc.py` (`-h` mostra a ajuda). Uma etapa fecha só por `abrir`, `entregar`, `revisar` e `decidir`.
 
-| Estação | Comando | Faz |
-|---|---|---|
-| 2 | `sc.py ordem --etapa <ID>` | Cria `sociedade/ordens/<ID>.md` a partir do modelo |
-| 3 | `sc.py entregar --etapa <ID> --base <commit>` | Roda o portão sobre base..HEAD e grava o atestado |
-| 4 | `sc.py conferir --ordem <arquivo>` | Marca cada entrega como feita ou não feita |
-| 4 | `sc.py sessao <antigravity\|codex\|claude>` | Mede uma sessão pelo log do aplicativo |
-| 5 | `sc.py revisar --etapa <ID> --base <commit>` | Prepara a cópia descartável para o revisor |
-| 6 | `sc.py estado` | Gera `sociedade/estado.md` e `estado.html` |
+| Estação | Comando |
+|---|---|
+| 2 | `sc.py ordem --etapa <ID>` |
+| 3 | `sc.py abrir --etapa <ID> --ordem <arquivo> --base <commit>`; `sc.py entregar --etapa <ID> --base <commit>` |
+| 4 | `sc.py conferir --ordem <arquivo>`; `sc.py sessao <antigravity\|codex\|claude>` |
+| 5 | `sc.py revisar --etapa <ID> --base <commit>`; `sc.py revisar --etapa <ID> --parecer <arquivo> --head <commit>` |
+| 6 | `sc.py decidir --etapa <ID> aceitar\|corrigir\|rejeitar\|sem-aceite --por <nome>`; `sc.py estado` |
 
-Os scripts de baixo nível (`sc_rodada.py`, `sc_registro.py`, `sc_passagem.py`, `sc_worktree.py`) ficam para casos especiais.
+O que cada um grava e recusa: `references/comandos.md`.
 
-Referências: `references/contrato-nucleo-projeto.md` (núcleo e projeto) e `references/compatibilidade.md` (onde cada ferramenta lê o quê).
+Referências: `references/comandos.md`, `references/contrato-nucleo-projeto.md` (núcleo e projeto) e `references/compatibilidade.md` (onde cada ferramenta lê o quê).

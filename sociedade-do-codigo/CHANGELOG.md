@@ -2,6 +2,17 @@
 
 Versionamento semântico. Major: muda o comportamento a ponto de exigir ajuste nos projetos.
 
+## Não lançado
+
+Etapa `m0-destravar`: uma etapa fecha só com comandos documentados.
+
+**Entrou**
+
+- **B01 · ciclo da etapa no `sc.py`** (`sc_ciclo.py`): `abrir` (a partir da ordem, com base que resolve), `revisar --parecer` (registra o parecer sem passo manual) e `decidir aceitar|corrigir|rejeitar|sem-aceite`. O encerramento não passa mais pelo `sc_rodada`. O `decidir aceitar` exige atestado aprovado e parecer válido do mesmo SHA, grava o nome de quem decide (`--por` ou `git config user.name`, nunca um nome padrão), a marca "aceite em emulação", as métricas e a linha de `evolucao.md`. `rejeitar` e `sem-aceite` encerram sem aceite; `corrigir` deixa a etapa aberta.
+- **B06 · cauda de governança**: `parecer_vale`; commit de produto depois do SHA do parecer derruba o parecer, e commits só de `sociedade/` não.
+- **B08 · ID de etapa validado** (`^[a-z0-9][a-z0-9-]{0,39}$`) em `abrir`, só para etapas novas; o ID legado segue nos demais comandos.
+- **Ligações**: `sc.py sessao` repassa `--sessao` e `--projetos`; o `conferir` aceita `delegacoes | claude` e `conversa_nova | claude` ponta a ponta; o registro grava `commit` no parecer e na decisão, e `desfecho` no encerramento sem aceite; o parecer do `sc_passagem exportar-revisao` traz `- commit:` e passa no `lint_parecer`; teste de fumaça com uma etapa trivial.
+
 ## 3.0.0 (25/09/2026)
 
 Arrumação a partir do diagnóstico de 25/09/2026 (Q130–Q143): o método passa a ser curto, sem contradições com as decisões e conferido por script. Quebra compatibilidade (Q72).
