@@ -11,6 +11,7 @@ PARECER = """## Parecer do Revisor Independente
 - rodada: NT-02
 - fatia ou fechamento: 1
 - entrega: PR 34
+- commit: e4f5a6b
 - base..head: a1b2c3d..e4f5a6b
 - revisor: Claude Code · fornecedor: Anthropic · sessão: sess_abc123
 - veredito: aceitar com ressalvas

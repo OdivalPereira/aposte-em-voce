@@ -405,6 +405,10 @@ def derivar_estado(registro_dados):
                 'lacunas': d.get('lacunas', []),
                 'nivel_independencia': d.get('nivel_independencia', 'A'),
                 'justificativa_independencia': d.get('justificativa_independencia', ''),
+                'aceite_em_emulacao': bool(d.get('aceite_em_emulacao')),
+                # B02: aceite em emulação nunca é revisão independente (D-RT-001)
+                'independencia': d.get('independencia') or ('sim' if d.get('nivel_independencia', 'A') == 'A' else 'não'),
+                'commit': d.get('commit'),
                 'timestamp': ev.get('timestamp'),
             }
             etapas[e_id]['pareceres'].append(p_item)
@@ -426,6 +430,9 @@ def derivar_estado(registro_dados):
                 'referencia': d.get('referencia'),
                 'acao': d.get('acao'),
                 'alcance': d.get('alcance'),
+                'aceite_em_emulacao': bool(d.get('aceite_em_emulacao')),
+                'independencia': d.get('independencia'),
+                'commit': d.get('commit'),
                 'timestamp': ev.get('timestamp'),
             })
 
@@ -459,6 +466,17 @@ def derivar_estado(registro_dados):
             etapas[e_id]['encerrada_em'] = ev.get('timestamp')
             etapas[e_id]['resumo_encerramento'] = d.get('resumo', '')
             etapas[e_id]['elegivel_publicacao'] = d.get('elegivel_publicacao', False)
+            etapas[e_id]['desfecho'] = d.get('desfecho')
+
+    for e in etapas.values():
+        # B02: marca de emulação da etapa = parecer que decide (Q144) ou alguma decisão marcada.
+        ps = e.get('pareceres', [])
+        idx_a = [i for i, p in enumerate(ps) if p.get('nivel_independencia', 'A') == 'A']
+        decide = ps[idx_a[-1]] if idx_a else (ps[-1] if ps else None)
+        marcada = bool((decide or {}).get('aceite_em_emulacao')) or any(
+            x.get('aceite_em_emulacao') for x in e.get('decisoes', []))
+        e['aceite_em_emulacao'] = marcada
+        e['independencia'] = 'não' if marcada else ((decide or {}).get('independencia'))
 
     ativas = [e for e in etapas.values() if e['estado'] != 'encerrada']
     todas_encerradas = [e for e in etapas.values() if e['estado'] == 'encerrada']
@@ -1043,11 +1061,16 @@ class Registro:
                 vistos[agente] = forn
         return [{'agente': a, 'fornecedor': f} for a, f in vistos.items()]
 
+    def _emulacao_ligada(self, perfil=None):
+        """Chave `emulacao` do perfil (B02, Q147); sem perfil legível, desligada (falha fechada)."""
+        from sc_perfil import emulacao_ligada
+        return emulacao_ligada(perfil if perfil is not None else self.perfil)
+
     def registrar_parecer(self, etapa_id, parecer_id, revisor, fornecedor_revisor, implementadores,
                           versao_examinada, veredito, criterios_verificados, achados_referenciados=None,
                           lacunas=None, autor='Revisor', aplicar=True,
                           nivel_independencia='A', justificativa_independencia='',
-                          perfil=None):
+                          perfil=None, aceite_em_emulacao=None, commit=None):
         if veredito not in VEREDITOS_PARECER:
             raise ErroValidacaoRegistro(f'Veredito de parecer inválido: {veredito}')
 
@@ -1077,6 +1100,14 @@ class Registro:
         if isinstance(perfil_ativo, (str, Path)):
             from sc_perfil import carregar_perfil
             perfil_ativo = carregar_perfil(perfil_ativo)
+
+        # B02: aceite em emulação. None = automático (só se o perfil liga a chave e o fornecedor coincide);
+        # True = declarado (exige a chave ligada); False = comportamento antigo.
+        emul_ligada = self._emulacao_ligada(perfil_ativo)
+        if aceite_em_emulacao and not emul_ligada:
+            raise ErroValidacaoRegistro('Aceite em emulação exige a chave "Emulação: sim" na seção "Modo emulação" do perfil.')
+        marcar_emulacao = bool(aceite_em_emulacao)
+        permite_auto = emul_ligada and aceite_em_emulacao is None and nivel_ind == 'A'
 
         implementadores_processados = []
 
@@ -1164,9 +1195,17 @@ class Registro:
                         f'Implementador "{impl_agente}" tem fornecedor desconhecido.'
                     )
                 if forn_impl_norm == forn_rev_norm:
+                    if permite_auto:
+                        marcar_emulacao = True
+                        continue
                     raise ErroValidacaoRegistro(
                         f'Independência violada: fornecedor do revisor "{fornecedor_revisor}" coincide com o do implementador "{impl_forn}".'
                     )
+
+        if marcar_emulacao:
+            # Nunca revisão independente (D-RT-001): nível próprio "E", fora da elegibilidade de publicação.
+            nivel_ind = 'E'
+            justif_ind = justif_ind or 'aceite em emulação: mesmo fornecedor do implementador (Q147)'
 
         def gerador(dados):
             if not _etapa_existe_no_registro(dados, etapa_id):
@@ -1186,13 +1225,23 @@ class Registro:
                     'lacunas': list(lacunas or []),
                     'nivel_independencia': nivel_ind,
                     'justificativa_independencia': justif_ind,
+                    **({'commit': commit} if commit else {}),
+                    **({'aceite_em_emulacao': True, 'independencia': 'não'} if marcar_emulacao else {}),
                 },
             }]
 
         return self.aplicar_mutacao(gerador, autor=autor, aplicar=aplicar)
 
     def registrar_troca_papel(self, papel, plataforma, fornecedor, modelo=None, esforco=None,
-                              estado='ativo', motivo='', decisao_ref=None, autor='Gandalf', aplicar=True):
+                              estado='ativo', motivo='', decisao_ref=None, autor='Gandalf', aplicar=True,
+                              emulacao=False, perfil=None):
+        if emulacao:
+            # B02/R4: em emulação o motivo gravado começa por "emulação"; a chave precisa estar ligada.
+            if not self._emulacao_ligada(perfil):
+                raise ErroValidacaoRegistro('Troca em emulação exige a chave "Emulação: sim" na seção "Modo emulação" do perfil.')
+            from sc_perfil import marcar_motivo_emulacao
+            motivo = marcar_motivo_emulacao(motivo)
+
         def gerador(dados):
             return [{
                 'tipo': 'papel_trocado',
@@ -1206,12 +1255,28 @@ class Registro:
                     'motivo': motivo,
                     'decisao_ref': decisao_ref,
                     'desde': datetime.now(timezone.utc).strftime('%Y-%m-%d'),
+                    **({'emulacao': True} if emulacao else {}),
                 }
             }]
         return self.aplicar_mutacao(gerador, autor=autor, aplicar=aplicar)
 
     def registrar_decisao(self, etapa_id, decisao_id, quem, referencia, acao, alcance='etapa',
-                          autor='Gandalf', aplicar=True):
+                          autor='Gandalf', aplicar=True, aceite_em_emulacao=False, independencia=None,
+                          perfil=None, commit=None):
+        extra = {'commit': commit} if commit else {}
+        if independencia is not None:
+            indep = str(independencia).strip().lower().replace('nao', 'não')
+            if indep not in ('sim', 'não'):
+                raise ErroValidacaoRegistro(f'Independência inválida: "{independencia}". Use "sim" ou "não".')
+            extra['independencia'] = indep
+        if aceite_em_emulacao:
+            # B02: marca "aceite em emulação" exige a chave ligada e nunca é revisão independente.
+            if not self._emulacao_ligada(perfil):
+                raise ErroValidacaoRegistro('Aceite em emulação exige a chave "Emulação: sim" na seção "Modo emulação" do perfil.')
+            if extra.get('independencia', 'não') != 'não':
+                raise ErroValidacaoRegistro('Aceite em emulação tem independência "não"; "sim" é contraditório.')
+            extra.update({'aceite_em_emulacao': True, 'independencia': 'não'})
+
         def gerador(dados):
             if not _etapa_existe_no_registro(dados, etapa_id):
                 raise ErroValidacaoRegistro(f'Etapa "{etapa_id}" não encontrada no registro.')
@@ -1224,6 +1289,7 @@ class Registro:
                     'referencia': referencia,
                     'acao': acao,
                     'alcance': alcance,
+                    **extra,
                 },
             }]
 
@@ -1279,13 +1345,24 @@ class Registro:
         ok, bloqueios, elegivel_pub = verificar_condicoes_encerramento_estado(est, etapa_id)
         return ok, bloqueios
 
-    def encerrar_etapa(self, etapa_id, resumo, autor='Gandalf', aplicar=True, revisao_esperada=None):
-        """Encerra a etapa validando as condições sob trava diretamente sobre o snapshot do disco (REV-009)."""
+    def encerrar_etapa(self, etapa_id, resumo, autor='Gandalf', aplicar=True, revisao_esperada=None, desfecho=None):
+        """Encerra a etapa validando as condições sob trava diretamente sobre o snapshot do disco (REV-009).
+
+        `desfecho` ('rejeitar' ou 'sem-aceite', decididos por pessoa em `sc.py decidir`) encerra sem aceite:
+        não há o que condicionar, e a etapa nunca fica elegível à publicação."""
+        if desfecho not in (None, 'rejeitar', 'sem-aceite'):
+            raise ErroValidacaoRegistro(f'Desfecho inválido: {desfecho}')
+
         def gerador(disco):
             if not _etapa_existe_no_registro(disco, etapa_id):
                 raise ErroValidacaoRegistro(f'Etapa "{etapa_id}" não encontrada no registro.')
             est = derivar_estado(disco)
-            ok, bloqueios, elegivel_pub = verificar_condicoes_encerramento_estado(est, etapa_id)
+            if desfecho:
+                if not est['etapa_atual'] or est['etapa_atual']['id'] != etapa_id:
+                    raise ErroValidacaoRegistro(f'Etapa {etapa_id} não é a etapa ativa no registro.')
+                ok, elegivel_pub = True, False
+            else:
+                ok, bloqueios, elegivel_pub = verificar_condicoes_encerramento_estado(est, etapa_id)
             if not ok:
                 raise ErroValidacaoRegistro(f'Encerramento bloqueado: {"; ".join(bloqueios)}')
 
@@ -1295,6 +1372,7 @@ class Registro:
                     'etapa_id': etapa_id,
                     'resumo': resumo,
                     'elegivel_publicacao': elegivel_pub,
+                    **({'desfecho': desfecho} if desfecho else {}),
                 },
             }]
 

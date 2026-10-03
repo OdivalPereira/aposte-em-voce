@@ -34,13 +34,14 @@ def coletar(pasta_soc):
     dados = {'projeto': raiz.name, 'gerado_em': datetime.now(timezone.utc).strftime('%d/%m/%Y %H:%M UTC'),
              'papeis': [], 'etapas': [], 'conferencias': [], 'atestados': [], 'commits': [], 'worktrees': [],
              'ramo': git(raiz, 'rev-parse', '--abbrev-ref', 'HEAD'), 'head': git(raiz, 'rev-parse', '--short', 'HEAD'),
-             'avisos': []}
+             'avisos': [], 'emulacao': False}
     # perfil
     try:
         from sc_perfil import carregar_perfil
         perfil = carregar_perfil(pasta_soc / 'perfil.md')
         dados['papeis'] = [{k: p.get(k, '') for k in ('papel', 'nome', 'plataforma', 'fornecedor', 'modelo', 'estado')}
                            for p in perfil.listar_papeis()]
+        dados['emulacao'] = perfil.emulacao
     except Exception as e:
         dados['avisos'].append(f'perfil não lido: {e}')
     # registro
@@ -62,6 +63,8 @@ def coletar(pasta_soc):
                     'parecer': (pareceres[-1].get('veredito') if pareceres else None),
                     'revisor': (pareceres[-1].get('revisor') if pareceres else None),
                     'exige_revisao': e.get('exigir_revisao', True),
+                    'aceite_em_emulacao': bool(e.get('aceite_em_emulacao')),
+                    'independencia': e.get('independencia'),
                 })
             ultimas = {}
             for ev in reg.get('eventos', []):
@@ -99,6 +102,13 @@ def coletar(pasta_soc):
     return dados
 
 
+def rotulo_parecer(e):
+    """Parecer da etapa; o aceite em emulação (B02) é marcado e nunca conta como independente."""
+    if not e.get('parecer'):
+        return None
+    return f"{e['parecer']} (aceite em emulação; independência: não)" if e.get('aceite_em_emulacao') else e['parecer']
+
+
 def pendencias(d):
     """O que precisa de atenção, derivado dos dados (sem opinião)."""
     itens = []
@@ -109,6 +119,11 @@ def pendencias(d):
             itens.append(f"Etapa {e['id']}: {e['achados_abertos']['bloqueador']} bloqueador(es) aberto(s).")
         if e['exige_revisao'] and not e['parecer'] and e['estado'] != 'encerrada':
             itens.append(f"Etapa {e['id']}: aguardando revisão independente.")
+    if d.get('emulacao'):
+        itens.append('Modo emulação ligado: R1–R3 valem como aviso; nenhum aceite conta como revisão independente.')
+    for e in d['etapas']:
+        if e.get('aceite_em_emulacao'):
+            itens.append(f"Etapa {e['id']}: aceite em emulação (independência: não).")
     for c in d['conferencias']:
         if c.get('feitos') != c.get('total'):
             itens.append(f"Ordem {c.get('etapa')}: {c.get('total', 0) - c.get('feitos', 0)} entrega(s) não feita(s) na última conferência.")
@@ -130,7 +145,7 @@ def gerar_md(d):
         L += ['', '## Etapas', '| Etapa | Estado | Critérios | Achados abertos (B/R/O) | Parecer |', '|---|---|---|---|---|']
         for e in d['etapas']:
             a = e['achados_abertos']
-            L.append(f"| {e['id']} | {e['estado']} | {e['criterios']} | {a['bloqueador']}/{a['relevante']}/{a['opcional']} | {e['parecer'] or '—'} |")
+            L.append(f"| {e['id']} | {e['estado']} | {e['criterios']} | {a['bloqueador']}/{a['relevante']}/{a['opcional']} | {rotulo_parecer(e) or '—'} |")
     if d['conferencias']:
         L += ['', '## Conferências (verificado por script)']
         for c in d['conferencias']:
@@ -158,7 +173,7 @@ def gerar_html(d, fragmento=False):
     def chip(estado):
         classe = {'feito': 'ok', 'APROVADO': 'ok', 'encerrada': 'ok', 'aceitar': 'ok', 'ativo': 'ok',
                   'não feito': 'mau', 'REPROVADO': 'mau', 'nao_aceitar': 'mau',
-                  'aberta': 'meio', 'espera': 'meio', 'reserva': 'neutro'}.get(str(estado), 'neutro')
+                  'aberta': 'meio', 'espera': 'meio', 'aceite em emulação': 'meio', 'reserva': 'neutro'}.get(str(estado), 'neutro')
         return f'<span class="chip {classe}">{esc(str(estado or "—"))}</span>'
     partes = [f'<header><p class="rot">Sociedade do Código · estado</p><h1>{esc(d["projeto"])}</h1>'
               f'<p class="meta">Ramo <code>{esc(d["ramo"])}</code> em <code>{esc(d["head"])}</code> · gerado em {esc(d["gerado_em"])}</p></header>']
@@ -173,7 +188,9 @@ def gerar_html(d, fragmento=False):
     if d['etapas']:
         linhas = ''.join(f'<tr><td><b>{esc(e["id"])}</b><br><small>{esc(e["objetivo"][:80])}</small></td><td>{chip(e["estado"])}</td>'
                          f'<td class="num">{esc(e["criterios"])}</td><td class="num">{e["achados_abertos"]["bloqueador"]}/{e["achados_abertos"]["relevante"]}/{e["achados_abertos"]["opcional"]}</td>'
-                         f'<td>{chip(e["parecer"]) if e["parecer"] else "—"}</td></tr>' for e in d['etapas'])
+                         f'<td>{chip(e["parecer"]) if e["parecer"] else "—"}'
+                         f'{"<br>" + chip("aceite em emulação") + "<small>independência: não</small>" if e.get("aceite_em_emulacao") else ""}</td></tr>'
+                         for e in d['etapas'])
         partes.append('<section><h2>Etapas</h2><div class="rolagem"><table><thead><tr><th>Etapa</th><th>Estado</th><th>Critérios</th><th>Achados B/R/O</th><th>Parecer</th></tr></thead>'
                       f'<tbody>{linhas}</tbody></table></div></section>')
     if d['papeis']:

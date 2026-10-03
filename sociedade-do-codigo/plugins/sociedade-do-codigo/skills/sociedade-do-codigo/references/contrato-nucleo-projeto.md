@@ -21,8 +21,8 @@ O núcleo diz **como** a equipe trabalha. O projeto diz **o quê**, **para quem*
 | `sociedade/registro.json` | Fonte estruturada e transacional de eventos da etapa (SC-E1) |
 | `sociedade/estado.md` | Resumo de uma tela, gerado por `sc.py estado` |
 | `sociedade/ordens/` | Ordens verificáveis de cada etapa |
-| `sociedade/pareceres/` | Atestados do portão e pareceres do revisor |
-| `sociedade/rodada.md` e `sociedade/historico.md` | Projeções de `sc_rodada.py`, quando usado |
+| `sociedade/pareceres/` | `atestado-<ID>.json` (`sc.py entregar`) e `parecer-<ID>.md` (`sc.py revisar --parecer`) |
+| `sociedade/evolucao.md` | Uma linha por etapa, gravada por `sc.py decidir aceitar` |
 | Skills de domínio | Conhecimento que só faz sentido ali. Nome próprio, sem prefixo `sc-` e sem colidir com os papéis |
 
 ## Papéis locais

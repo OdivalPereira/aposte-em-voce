@@ -1,0 +1,84 @@
+# Status `portao` e `aceite` do PR de etapa (B05, caso B: a sessão em nuvem não publica status de commit).
+# A lógica fica em sc_status.py; aqui só se chama o script. Sem atestado ou sem decisão, o job fica vermelho.
+# Depois que o script existir na base do PR, vale a cópia da base (um PR não aprova a si mesmo);
+# no PR que cria o script, vale a do próprio PR.
+name: status
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+env:
+  SCRIPT: sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_status.py
+
+jobs:
+  portao:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -eo pipefail {0}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Script da base, quando existir
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          if git cat-file -e "$BASE_SHA:$SCRIPT" 2>/dev/null; then
+            for f in sc_status.py sc_registro.py; do
+              git show "$BASE_SHA:$(dirname "$SCRIPT")/$f" > "$RUNNER_TEMP/$f"
+            done
+            echo "SC_STATUS=$RUNNER_TEMP/sc_status.py" >> "$GITHUB_ENV"
+          else
+            echo "SC_STATUS=$SCRIPT" >> "$GITHUB_ENV"
+          fi
+      - name: portao
+        env:
+          RAMO: ${{ github.head_ref }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          python3 -B "$SC_STATUS" portao --ramo "$RAMO" --head "$HEAD_SHA" --raiz .
+
+  aceite:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -eo pipefail {0}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Script da base, quando existir
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          if git cat-file -e "$BASE_SHA:$SCRIPT" 2>/dev/null; then
+            for f in sc_status.py sc_registro.py; do
+              git show "$BASE_SHA:$(dirname "$SCRIPT")/$f" > "$RUNNER_TEMP/$f"
+            done
+            echo "SC_STATUS=$RUNNER_TEMP/sc_status.py" >> "$GITHUB_ENV"
+          else
+            echo "SC_STATUS=$SCRIPT" >> "$GITHUB_ENV"
+          fi
+      - name: aceite
+        env:
+          RAMO: ${{ github.head_ref }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          python3 -B "$SC_STATUS" aceite --ramo "$RAMO" --head "$HEAD_SHA" --raiz .

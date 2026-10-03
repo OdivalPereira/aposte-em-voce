@@ -1,10 +1,11 @@
 ## Parecer do Revisor Independente
 - etapa: <ID>
 - entrega: <commit congelado ou PR>
+- commit: <SHA do commit revisado, 7 a 40 hexadecimais, igual ao head de base..head>
 - base..head: <sha7>..<sha7>
 - revisor: <papel e ferramenta> · fornecedor: <fornecedor> · sessão: <id>
 - modelo: <modelo configurado> · esforço: <esforço configurado|não exposto>
-- independência: <fornecedor diferente de todos os implementadores | mesmo fornecedor: revisão interna>
+- independência: <Nível A (fornecedor diferente), Nível B (sessão distinta) ou Nível C (mesmo fornecedor)>
 - veredito: <aceitar, aceitar com ressalvas ou não aceitar>
 - data: <dd/mm/aaaa hh:mm>
 

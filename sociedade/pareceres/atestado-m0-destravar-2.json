@@ -1,0 +1,55 @@
+{
+  "tipo": "atestado_pre_devolucao",
+  "versao": "1.2.0",
+  "timestamp": "2026-10-03T15:54:51.744403Z",
+  "papel": "Coordenador",
+  "etapa_id": "m0-destravar",
+  "fatia_id": "2",
+  "status": "APROVADO",
+  "verificacoes": {
+    "higiene_pastas": {
+      "ok": true,
+      "erros": []
+    },
+    "compilacao": {
+      "ok": true,
+      "erros": []
+    },
+    "seguranca_antitoken": {
+      "ok": true,
+      "erros": []
+    },
+    "disjuncao": {
+      "ok": true,
+      "erros": []
+    },
+    "testes": {
+      "ok": true,
+      "detalhes": ".............................s..............................................................................................................\n----------------------------------------------------------------------\nRan 442 tests in 43.878s\n\nOK (skipped=1)",
+      "comando": "python3 -B -m unittest discover -s tests",
+      "totais": {
+        "executados": 442,
+        "resultado": "OK",
+        "skipped": 1
+      }
+    }
+  },
+  "commit": "530d9a2fdcb7cb004c2b5aa2c89b3ede12be7ee1",
+  "base": "289a0b5460cd9cb1c293e3ea2ac5da1ddd8d4b29",
+  "origem_arquivos": "git",
+  "total_arquivos_inspecionados": 8,
+  "arquivos_removidos": [],
+  "python": "3.11.15",
+  "hashes_artefatos": {
+    ".github/workflows/status.yml": "adcd55e9a6b9691ceafe75125dffabd27fbe43863d0618b7410757d7297a74d6",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_conferir.py": "896cdca27da5cbdbfb0b2f78ad99afa37d998661cc30339a24a01457cf780039",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_metricas.py": "dd021e1c6824b000ab7848d563ba820fa43526e95756f5b6412c3b57a1eb5124",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_sessao.py": "d408581e9f9da31ca2bb2893f08472994046525a20bd0e9553b4fd19cad477cb",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_status.py": "fbd17b8be6acbcd590c29045f935c4d3f3f0326c606356a5c6a5b441416af006",
+    "sociedade-do-codigo/tests/test_metricas.py": "3d99bc5319060ab7533d046bac34d670e39e0ffbbbca0b2c946183abd9b5ae59",
+    "sociedade-do-codigo/tests/test_sessao_claude.py": "8d4d489708a22ba08d5f7cea9cfc8d3e5821a469b61ca6d74699e93d2347b6c2",
+    "sociedade-do-codigo/tests/test_status.py": "66de7723bbb2540256af80f89daa14b5c9e4fe52ddfa17d3fcb51c356d12e4ad"
+  },
+  "erros": [],
+  "atestado_hash": "818f3da641a96ecee8413b3c34053b0928a09ae83a1dadbaffdd1b0fcd38d522"
+}

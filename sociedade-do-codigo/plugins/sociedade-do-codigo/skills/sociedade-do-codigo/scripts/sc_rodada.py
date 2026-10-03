@@ -1324,8 +1324,14 @@ def resolver_destino(perfil, papel, para=None, fornecedor=None, modelo=None, esf
     return para, forn, mod, esforco or atual.get('esforco') or 'padrão'
 
 
-def validar_regras_troca(papel, novo_estado, nova_plataforma, novo_fornecedor, perfil, reg, decisao_ref=None):
-    """Valida as regras invariantes R1-R3. Retorna (ok, lista_erros)."""
+def validar_regras_troca(papel, novo_estado, nova_plataforma, novo_fornecedor, perfil, reg, decisao_ref=None,
+                         emulacao=None, avisos=None):
+    """Valida as regras invariantes R1-R3. Retorna (ok, lista_erros).
+
+    Modo emulação (B02, Q147): com a chave ligada no perfil (ou emulacao=True), as violações de
+    R1-R3 não reprovam; vão para a lista `avisos`, se dada, e a função devolve (True, []).
+    Com a chave desligada ou ausente, nada muda.
+    """
     if novo_estado == 'espera':
         return True, []
 
@@ -1383,7 +1389,16 @@ def validar_regras_troca(papel, novo_estado, nova_plataforma, novo_fornecedor, p
                 f"Violação de R3: a decisão '{decisao_ref}' não trata de execução fora do Google (ação: '{decisao.get('acao')}')."
             )
 
+    if erros and (emulacao if emulacao is not None else _emulacao_do_perfil(perfil)):
+        if avisos is not None:
+            avisos.extend(erros)
+        return True, []
     return (len(erros) == 0, erros)
+
+
+def _emulacao_do_perfil(perfil):
+    from sc_perfil import emulacao_ligada
+    return emulacao_ligada(perfil)
 
 
 def formatar_mensagem_passagem_troca(papel, plataforma, fornecedor, modelo, esforco, estado, motivo, data_str):
@@ -1473,6 +1488,8 @@ def cmd_papel_trocar(a):
     except Exception as e:
         raise SystemExit(f"erro: {e}")
 
+    emulacao = _emulacao_do_perfil(perfil)
+    avisos = []
     ok, erros = validar_regras_troca(
         papel=papel,
         novo_estado=novo_estado,
@@ -1480,8 +1497,16 @@ def cmd_papel_trocar(a):
         novo_fornecedor=forn,
         perfil=perfil,
         reg=reg,
-        decisao_ref=getattr(a, 'decisao_ref', None)
+        decisao_ref=getattr(a, 'decisao_ref', None),
+        emulacao=emulacao,
+        avisos=avisos
     )
+    for av in avisos:
+        print(f"AVISO (emulação): {av}", file=sys.stderr)
+    if emulacao:
+        # R4: a troca parte do estado salvo, com motivo e autor; em emulação o motivo começa por "emulação".
+        from sc_perfil import marcar_motivo_emulacao
+        motivo = marcar_motivo_emulacao(motivo)
 
     if not ok:
         for err in erros:
@@ -1503,7 +1528,10 @@ def cmd_papel_trocar(a):
 
     if not getattr(a, 'aplicar', False):
         print("=== SIMULAÇÃO DE TROCA DE PAPEL (M2) ===")
-        print("Regras R1-R3 verificadas e aprovadas com sucesso.")
+        if emulacao:
+            print(f"Modo emulação: R1-R3 valem como aviso ({len(avisos)} aviso(s)); independência: não.")
+        else:
+            print("Regras R1-R3 verificadas e aprovadas com sucesso.")
         print("Nenhuma alteração foi gravada em disco. Use --aplicar para efetivar.\n")
         print(msg_passagem)
         return 0
@@ -1531,7 +1559,9 @@ def cmd_papel_trocar(a):
         motivo=motivo,
         decisao_ref=getattr(a, 'decisao_ref', None),
         autor=a.autor,
-        aplicar=True
+        aplicar=True,
+        emulacao=emulacao,
+        perfil=perfil
     )
 
     print(f"Papel '{papel}' atualizado com sucesso para '{plat}' ({novo_estado}) no perfil.md e registro.json.\n")

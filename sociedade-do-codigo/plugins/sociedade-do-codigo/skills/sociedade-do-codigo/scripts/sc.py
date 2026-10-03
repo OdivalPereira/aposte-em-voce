@@ -2,10 +2,13 @@
 """Comandos do pipeline da Sociedade do Código, um por estação.
 
   sc.py ordem    --etapa <ID>                      2. cria sociedade/ordens/<ID>.md a partir do modelo
+  sc.py abrir    --etapa <ID> --ordem <arquivo> --base <commit>   3. abre a etapa no registro, a partir da ordem
   sc.py entregar --etapa <ID> --base <commit>      3. portão sobre base..HEAD e atestado em sociedade/pareceres/
   sc.py conferir --ordem <arquivo> [--registrar]   4. marca cada entrega como feita ou não feita
   sc.py sessao   <antigravity|codex|claude>        4. mede uma sessão pelo log do aplicativo
   sc.py revisar  --etapa <ID> --base <commit>      5. cópia descartável do candidato para o revisor
+  sc.py revisar  --etapa <ID> --parecer <arquivo> --head <commit>   5. registra o parecer (lint e commit conferidos)
+  sc.py decidir  --etapa <ID> aceitar|corrigir|rejeitar|sem-aceite --por <nome>   6. decisão, métricas e encerramento
   sc.py estado [--artefato <arquivo>]              6. gera sociedade/estado.md, estado.html e, se pedido, o painel
 
 Cada subcomando mostra a ajuda completa com -h. Os scripts de baixo nível continuam disponíveis.
@@ -20,6 +23,7 @@ from pathlib import Path
 AQUI = Path(__file__).resolve().parent
 sys.path.insert(0, str(AQUI))
 from sc_registro import localizar_sociedade_canonica  # noqa: E402
+import sc_ciclo  # noqa: E402
 
 ID_VALIDO = re.compile(r'^[A-Za-z0-9][A-Za-z0-9._-]*$')
 
@@ -72,10 +76,35 @@ def cmd_conferir(a):
     return sc_conferir.main(argv)
 
 
+def _executar(funcao, *args, **kw):
+    """Roda uma função de sc_ciclo: imprime as linhas que ela devolve; a recusa vira `erro:` e saída 1."""
+    try:
+        for linha in funcao(*args, **kw):
+            print(linha)
+    except (sc_ciclo.ErroCiclo, sc_ciclo.ErroRegistro, sc_ciclo.ErroSessao) as e:
+        print(f'erro: {e}', file=sys.stderr)
+        return 1
+    return 0
+
+
+def _soc(a):
+    return Path(a.pasta_sociedade) if a.pasta_sociedade else localizar_sociedade_canonica()
+
+
+def cmd_abrir(a):
+    return _executar(sc_ciclo.abrir, _soc(a), a.etapa, a.ordem, a.base, a.bastao)
+
+
+def cmd_decidir(a):
+    return _executar(sc_ciclo.decidir, _soc(a), _id(a.etapa), a.acao, a.por, a.head, a.motivo, a.minutos, a.intervencoes,
+                     a.escaparam, a.log, a.sessao, a.projetos)
+
+
 def cmd_sessao(a):
     import sc_sessao
     argv = [a.app] + (['--log', a.log] if a.log else []) + (['--pasta', a.pasta] if a.pasta else []) \
-        + (['--conversa', a.conversa] if a.conversa else []) + (['--json'] if a.json else [])
+        + (['--conversa', a.conversa] if a.conversa else []) + (['--sessao', a.sessao] if a.sessao else []) \
+        + (['--projetos', a.projetos] if a.projetos else []) + (['--json'] if a.json else [])
     return sc_sessao.main(argv)
 
 
@@ -88,10 +117,14 @@ def cmd_estado(a):
 
 
 def cmd_revisar(a):
-    """Prepara uma cópia descartável com dois commits (base e candidato) para o revisor independente."""
+    """Prepara a cópia descartável para o revisor; com --parecer, registra o parecer pronto no registro."""
     soc = Path(a.pasta_sociedade) if a.pasta_sociedade else localizar_sociedade_canonica()
     raiz = soc.parent
     etapa = _id(a.etapa)
+    if a.parecer:
+        return _executar(sc_ciclo.registrar_parecer, soc, etapa, a.parecer, a.head, a.implementador or None)
+    if not a.base:
+        raise SystemExit('erro: informe --base (preparar a cópia) ou --parecer (registrar o parecer).')
     base = _git(raiz, 'rev-parse', '--verify', f'{a.base}^{{commit}}')
     head = _git(raiz, 'rev-parse', '--verify', f'{a.head}^{{commit}}')
     projeto = re.sub(r'[^A-Za-z0-9._-]+', '_', raiz.name)
@@ -148,6 +181,14 @@ def main(argv=None):
     p.add_argument('--pasta-sociedade')
     p.set_defaults(func=cmd_ordem)
 
+    p = sub.add_parser('abrir', help='abre a etapa no registro a partir da ordem aprovada')
+    p.add_argument('--etapa', required=True, help='ID novo: minúsculas, números e "-" (até 40)')
+    p.add_argument('--ordem', required=True, help='arquivo da ordem aprovada')
+    p.add_argument('--base', required=True, help='commit de partida da etapa')
+    p.add_argument('--bastao', default='Coordenador')
+    p.add_argument('--pasta-sociedade')
+    p.set_defaults(func=cmd_abrir)
+
     p = sub.add_parser('entregar', help='portão sobre base..HEAD e atestado')
     p.add_argument('--etapa', required=True)
     p.add_argument('--base', required=True, help='commit de partida (da fatia ou da etapa)')
@@ -170,16 +211,35 @@ def main(argv=None):
     p.add_argument('--log')
     p.add_argument('--pasta')
     p.add_argument('--conversa')
+    p.add_argument('--sessao', help='identificador da sessão (ou do subagente) do Claude Code')
+    p.add_argument('--projetos', help='pasta de projetos do Claude Code')
     p.add_argument('--json', action='store_true')
     p.set_defaults(func=cmd_sessao)
 
-    p = sub.add_parser('revisar', help='prepara a cópia descartável para o revisor')
+    p = sub.add_parser('revisar', help='prepara a cópia para o revisor; com --parecer, registra o parecer')
     p.add_argument('--etapa', required=True)
-    p.add_argument('--base', required=True)
-    p.add_argument('--head', default='HEAD')
+    p.add_argument('--base', help='sem --parecer: commit de partida da cópia descartável')
+    p.add_argument('--head', default='HEAD', help='SHA revisado (candidato)')
     p.add_argument('--destino')
+    p.add_argument('--parecer', help='arquivo do parecer pronto: lint, commit igual ao head e registro')
+    p.add_argument('--implementador', action='append', help='Nome[:Fornecedor]; padrão: o responsável da etapa')
     p.add_argument('--pasta-sociedade')
     p.set_defaults(func=cmd_revisar)
+
+    p = sub.add_parser('decidir', help='decisão de Odival: aceitar, corrigir, rejeitar ou sem-aceite')
+    p.add_argument('--etapa', required=True)
+    p.add_argument('acao', choices=sc_ciclo.ACOES)
+    p.add_argument('--por', help='quem decide (padrão: git config user.name; sem nenhum dos dois, recusa)')
+    p.add_argument('--head', help='head do PR (padrão: ramo etapa/<ID>, senão HEAD)')
+    p.add_argument('--motivo')
+    p.add_argument('--minutos', type=int, help='minutos de Odival (opcional; sem ele a métrica é n/d)')
+    p.add_argument('--intervencoes', type=int, help='intervenções de Odival (opcional)')
+    p.add_argument('--escaparam', type=int, help='achados que escaparam ao aceite (opcional)')
+    p.add_argument('--log', action='append', default=[], help='log de sessão para as métricas (repetível)')
+    p.add_argument('--sessao', action='append', default=[], help='sessão do Claude Code para as métricas (repetível)')
+    p.add_argument('--projetos', help='pasta de projetos do Claude Code')
+    p.add_argument('--pasta-sociedade')
+    p.set_defaults(func=cmd_decidir)
 
     p = sub.add_parser('estado', help='gera sociedade/estado.md e estado.html')
     p.add_argument('--pasta-sociedade')

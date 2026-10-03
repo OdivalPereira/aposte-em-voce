@@ -1,0 +1,94 @@
+{
+  "tipo": "atestado_pre_devolucao",
+  "versao": "1.2.0",
+  "timestamp": "2026-10-03T16:55:08.199085Z",
+  "papel": "Coordenador",
+  "etapa_id": "m0-destravar",
+  "fatia_id": "N/A",
+  "status": "APROVADO",
+  "verificacoes": {
+    "higiene_pastas": {
+      "ok": true,
+      "erros": []
+    },
+    "compilacao": {
+      "ok": true,
+      "erros": []
+    },
+    "seguranca_antitoken": {
+      "ok": true,
+      "erros": []
+    },
+    "disjuncao": {
+      "ok": true,
+      "erros": []
+    },
+    "testes": {
+      "ok": true,
+      "detalhes": ".............................s..............................................................................................................\n----------------------------------------------------------------------\nRan 610 tests in 86.358s\n\nOK (skipped=1, expected failures=15)",
+      "comando": "python3 -B -m unittest discover -s tests",
+      "totais": {
+        "executados": 610,
+        "resultado": "OK",
+        "skipped": 1,
+        "expected failures": 15
+      }
+    }
+  },
+  "commit": "fb3ae4265da0fc5fdd1e327d8320b579c640d3b5",
+  "base": "3bff553e1c47a88a4d982051b3264badda6c36b3",
+  "origem_arquivos": "git",
+  "total_arquivos_inspecionados": 46,
+  "arquivos_removidos": [],
+  "python": "3.11.15",
+  "hashes_artefatos": {
+    ".github/workflows/ci.yml": "a6bf40f7c043dbbfe89b3057f33b14a556919859ac042b2b9ff701164fc0000b",
+    ".github/workflows/status.yml": "adcd55e9a6b9691ceafe75125dffabd27fbe43863d0618b7410757d7297a74d6",
+    "sociedade-do-codigo/CHANGELOG.md": "d5f01c39b84a20e4fdcf8f0ba3ccba1326443e12c6db8b86b20172a4bbe6df2f",
+    "sociedade-do-codigo/README.md": "df4c0b26471260e322ba6709dc6907c3f8b7006ce75fb579bb2bcc33e2ae0b3a",
+    "sociedade-do-codigo/adapters/claude/agents/barbarvore.md": "ff1482c97739226673e07f492f3ef2d0f2add86d305a2549ee3746c4abaf0cac",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sc-revisao/SKILL.md": "d959c3d87d8705ea2a3fcf4392368a75e8ac9a63aa76a8cb724c9757f74b4fc3",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sc-revisao/assets/parecer-modelo.md": "0f84ea97a2844b9ef2db732e4253ccae0428050887bce7f1feee072d25252183",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sc-revisao/references/protocolo-revisao.md": "69e74ad02b27947179abfdc2f66e83e97bcfba17e56fae7235923f9e19ab4a70",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sc-revisao/scripts/lint_parecer.py": "2c780f9185bd3feb1199777b521f558997500c819b03381c930bb216ece694fd",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/SKILL.md": "e2a26524ad6ae56b3dcff3192ae114a81dc3e6f7efd18b7b2ce9c5d09bc73d32",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/assets/rodada-modelo.md": "ff9b42298c95612371002032a7861f87f62eabf26a38748966b946d3aca9fdc8",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/references/comandos.md": "dfb99a9d9bf3a804169c8c63bee1d68221ef2fe43879402d480854a53ef37316",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/references/contrato-nucleo-projeto.md": "f2aef325964e057b978569be86e5b03ac42302f43711eafefb5075b342f1d238",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc.py": "7cdc592a506315fca4c291180b996700b6e1bbfe2478cacef03f14f3afcdb074",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_ciclo.py": "c857672be421190c6df00c5686c290486ac6c630da141f5f56636d39a2b82540",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_conferir.py": "896cdca27da5cbdbfb0b2f78ad99afa37d998661cc30339a24a01457cf780039",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_metricas.py": "dd021e1c6824b000ab7848d563ba820fa43526e95756f5b6412c3b57a1eb5124",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_passagem.py": "762b9e4dda0255d2a53033a9192a080352a0e4be590da08110fa0f76c87d40e6",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_perfil.py": "bf9872243229bccf5422917d9796e7bcc87d862a9de288ae67506bb909211ba0",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_registro.py": "3a6fe6fa24d50781409e0c11b46e4e47f772026d60f46f8619289a112119f40d",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_resumo.py": "956bbb6b7ea7404992928c92b36c960195dd30c34ced43c7c425b048932af750",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_rodada.py": "9758ae88a4266e3bcaaa6605818c13fb329213d4e3ef0ca0e26abe77e602cf91",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_sessao.py": "d408581e9f9da31ca2bb2893f08472994046525a20bd0e9553b4fd19cad477cb",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_status.py": "29f61a694c3104a9f6fb560b3e40fa63318642548b20ef1784a950caa8c47911",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/validar_perfil.py": "f3e9ef5ae67cb354fb3ad7a027c76073491a4b359145b4885ceff73dc628bdd6",
+    "sociedade-do-codigo/tests/adversarial/__init__.py": "bb896173509b26646d15269cb431b4103e567d66115f5eeea441489426d94c0d",
+    "sociedade-do-codigo/tests/adversarial/_cenario.py": "0418e65b2b88926e4f7c889085f5fb6da20f700ead06a45c42d346f6f64629e0",
+    "sociedade-do-codigo/tests/adversarial/test_achados_novos.py": "015dc26effd4cb296ee702e74464de394cf15fa1f33c047cf20f318a3c099dac",
+    "sociedade-do-codigo/tests/adversarial/test_dg01_fonte_unica.py": "200d879eac0988062af5031557ad3e5b0c619c70ca9ad77910b02f76b1465261",
+    "sociedade-do-codigo/tests/adversarial/test_dg02_aceite_forjavel.py": "0df4d3e43b8d201ca393480c339bb9a8e7a699eb0986ea6130351c857088bbe9",
+    "sociedade-do-codigo/tests/adversarial/test_dg03_commit_amarrado.py": "f96e23d279df5350bb2c62be13adc6dacedd293cdf04ff76c893cadcc3909f64",
+    "sociedade-do-codigo/tests/adversarial/test_dg04_emulacao.py": "0ecea3d70c5d6f081ee359107f0512ace5082b1ff7f660c0b1fe12d33512702e",
+    "sociedade-do-codigo/tests/adversarial/test_dg05_estacao5.py": "54b3a39335281aff294169490d9912747d2b97103dd5d162f9acf594cc3058e2",
+    "sociedade-do-codigo/tests/test_cauda.py": "9bc9720b50541b73ea879b1a20592e7736a1c641f432a914ff10ce39ba62afd2",
+    "sociedade-do-codigo/tests/test_ci_pipefail.py": "107186315bfa3d26f0e2cff489ade8f9581567ab8fbdebb038c44a1a279e5e7d",
+    "sociedade-do-codigo/tests/test_ciclo.py": "9b4c3156d99b7ad6e6c1f76f20bb186ef9061ff00f57c62defcc599df86bb668",
+    "sociedade-do-codigo/tests/test_contrato_modelos.py": "648351f48cf9c17a6e179c3f49d426d04bdeff9a2e8bd01bc1fdfc81a66990d6",
+    "sociedade-do-codigo/tests/test_emulacao.py": "42d0b0e621e71c1f1a3fc36455cea3663aae0c3f9b14dc8b5df191504752d8f7",
+    "sociedade-do-codigo/tests/test_id_etapa.py": "4a2a84c4c2bb34a81888fd2da0b1dd14252f45da91963895e892a990a73a7c4e",
+    "sociedade-do-codigo/tests/test_metricas.py": "3d99bc5319060ab7533d046bac34d670e39e0ffbbbca0b2c946183abd9b5ae59",
+    "sociedade-do-codigo/tests/test_pacote2_desacoplamento_eficiencia.py": "d9d4b44570198d7ae9e0841a636f336c3a9b1e6591ee43ad95d9e82e0a4388e7",
+    "sociedade-do-codigo/tests/test_parecer.py": "6814e720f7d151c93778f6a225934fef440210c90d85bf88dcecedc61b3c8b8a",
+    "sociedade-do-codigo/tests/test_revisor_independente_operacional.py": "7eceed6d4d453c24cfb8073efb3217b70fe422c1b76c91a97a903cfbe62e0b41",
+    "sociedade-do-codigo/tests/test_rodada.py": "996aaa279c908d6ee4eca7fc152b2081d2b0960f40cd2b0706a051a0000ab924",
+    "sociedade-do-codigo/tests/test_sessao_claude.py": "8d4d489708a22ba08d5f7cea9cfc8d3e5821a469b61ca6d74699e93d2347b6c2",
+    "sociedade-do-codigo/tests/test_status.py": "66de7723bbb2540256af80f89daa14b5c9e4fe52ddfa17d3fcb51c356d12e4ad"
+  },
+  "erros": [],
+  "atestado_hash": "e1b801843c4914595afd04457db45d164ab1b26b58e5631b8286ab2aa9ef4e3b"
+}

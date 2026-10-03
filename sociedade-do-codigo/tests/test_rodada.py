@@ -263,7 +263,7 @@ class TesteRodada(unittest.TestCase):
         self.abrir()
         for secao in ('## Aceite', '## Fatias', '## Para quem pega o bastão agora', '## Achados abertos'):
             self.assertIn(secao, self.texto())
-        self.assertRegex(modelo, r'(?m)^nivel: ')
+        self.assertRegex(modelo, r'(?m)^- nivel: ')
 
     def test_comandos_aceitam_flags_antes_e_depois_do_subcomando(self):
         pasta = str(self.p / 'sociedade')

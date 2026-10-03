@@ -16,6 +16,10 @@ Tipos:
   push_feito <ramo>                                          ramo remoto (origin) igual ao local; sem rede: não verificado
   delegacoes antigravity | <conversa> | <mínimo>             chamadas a invoke_subagent no log da conversa
   conversa_nova antigravity | <conversa>                     uma única ordem na conversa
+  delegacoes claude | <sessão> | <mínimo>                    delegações com log em <sessão>/subagents/agent-*.jsonl
+  conversa_nova claude | <sessão ou agente>                  uma única ordem na sessão ou no subagente (agent-<id>)
+                                                             Log ausente ou ilegível reprova (falha fechada).
+                                                             A pasta de projetos vem de SC_CLAUDE_PROJETOS.
 
 Com --registrar, grava o resultado no registro.json como evento 'conferencia_registrada'.
 Código de saída 0 só se todas as entregas estiverem feitas.
@@ -139,15 +143,20 @@ def conferir_item(item, raiz):
 
     if tipo in ('delegacoes', 'conversa_nova'):
         from sc_sessao import medir, ErroSessao
-        if args[0] != 'antigravity' or len(args) < 2:
-            return NAO_PREENCHIDO, 'use "antigravity | <conversa>"'
+        if args[0] not in ('antigravity', 'claude') or len(args) < 2:
+            return NAO_PREENCHIDO, 'use "antigravity | <conversa>" ou "claude | <sessão>"'
         try:
-            m = medir('antigravity', conversa=args[1])
+            if args[0] == 'claude':
+                m = medir('claude', sessao=args[1])
+            else:
+                m = medir('antigravity', conversa=args[1])
         except ErroSessao as e:
-            return NAO_VERIFICADO, str(e)
+            return (NAO_FEITO if args[0] == 'claude' else NAO_VERIFICADO), str(e)
         if tipo == 'conversa_nova':
             return (FEITO, '1 ordem na conversa') if m['conversa_nova'] else \
                    (NAO_FEITO, f'{m["ordens_na_conversa"]} ordens na mesma conversa')
+        if 'delegacoes_total' not in m:
+            return NAO_FEITO, 'o identificador é de um subagente, não de uma sessão; delegações não medidas'
         minimo = int(args[2]) if len(args) > 2 and args[2].isdigit() else 1
         return (FEITO, f'{m["delegacoes_total"]} delegações') if m['delegacoes_total'] >= minimo else \
                (NAO_FEITO, f'{m["delegacoes_total"]} delegações, mínimo {minimo}')

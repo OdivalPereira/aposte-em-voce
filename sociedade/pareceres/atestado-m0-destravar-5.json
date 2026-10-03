@@ -1,0 +1,56 @@
+{
+  "tipo": "atestado_pre_devolucao",
+  "versao": "1.2.0",
+  "timestamp": "2026-10-03T16:42:59.413654Z",
+  "papel": "Coordenador",
+  "etapa_id": "m0-destravar",
+  "fatia_id": "5",
+  "status": "APROVADO",
+  "verificacoes": {
+    "higiene_pastas": {
+      "ok": true,
+      "erros": []
+    },
+    "compilacao": {
+      "ok": true,
+      "erros": []
+    },
+    "seguranca_antitoken": {
+      "ok": true,
+      "erros": []
+    },
+    "disjuncao": {
+      "ok": true,
+      "erros": []
+    },
+    "testes": {
+      "ok": true,
+      "detalhes": ".............................s..............................................................................................................\n----------------------------------------------------------------------\nRan 594 tests in 85.835s\n\nOK (skipped=1, expected failures=22)",
+      "comando": "python3 -B -m unittest discover -s tests",
+      "totais": {
+        "executados": 594,
+        "resultado": "OK",
+        "skipped": 1,
+        "expected failures": 22
+      }
+    }
+  },
+  "commit": "ff15c9b93e661a138ff23815dc90341e87b72d1a",
+  "base": "86b0eab9bdfcb03a05084fce790082837aac3380",
+  "origem_arquivos": "git",
+  "total_arquivos_inspecionados": 8,
+  "arquivos_removidos": [],
+  "python": "3.11.15",
+  "hashes_artefatos": {
+    "sociedade-do-codigo/tests/adversarial/__init__.py": "bb896173509b26646d15269cb431b4103e567d66115f5eeea441489426d94c0d",
+    "sociedade-do-codigo/tests/adversarial/_cenario.py": "0418e65b2b88926e4f7c889085f5fb6da20f700ead06a45c42d346f6f64629e0",
+    "sociedade-do-codigo/tests/adversarial/test_achados_novos.py": "ff01f91c56929ff3ef6ffae5df2032534588b8126cdbc684dc173a9b57b9df06",
+    "sociedade-do-codigo/tests/adversarial/test_dg01_fonte_unica.py": "200d879eac0988062af5031557ad3e5b0c619c70ca9ad77910b02f76b1465261",
+    "sociedade-do-codigo/tests/adversarial/test_dg02_aceite_forjavel.py": "0df4d3e43b8d201ca393480c339bb9a8e7a699eb0986ea6130351c857088bbe9",
+    "sociedade-do-codigo/tests/adversarial/test_dg03_commit_amarrado.py": "f96e23d279df5350bb2c62be13adc6dacedd293cdf04ff76c893cadcc3909f64",
+    "sociedade-do-codigo/tests/adversarial/test_dg04_emulacao.py": "0ecea3d70c5d6f081ee359107f0512ace5082b1ff7f660c0b1fe12d33512702e",
+    "sociedade-do-codigo/tests/adversarial/test_dg05_estacao5.py": "54b3a39335281aff294169490d9912747d2b97103dd5d162f9acf594cc3058e2"
+  },
+  "erros": [],
+  "atestado_hash": "55c247a05868083754a9a7323e2302f48c01954c23e7293e72b350b50690af5b"
+}
