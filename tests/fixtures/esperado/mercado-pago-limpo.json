@@ -1,0 +1,66 @@
+{
+  "status": "suficiente",
+  "motivo": null,
+  "bancoProvavel": "Mercado Pago",
+  "periodo": {
+    "inicio": "2026-09-05",
+    "fim": "2026-09-20"
+  },
+  "paginas": 1,
+  "linhasCandidatas": 5,
+  "lancamentos": [
+    {
+      "data": "2026-09-05",
+      "hora": null,
+      "valorCentavos": 85000,
+      "direcao": "entrada",
+      "descricao": "PAGAMENTO RECEBIDO LOJA X",
+      "pagina": 1,
+      "saldoCentavos": 585000
+    },
+    {
+      "data": "2026-09-08",
+      "hora": null,
+      "valorCentavos": 1550,
+      "direcao": "saida",
+      "descricao": "TAXA OPERACIONAL",
+      "pagina": 1,
+      "saldoCentavos": 583450
+    },
+    {
+      "data": "2026-09-10",
+      "hora": null,
+      "valorCentavos": 120000,
+      "direcao": "entrada",
+      "descricao": "PAGAMENTO RECEBIDO LOJA Y",
+      "pagina": 1,
+      "saldoCentavos": 703450
+    },
+    {
+      "data": "2026-09-15",
+      "hora": null,
+      "valorCentavos": 300000,
+      "direcao": "saida",
+      "descricao": "SAQUE PARA CONTA",
+      "pagina": 1,
+      "saldoCentavos": 403450
+    },
+    {
+      "data": "2026-09-20",
+      "hora": null,
+      "valorCentavos": 50000,
+      "direcao": "entrada",
+      "descricao": "PAGAMENTO RECEBIDO LOJA Z",
+      "pagina": 1,
+      "saldoCentavos": 453450
+    }
+  ],
+  "conferencia": {
+    "situacao": "fecha",
+    "saldoInicialCentavos": 500000,
+    "saldoFinalCentavos": 453450,
+    "entradasCentavos": 255000,
+    "saidasCentavos": 301550,
+    "diferencaCentavos": 0
+  }
+}

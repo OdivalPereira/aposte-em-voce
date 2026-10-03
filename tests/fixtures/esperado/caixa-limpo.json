@@ -1,0 +1,57 @@
+{
+  "status": "suficiente",
+  "motivo": null,
+  "bancoProvavel": "Caixa",
+  "periodo": {
+    "inicio": "2026-09-20",
+    "fim": "2026-09-28"
+  },
+  "paginas": 1,
+  "linhasCandidatas": 4,
+  "lancamentos": [
+    {
+      "data": "2026-09-20",
+      "hora": null,
+      "valorCentavos": 500000,
+      "direcao": "entrada",
+      "descricao": "TRANSFERÊNCIA RECEBIDA",
+      "pagina": 1,
+      "saldoCentavos": 2000000
+    },
+    {
+      "data": "2026-09-22",
+      "hora": null,
+      "valorCentavos": 300000,
+      "direcao": "saida",
+      "descricao": "PAGAMENTO FATURA",
+      "pagina": 1,
+      "saldoCentavos": 1700000
+    },
+    {
+      "data": "2026-09-25",
+      "hora": null,
+      "valorCentavos": 150000,
+      "direcao": "saida",
+      "descricao": "SAQUE ATM",
+      "pagina": 1,
+      "saldoCentavos": 1550000
+    },
+    {
+      "data": "2026-09-28",
+      "hora": null,
+      "valorCentavos": 5000,
+      "direcao": "entrada",
+      "descricao": "JUROS",
+      "pagina": 1,
+      "saldoCentavos": 1555000
+    }
+  ],
+  "conferencia": {
+    "situacao": "fecha",
+    "saldoInicialCentavos": 1500000,
+    "saldoFinalCentavos": 1555000,
+    "entradasCentavos": 505000,
+    "saidasCentavos": 450000,
+    "diferencaCentavos": 0
+  }
+}

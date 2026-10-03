@@ -1,0 +1,93 @@
+{
+  "status": "suficiente",
+  "motivo": null,
+  "bancoProvavel": "Nubank",
+  "periodo": {
+    "inicio": "2026-09-02",
+    "fim": "2026-09-25"
+  },
+  "paginas": 1,
+  "linhasCandidatas": 8,
+  "lancamentos": [
+    {
+      "data": "2026-09-02",
+      "hora": null,
+      "valorCentavos": 4550,
+      "direcao": "saida",
+      "descricao": "COMPRA NO DÉBITO - PADARIA FICTICIA",
+      "pagina": 1,
+      "saldoCentavos": 1000000
+    },
+    {
+      "data": "2026-09-03",
+      "hora": null,
+      "valorCentavos": 120000,
+      "direcao": "saida",
+      "descricao": "PIX ENVIADO PARA PESSOA FICTICIA",
+      "pagina": 1,
+      "saldoCentavos": 880000
+    },
+    {
+      "data": "2026-09-05",
+      "hora": null,
+      "valorCentavos": 250000,
+      "direcao": "entrada",
+      "descricao": "PIX RECEBIDO DE EMPRESA FICTICIA",
+      "pagina": 1,
+      "saldoCentavos": 1130000
+    },
+    {
+      "data": "2026-09-07",
+      "hora": null,
+      "valorCentavos": 85000,
+      "direcao": "saida",
+      "descricao": "PAGAMENTO DE BOLETO FICTICIO",
+      "pagina": 1,
+      "saldoCentavos": 1045000
+    },
+    {
+      "data": "2026-09-10",
+      "hora": null,
+      "valorCentavos": 50000,
+      "direcao": "saida",
+      "descricao": "SAQUE ATM BANCO FICTICIO",
+      "pagina": 1,
+      "saldoCentavos": 995000
+    },
+    {
+      "data": "2026-09-15",
+      "hora": null,
+      "valorCentavos": 300000,
+      "direcao": "entrada",
+      "descricao": "TRANSFERÊNCIA RECEBIDA",
+      "pagina": 1,
+      "saldoCentavos": 1295000
+    },
+    {
+      "data": "2026-09-20",
+      "hora": null,
+      "valorCentavos": 28575,
+      "direcao": "saida",
+      "descricao": "PAGAMENTO CONTA LUZ",
+      "pagina": 1,
+      "saldoCentavos": 1266425
+    },
+    {
+      "data": "2026-09-25",
+      "hora": null,
+      "valorCentavos": 12590,
+      "direcao": "saida",
+      "descricao": "COMPRA ONLINE LOJA FICTICIA",
+      "pagina": 1,
+      "saldoCentavos": 1253835
+    }
+  ],
+  "conferencia": {
+    "situacao": "nao-fecha",
+    "saldoInicialCentavos": 1004550,
+    "saldoFinalCentavos": 1253835,
+    "entradasCentavos": 550000,
+    "saidasCentavos": 301115,
+    "diferencaCentavos": null
+  }
+}

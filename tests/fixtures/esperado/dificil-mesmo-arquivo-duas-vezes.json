@@ -1,0 +1,39 @@
+{
+  "status": "suficiente",
+  "motivo": null,
+  "bancoProvavel": null,
+  "periodo": {
+    "inicio": "2026-09-05",
+    "fim": "2026-09-10"
+  },
+  "paginas": 1,
+  "linhasCandidatas": 2,
+  "lancamentos": [
+    {
+      "data": "2026-09-05",
+      "hora": null,
+      "valorCentavos": 10000,
+      "direcao": "saida",
+      "descricao": "TRANSAÇÃO A",
+      "pagina": 1,
+      "saldoCentavos": 110000
+    },
+    {
+      "data": "2026-09-10",
+      "hora": null,
+      "valorCentavos": 20000,
+      "direcao": "saida",
+      "descricao": "TRANSAÇÃO B",
+      "pagina": 1,
+      "saldoCentavos": 130000
+    }
+  ],
+  "conferencia": {
+    "situacao": "nao-fecha",
+    "saldoInicialCentavos": 100000,
+    "saldoFinalCentavos": 130000,
+    "entradasCentavos": 0,
+    "saidasCentavos": 30000,
+    "diferencaCentavos": null
+  }
+}

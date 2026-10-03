@@ -1,0 +1,17 @@
+{
+  "status": "nao-suportado",
+  "motivo": "imagem",
+  "bancoProvavel": null,
+  "periodo": null,
+  "paginas": 1,
+  "linhasCandidatas": 0,
+  "lancamentos": [],
+  "conferencia": {
+    "situacao": "indisponivel",
+    "saldoInicialCentavos": null,
+    "saldoFinalCentavos": null,
+    "entradasCentavos": 0,
+    "saidasCentavos": 0,
+    "diferencaCentavos": null
+  }
+}

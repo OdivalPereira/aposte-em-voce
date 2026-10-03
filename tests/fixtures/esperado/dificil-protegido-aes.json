@@ -1,0 +1,39 @@
+{
+  "status": "parcial",
+  "motivo": null,
+  "bancoProvavel": null,
+  "periodo": {
+    "inicio": "2026-09-10",
+    "fim": "2026-09-20"
+  },
+  "paginas": 1,
+  "linhasCandidatas": 2,
+  "lancamentos": [
+    {
+      "data": "2026-09-10",
+      "hora": null,
+      "valorCentavos": 150000,
+      "direcao": "saida",
+      "descricao": "DEPÓSITO",
+      "pagina": 1,
+      "saldoCentavos": 450000
+    },
+    {
+      "data": "2026-09-20",
+      "hora": null,
+      "valorCentavos": 50000,
+      "direcao": "saida",
+      "descricao": "SAQUE",
+      "pagina": 1,
+      "saldoCentavos": 400000
+    }
+  ],
+  "conferencia": {
+    "situacao": "nao-fecha",
+    "saldoInicialCentavos": 300000,
+    "saldoFinalCentavos": 400000,
+    "entradasCentavos": 0,
+    "saidasCentavos": 200000,
+    "diferencaCentavos": null
+  }
+}

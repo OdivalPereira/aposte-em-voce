@@ -1,0 +1,66 @@
+{
+  "status": "suficiente",
+  "motivo": null,
+  "bancoProvavel": "Inter",
+  "periodo": {
+    "inicio": "2026-09-10",
+    "fim": "2026-09-25"
+  },
+  "paginas": 1,
+  "linhasCandidatas": 5,
+  "lancamentos": [
+    {
+      "data": "2026-09-10",
+      "hora": null,
+      "valorCentavos": 150000,
+      "direcao": "entrada",
+      "descricao": "TRANSFERÊNCIA RECEBIDA",
+      "pagina": 1,
+      "saldoCentavos": 950000
+    },
+    {
+      "data": "2026-09-12",
+      "hora": null,
+      "valorCentavos": 65000,
+      "direcao": "saida",
+      "descricao": "COMPRA COM CARTÃO",
+      "pagina": 1,
+      "saldoCentavos": 885000
+    },
+    {
+      "data": "2026-09-15",
+      "hora": null,
+      "valorCentavos": 200000,
+      "direcao": "entrada",
+      "descricao": "DEPÓSITO",
+      "pagina": 1,
+      "saldoCentavos": 1085000
+    },
+    {
+      "data": "2026-09-18",
+      "hora": null,
+      "valorCentavos": 35000,
+      "direcao": "saida",
+      "descricao": "PIX ENVIADO",
+      "pagina": 1,
+      "saldoCentavos": 1050000
+    },
+    {
+      "data": "2026-09-25",
+      "hora": null,
+      "valorCentavos": 4550,
+      "direcao": "entrada",
+      "descricao": "JUROS CREDITADOS",
+      "pagina": 1,
+      "saldoCentavos": 1054550
+    }
+  ],
+  "conferencia": {
+    "situacao": "nao-fecha",
+    "saldoInicialCentavos": 800000,
+    "saldoFinalCentavos": 1054550,
+    "entradasCentavos": 355550,
+    "saidasCentavos": 100000,
+    "diferencaCentavos": null
+  }
+}

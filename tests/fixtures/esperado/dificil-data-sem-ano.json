@@ -1,0 +1,48 @@
+{
+  "status": "parcial",
+  "motivo": null,
+  "bancoProvavel": null,
+  "periodo": {
+    "inicio": "2026-09-15",
+    "fim": "2026-09-25"
+  },
+  "paginas": 1,
+  "linhasCandidatas": 3,
+  "lancamentos": [
+    {
+      "data": "2026-09-15",
+      "hora": null,
+      "valorCentavos": 10000,
+      "direcao": "saida",
+      "descricao": "PIX ENVIADO",
+      "pagina": 1,
+      "saldoCentavos": 490000
+    },
+    {
+      "data": "2026-09-20",
+      "hora": null,
+      "valorCentavos": 20000,
+      "direcao": "saida",
+      "descricao": "PIX RECEBIDO",
+      "pagina": 1,
+      "saldoCentavos": 510000
+    },
+    {
+      "data": "2026-09-25",
+      "hora": null,
+      "valorCentavos": 5000,
+      "direcao": "saida",
+      "descricao": "TAXA",
+      "pagina": 1,
+      "saldoCentavos": 505000
+    }
+  ],
+  "conferencia": {
+    "situacao": "nao-fecha",
+    "saldoInicialCentavos": 500000,
+    "saldoFinalCentavos": 505000,
+    "entradasCentavos": 0,
+    "saidasCentavos": 35000,
+    "diferencaCentavos": null
+  }
+}

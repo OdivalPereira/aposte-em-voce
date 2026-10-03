@@ -1,0 +1,57 @@
+{
+  "status": "suficiente",
+  "motivo": null,
+  "bancoProvavel": "PicPay",
+  "periodo": {
+    "inicio": "2026-09-15",
+    "fim": "2026-09-25"
+  },
+  "paginas": 1,
+  "linhasCandidatas": 4,
+  "lancamentos": [
+    {
+      "data": "2026-09-15",
+      "hora": null,
+      "valorCentavos": 50000,
+      "direcao": "entrada",
+      "descricao": "TRANSFERÊNCIA RECEBIDA DE PESSOA FICTICIA",
+      "pagina": 1,
+      "saldoCentavos": 250000
+    },
+    {
+      "data": "2026-09-18",
+      "hora": null,
+      "valorCentavos": 20000,
+      "direcao": "saida",
+      "descricao": "PAGAMENTO CONTA FICTICIA",
+      "pagina": 1,
+      "saldoCentavos": 230000
+    },
+    {
+      "data": "2026-09-22",
+      "hora": null,
+      "valorCentavos": 5000,
+      "direcao": "saida",
+      "descricao": "RECARGA DE CELULAR",
+      "pagina": 1,
+      "saldoCentavos": 225000
+    },
+    {
+      "data": "2026-09-25",
+      "hora": null,
+      "valorCentavos": 7500,
+      "direcao": "entrada",
+      "descricao": "DEVOLUÇÃO PAGAMENTO",
+      "pagina": 1,
+      "saldoCentavos": 232500
+    }
+  ],
+  "conferencia": {
+    "situacao": "fecha",
+    "saldoInicialCentavos": 200000,
+    "saldoFinalCentavos": 232500,
+    "entradasCentavos": 57500,
+    "saidasCentavos": 25000,
+    "diferencaCentavos": 0
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "status": "suficiente",
+  "motivo": null,
+  "bancoProvavel": "Caixa Tem",
+  "periodo": {
+    "inicio": "2026-09-05",
+    "fim": "2026-09-18"
+  },
+  "paginas": 1,
+  "linhasCandidatas": 4,
+  "lancamentos": [
+    {
+      "data": "2026-09-05",
+      "hora": null,
+      "valorCentavos": 100000,
+      "direcao": "entrada",
+      "descricao": "BENEFÍCIO RECEBIDO",
+      "pagina": 1,
+      "saldoCentavos": 220000
+    },
+    {
+      "data": "2026-09-08",
+      "hora": null,
+      "valorCentavos": 35000,
+      "direcao": "saida",
+      "descricao": "SAQUE",
+      "pagina": 1,
+      "saldoCentavos": 185000
+    },
+    {
+      "data": "2026-09-12",
+      "hora": null,
+      "valorCentavos": 12000,
+      "direcao": "saida",
+      "descricao": "PAGAMENTO DE CONTA",
+      "pagina": 1,
+      "saldoCentavos": 173000
+    },
+    {
+      "data": "2026-09-18",
+      "hora": null,
+      "valorCentavos": 50000,
+      "direcao": "saida",
+      "descricao": "TRANSFERÊNCIA ENVIADA",
+      "pagina": 1,
+      "saldoCentavos": 123000
+    }
+  ],
+  "conferencia": {
+    "situacao": "fecha",
+    "saldoInicialCentavos": 120000,
+    "saldoFinalCentavos": 123000,
+    "entradasCentavos": 100000,
+    "saidasCentavos": 97000,
+    "diferencaCentavos": 0
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "status": "suficiente",
+  "motivo": null,
+  "bancoProvavel": null,
+  "periodo": {
+    "inicio": "2026-09-05",
+    "fim": "2026-09-15"
+  },
+  "paginas": 1,
+  "linhasCandidatas": 3,
+  "lancamentos": [
+    {
+      "data": "2026-09-05",
+      "hora": null,
+      "valorCentavos": 50000,
+      "direcao": "saida",
+      "descricao": "SAQUE",
+      "pagina": 1,
+      "saldoCentavos": 450000
+    },
+    {
+      "data": "2026-09-10",
+      "hora": null,
+      "valorCentavos": 100000,
+      "direcao": "entrada",
+      "descricao": "DEPÓSITO",
+      "pagina": 1,
+      "saldoCentavos": 550000
+    },
+    {
+      "data": "2026-09-15",
+      "hora": null,
+      "valorCentavos": 30000,
+      "direcao": "saida",
+      "descricao": "CHEQUE COMPENSADO",
+      "pagina": 1,
+      "saldoCentavos": 520000
+    }
+  ],
+  "conferencia": {
+    "situacao": "fecha",
+    "saldoInicialCentavos": 500000,
+    "saldoFinalCentavos": 520000,
+    "entradasCentavos": 100000,
+    "saidasCentavos": 80000,
+    "diferencaCentavos": 0
+  }
+}

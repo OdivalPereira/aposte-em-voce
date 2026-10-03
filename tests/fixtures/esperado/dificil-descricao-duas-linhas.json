@@ -1,0 +1,39 @@
+{
+  "status": "suficiente",
+  "motivo": null,
+  "bancoProvavel": null,
+  "periodo": {
+    "inicio": "2026-09-05",
+    "fim": "2026-09-10"
+  },
+  "paginas": 1,
+  "linhasCandidatas": 2,
+  "lancamentos": [
+    {
+      "data": "2026-09-05",
+      "hora": null,
+      "valorCentavos": 100000,
+      "direcao": "saida",
+      "descricao": "PAGAMENTO LOJA FICTICÍA LTDA RESPEITO AOS CLIENTES",
+      "pagina": 1,
+      "saldoCentavos": 600000
+    },
+    {
+      "data": "2026-09-10",
+      "hora": null,
+      "valorCentavos": 50000,
+      "direcao": "saida",
+      "descricao": "TRANSFER PESSOA FICTICIA NOME SOBRENOME",
+      "pagina": 1,
+      "saldoCentavos": 650000
+    }
+  ],
+  "conferencia": {
+    "situacao": "nao-fecha",
+    "saldoInicialCentavos": 500000,
+    "saldoFinalCentavos": 650000,
+    "entradasCentavos": 0,
+    "saidasCentavos": 150000,
+    "diferencaCentavos": null
+  }
+}
