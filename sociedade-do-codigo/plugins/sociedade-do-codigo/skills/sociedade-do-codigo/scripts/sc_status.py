@@ -6,8 +6,10 @@ verificações rodam como jobs do GitHub Actions (.github/workflows/status.yml),
 este script. Cada job fica verde apenas se o script sair com 0.
 
   portao  lê, no head do PR, sociedade/pareceres/atestado-<ID>.json (ID tirado do ramo etapa/<ID>) e exige:
-          atestado APROVADO da mesma etapa; commit do atestado ancestral do head; e, depois dele,
-          só commits (sem merge) que tocam apenas sociedade/ (cauda de governança, Q149).
+          atestado APROVADO da mesma etapa, na forma do portão por área (1.3.0: `portao` do `sc.py entregar`, com
+          todas as áreas tocadas rodadas e ok, e o SHA-256 do perfil igual ao de sociedade/perfil.md no head);
+          commit do atestado ancestral do head; e, depois dele, só commits (sem merge) que tocam apenas
+          sociedade/ (cauda de governança, Q149).
   aceite  lê, no head do PR, sociedade/registro.json e exige que a última decisão da etapa seja
           `aceitar`, com quem decidiu e com o SHA revisado (dados.commit) ancestral do head, e a
           mesma cauda só de sociedade/. Sem decisão, vermelho.
@@ -32,6 +34,7 @@ ID_ETAPA = re.compile(r'^[a-z0-9][a-z0-9-]{0,39}$')
 SHA = re.compile(r'^[0-9a-fA-F]{7,40}$')
 PASTA_GOVERNANCA = 'sociedade/'
 REGISTRO = 'sociedade/registro.json'
+PERFIL = 'sociedade/perfil.md'
 
 
 def atestado_caminho(etapa_id):
@@ -59,6 +62,46 @@ def _resolver(raiz, ref):
 def _arquivo_em(raiz, head, caminho):
     rc, saida, _ = _git(raiz, 'show', f'{head}:{caminho}')
     return saida if rc == 0 else None
+
+
+def sha256_do_perfil_em(raiz, head):
+    """SHA-256 dos bytes de sociedade/perfil.md no commit `head`; None se o perfil não existir lá."""
+    r = subprocess.run(['git', '-C', str(raiz), 'show', f'{head}:{PERFIL}'], capture_output=True)
+    return hashlib.sha256(r.stdout).hexdigest() if r.returncode == 0 else None
+
+
+def forma_do_atestado(at, sha256_perfil_atual):
+    """(ok, motivo): o atestado é o do `sc.py entregar` (portão por área, versão 1.3.0), completo e do perfil de hoje.
+
+    Exige `portao.modo == 'por_area'`, `portao.commit` igual ao `commit` do atestado, áreas rodadas não vazias e todas
+    ok, `areas_tocadas` todas rodadas e ok (`cobertura_completa`: `--area` sozinho não basta) e `portao.perfil_sha256`
+    igual ao SHA-256 do perfil que está sendo julgado (`sha256_perfil_atual`). Um atestado avulso (`sc_pre_devolucao.py`
+    com `--comando-teste`) não passa."""
+    portao = at.get('portao') if isinstance(at, dict) else None
+    if not isinstance(portao, dict) or portao.get('modo') != 'por_area':
+        return False, 'atestado sem o portão por área (forma 1.3.0): só vale o gerado por `sc.py entregar`'
+    if not at.get('commit') or portao.get('commit') != at.get('commit'):
+        return False, 'o commit do portão não é o commit do atestado'
+    areas = portao.get('areas')
+    if not isinstance(areas, list) or not areas or not all(isinstance(a, dict) for a in areas):
+        return False, 'atestado sem nenhuma área rodada'
+    ruins = [str(a.get('area')) for a in areas if a.get('ok') is not True]
+    if ruins:
+        return False, f'área(s) que não passaram no portão: {", ".join(ruins)}'
+    tocadas = portao.get('areas_tocadas')
+    if not isinstance(tocadas, list) or not tocadas:
+        return False, 'atestado sem as áreas que base..HEAD toca'
+    rodadas = {a.get('area') for a in areas}
+    faltam = [str(t) for t in tocadas if t not in rodadas]
+    if faltam or portao.get('cobertura_completa') is not True:
+        return False, ('o atestado não cobre todas as áreas tocadas' + (f' (faltam: {", ".join(faltam)})' if faltam else '')
+                       + ': rode `sc.py entregar` sem --area')
+    sha = portao.get('perfil_sha256')
+    if not sha or not sha256_perfil_atual:
+        return False, 'sem como conferir o perfil: o atestado ou o commit julgado não tem o SHA-256 do perfil'
+    if sha != sha256_perfil_atual:
+        return False, 'o perfil mudou depois do portão (SHA-256 do atestado diferente do de sociedade/perfil.md)'
+    return True, 'portão por área completo e do perfil atual'
 
 
 def verificar_cauda(raiz, sha_revisado, head):
@@ -108,6 +151,9 @@ def verificar_portao(raiz, ramo, head):
         return _res(False, f'atestado da etapa {at.get("etapa_id")}, esperado {etapa}', hash_atestado)
     if not at.get('total_arquivos_inspecionados'):
         return _res(False, 'atestado sem arquivo inspecionado', hash_atestado)
+    ok, motivo = forma_do_atestado(at, sha256_do_perfil_em(raiz, head))
+    if not ok:
+        return _res(False, motivo, hash_atestado, at.get('commit'))
     ok, motivo = verificar_cauda(raiz, at.get('commit'), head)
     return _res(ok, motivo, hash_atestado, at.get('commit'))
 

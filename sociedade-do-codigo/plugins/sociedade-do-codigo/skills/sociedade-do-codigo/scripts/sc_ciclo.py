@@ -211,6 +211,10 @@ def _atestado(soc, raiz, etapa):
     commit = resolver(raiz, at.get('commit'))
     if not commit:
         raise ErroCiclo('o commit do atestado não existe no repositório.')
+    perfil = Path(soc) / 'perfil.md'
+    ok, motivo = sc_status.forma_do_atestado(at, hashlib.sha256(perfil.read_bytes()).hexdigest() if perfil.is_file() else None)
+    if not ok:
+        raise ErroCiclo(f'atestado recusado ({caminho}): {motivo}.')
     return at, commit
 
 

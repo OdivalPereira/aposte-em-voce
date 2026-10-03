@@ -270,7 +270,8 @@ class SondaDG02RestoB15(Base):
         B15 muda: a conferência verifica o hash dos atestados. Esperado: "não feito"."""
         p = self.p
         (p.soc / 'pareceres').mkdir(parents=True, exist_ok=True)
-        (p.soc / 'pareceres' / 'atestado-soma.json').write_text(json.dumps(atestado_a_mao(p.head)), encoding='utf-8')
+        (p.soc / 'pareceres' / 'atestado-soma.json').write_text(
+            json.dumps(atestado_a_mao(p.head, perfil=p.soc / 'perfil.md')), encoding='utf-8')
         ordem = p.raiz / 'ordem-conferencia.md'
         ordem.write_text('# Ordem\n\n```entregas\nE1 | atestado_aprovado | sociedade/pareceres/atestado-soma.json | HEAD\n```\n',
                          encoding='utf-8')
@@ -305,7 +306,7 @@ class SondaDG02RestoB15(Base):
         p = self.p
         self.ok(p.abrir())
         p.atestado().parent.mkdir(parents=True, exist_ok=True)
-        p.atestado().write_text(json.dumps(atestado_a_mao(p.head)), encoding='utf-8')
+        p.atestado().write_text(json.dumps(atestado_a_mao(p.head, perfil=p.soc / 'perfil.md')), encoding='utf-8')
         self.ok(p.revisar(p.escrever_parecer(nivel='Nível C (mesmo fornecedor)')))
         r = p.decidir('aceitar', *POR)
         self.assertNotEqual(r.returncode, 0, 'aceite concedido com atestado escrito à mão')

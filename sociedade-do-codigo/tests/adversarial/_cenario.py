@@ -3,6 +3,7 @@
 Copiado de `tests/test_ciclo.py` (classe `Projeto`) de propósito: as sondas não podem mudar junto com um teste
 que elas vigiam. Nada aqui é teste (o nome começa com `_`); os arquivos `test_dg0N_*.py` importam este módulo.
 """
+import hashlib
 import json
 import os
 import re
@@ -259,10 +260,20 @@ def preencher_modelo_de_parecer(head, base, etapa='soma', nivel='Nível C (mesmo
     return texto
 
 
-def atestado_a_mao(commit_sha, etapa='soma'):
-    """Atestado escrito à mão, com todos os campos que o `decidir` e a conferência leem e nenhum teste rodado."""
-    return {'tipo': 'atestado_pre_devolucao', 'etapa_id': etapa, 'status': 'APROVADO', 'commit': commit_sha,
-            'total_arquivos_inspecionados': 3, 'verificacoes': {}, 'erros': []}
+def atestado_a_mao(commit_sha, etapa='soma', perfil=None, completo=True):
+    """Atestado escrito à mão, com todos os campos que o `decidir` e a conferência leem e nenhum teste rodado.
+
+    `completo` (padrão): na forma 1.3.0 que o `decidir` e o status exigem desde a B11 (bloco `portao` com uma área ok,
+    cobertura completa e o SHA-256 do `perfil`); é o atestado forjado que só a B15 (hash conferido) vai fechar.
+    `completo=False`: o atestado avulso, sem `portao`, que a B11 recusa."""
+    at = {'tipo': 'atestado_pre_devolucao', 'etapa_id': etapa, 'status': 'APROVADO', 'commit': commit_sha,
+          'total_arquivos_inspecionados': 3, 'verificacoes': {}, 'erros': []}
+    if completo:
+        sha = hashlib.sha256(Path(perfil).read_bytes()).hexdigest() if perfil else None
+        at['portao'] = {'modo': 'por_area', 'commit': commit_sha, 'perfil_sha256': sha, 'areas_tocadas': ['projeto'],
+                        'cobertura_completa': True,
+                        'areas': [{'area': 'projeto', 'ok': True, 'testes': {'total': 1, 'pulados': 0, 'falhos': 0}}]}
+    return at
 
 
 def eventos_do_arquivo(soc):

@@ -25,6 +25,14 @@ Etapa `a1-parser`, fatia 1 (pacote "portão amarrado"): B11, B11a, B11b, B11c, B
 - **B11d**: o modelo de PR ganha a linha "Conferi o diff de `.github/` e `sociedade/pareceres/`".
 - **Sondas**: DG-03 (árvore suja) e DG-09 (3 casos) e DG-11 (NFD com espaço) verdes; as demais do DG-03 seguem `expectedFailure` até a B14.
 
+**Correções da F1 (revisão interna, F1c)**
+
+- O `decidir aceitar` e o status `portao` só aceitam o atestado do `sc.py entregar` (1.3.0: `portao.modo == por_area`, `portao.commit` igual ao `commit`, áreas rodadas e todas ok); um atestado avulso do `sc_pre_devolucao.py` com `--comando-teste` é recusado (`sc_status.forma_do_atestado`).
+- O atestado grava `areas_tocadas` e `cobertura_completa`; `--area` roda uma área só, mas o atestado resultante não aceita decisão nem fica verde no status se faltar área tocada.
+- `--no-renames` em `sc_pre_devolucao.py` e `sc_conferir.py`: na renomeação contam a origem e o destino (área da origem rodada; mover de `sociedade/` para fora acusa a governança).
+- O `decidir` e o status exigem `portao.perfil_sha256` igual ao SHA-256 de `sociedade/perfil.md` julgado (disco no `decidir`, head do PR no status); perfil trocado só para rodar o portão é recusado. O portão não compara com o HEAD: durante a etapa o perfil do worktree fica sem commit.
+- Testes que falham com código 0 reprovam; arquivo `assume-unchanged` ou `skip-worktree` (`git ls-files -v`) conta como árvore suja.
+
 **Mudou**
 
 - `sc.py entregar` não aceita mais `--comando-teste` (quebra: ajuste a seção "Portão por área" do perfil). O `sc_pre_devolucao.py` avulso mantém o comportamento antigo, salvo com `--portao-por-area`.

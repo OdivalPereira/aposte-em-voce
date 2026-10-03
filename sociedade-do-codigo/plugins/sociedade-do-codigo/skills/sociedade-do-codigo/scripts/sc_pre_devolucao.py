@@ -93,7 +93,9 @@ def _em_governanca(rel: str) -> bool:
 
 def listar_arvore(top: Path) -> Optional[List[str]]:
     """Caminhos com mudança na árvore de trabalho ou no índice, rastreados ou não (ignorados pelo `.gitignore` não
-    aparecem). `git status --porcelain=v1 -z`: em renomeação o destino vem antes da origem; os dois contam."""
+    aparecem). `git status --porcelain=v1 -z`: em renomeação o destino vem antes da origem; os dois contam.
+    Arquivo marcado `assume-unchanged` ou `skip-worktree` (`git ls-files -v`: letra minúscula ou `S`) também conta:
+    o Git deixa de ver a mudança dele no `status`."""
     campos = _git_z(top, 'status', '--porcelain=v1', '-z', '--untracked-files=all')
     if campos is None:
         return None
@@ -109,6 +111,12 @@ def listar_arvore(top: Path) -> Optional[List[str]]:
             if i < len(campos):
                 caminhos.append(campos[i])
                 i += 1
+    marcados = _git_z(top, 'ls-files', '-v', '-z')
+    if marcados is None:
+        return None
+    for campo in marcados:
+        if len(campo) > 2 and (campo[0].islower() or campo[0] == 'S'):
+            caminhos.append(campo[2:])
     return caminhos
 
 
@@ -142,7 +150,7 @@ def obter_arquivos_candidato(pasta_projeto: Path, base: Optional[str] = None,
             resultado['erros'].append(f'Base inválida ou inexistente: {base}')
             return resultado
         resultado['base'] = base_sha.strip()
-        diff = _git_z(top, 'diff', '--name-only', '-z', '-M', resultado['base'], 'HEAD')
+        diff = _git_z(top, 'diff', '--name-only', '-z', '--no-renames', resultado['base'], 'HEAD')  # origem e destino
         if diff is None:
             resultado['erros'].append(f'git diff {resultado["base"][:12]}..HEAD falhou')
             return resultado
@@ -515,11 +523,13 @@ class VerificadorPreDevolucao:
 
     def _rodar_areas(self, areas: List[Dict[str, Any]], area: Optional[str], caminhos: List[str],
                      raiz: Optional[Path], todos_erros: List[str],
-                     areas_rodadas: List[Dict[str, Any]]) -> Tuple[bool, str, Optional[str], Dict[str, int]]:
+                     areas_rodadas: List[Dict[str, Any]],
+                     tocadas_out: Optional[List[str]] = None) -> Tuple[bool, str, Optional[str], Dict[str, int]]:
         """Roda os testes de cada área escolhida (B11c) e acrescenta o registro de cada uma em `areas_rodadas`.
 
         Sem `area`: as áreas que `caminhos` (base..HEAD) toca; com `area`: só ela. O comando e o timeout vêm da tabela
-        do perfil. Reprovam: saída diferente de zero, timeout, 0 testes e todos pulados. Devolve
+        do perfil. Reprovam: saída diferente de zero, timeout, 0 testes, todos pulados e testes que falharam com
+        código 0. `tocadas_out` recebe todas as áreas que base..HEAD toca, rodem ou não. Devolve
         (ok, resumo, comandos, totais)."""
         totais = {'total': 0, 'pulados': 0, 'falhos': 0}
         if not areas:
@@ -527,13 +537,15 @@ class VerificadorPreDevolucao:
         if raiz is None:
             todos_erros.append('Portão por área: a pasta não está num repositório Git.')
             return False, 'Sem repositório Git: nenhum teste rodou.', None, totais
+        tocadas = areas_tocadas(caminhos, areas)
+        if tocadas_out is not None:
+            tocadas_out.extend(tocadas)
         if area:
             escolhidas = [a for a in areas if a['nome'] == area]
             if not escolhidas:
                 todos_erros.append(f'Área desconhecida: "{area}" (o perfil tem: {", ".join(a["nome"] for a in areas)}).')
                 return False, 'Área desconhecida: nenhum teste rodou.', None, totais
         else:
-            tocadas = areas_tocadas(caminhos, areas)
             escolhidas = [a for a in areas if a['nome'] in tocadas]
             if not escolhidas:
                 todos_erros.append('base..HEAD não toca nenhuma área do "Portão por área" (só sociedade/ e docs/?): '
@@ -568,6 +580,8 @@ class VerificadorPreDevolucao:
                     motivos.append('0 testes executados (ou formato de saída não reconhecido)')
                 elif t['pulados'] >= t['total']:
                     motivos.append(f'todos os {t["total"]} testes foram pulados')
+                if t['falhos'] > 0 and codigo == 0:
+                    motivos.append(f'{t["falhos"]} teste(s) falharam, embora o comando tenha saído com código 0')
             final = '\n'.join(ANSI.sub('', saida).strip().splitlines()[-6:])
             registro.update({'ok': not motivos, 'codigo': codigo, 'duracao_s': duracao, 'timeout_estourado': estourou,
                              'testes': t, 'motivos': motivos, 'saida_final': final})
@@ -771,9 +785,10 @@ class VerificadorPreDevolucao:
         # G. Testes automatizados
         comando_testes_usado = None
         areas_rodadas: List[Dict[str, Any]] = []
+        areas_do_candidato: List[str] = []
         if por_area:
             testes_ok, resumo_testes, comando_testes_usado, totais_testes = self._rodar_areas(
-                areas_perfil, area, caminhos_candidato, raiz_higiene, todos_erros, areas_rodadas)
+                areas_perfil, area, caminhos_candidato, raiz_higiene, todos_erros, areas_rodadas, areas_do_candidato)
             if raiz_higiene is not None:
                 depois = sorted({_nfc(r) for r in (listar_arvore(raiz_higiene) or []) if not _em_governanca(r)})
                 if depois != arvore_suja:
@@ -849,6 +864,9 @@ class VerificadorPreDevolucao:
                 'perfil_sha256': perfil_sha256,
                 'commit': commit_atual,
                 'area_pedida': area,
+                'areas_tocadas': areas_do_candidato,
+                'cobertura_completa': bool(areas_do_candidato) and all(
+                    any(r['area'] == nome and r.get('ok') is True for r in areas_rodadas) for nome in areas_do_candidato),
                 'areas': areas_rodadas,
             }
 

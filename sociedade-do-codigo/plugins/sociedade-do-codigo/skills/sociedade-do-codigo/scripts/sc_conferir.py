@@ -50,8 +50,8 @@ def git(raiz, *args):
 
 def arquivos_do_intervalo(raiz, base, head):
     """Caminhos alterados em base..head, lidos com `-z` e sem aspas (`core.quotepath=off`) e normalizados em NFC.
-    None se o intervalo for inválido."""
-    r = subprocess.run(['git', '-C', str(raiz), '-c', 'core.quotepath=off', 'diff', '--name-only', '-z', '-M', base, head],
+    `--no-renames`: numa renomeação contam a origem e o destino. None se o intervalo for inválido."""
+    r = subprocess.run(['git', '-C', str(raiz), '-c', 'core.quotepath=off', 'diff', '--name-only', '-z', '--no-renames', base, head],
                        capture_output=True)
     if r.returncode != 0:
         return None

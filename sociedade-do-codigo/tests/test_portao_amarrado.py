@@ -21,6 +21,7 @@ from util import NUCLEO, RAIZ, SKILLS, rodar  # noqa: E402
 sys.path.insert(0, str(NUCLEO / 'scripts'))
 import sc_perfil  # noqa: E402
 import sc_pre_devolucao  # noqa: E402
+import sc_status  # noqa: E402
 
 SC = NUCLEO / 'scripts' / 'sc.py'
 AMBIENTE = {**os.environ, 'GIT_CONFIG_GLOBAL': os.devnull, 'GIT_CONFIG_NOSYSTEM': '1'}
@@ -389,6 +390,109 @@ class TestPortao(Base):
         r.commitar('pacote/mod.py')
         res = r.entregar()
         self.assertIn('área pacote [OK]', res.stdout)
+
+
+class TestRenomeacao(Base):
+    """F1c, achado 3: a renomeação não pode esconder a origem (`--no-renames`)."""
+
+    def _renomear(self, r, origem, destino):
+        r.commitar(origem)  # o arquivo existe na base da sonda
+        r.base = git(r.raiz, 'rev-parse', 'HEAD')
+        (r.raiz / destino).parent.mkdir(parents=True, exist_ok=True)
+        git(r.raiz, 'mv', origem, destino)
+        commit(r.raiz, f'refactor: {origem} -> {destino}')
+
+    def test_mover_arquivo_do_pacote_para_a_raiz_roda_tambem_o_pacote(self):
+        r = self.repo()
+        self._renomear(r, 'pacote/extra.py', 'extra.py')
+        self.assertEqual(r.entregar().returncode, 0)
+        self.assertEqual(self.nomes(r.atestado()), ['app', 'pacote'])
+        self.assertEqual(r.atestado()['portao']['areas_tocadas'], ['app', 'pacote'])
+
+    def test_mover_arquivo_de_sociedade_para_docs_acusa_a_violacao_de_governanca(self):
+        r = self.repo()
+        self._renomear(r, 'sociedade/nota.md', 'docs/nota2.md')
+        r.commitar('pacote/mod.py')
+        self.assertNotEqual(r.entregar().returncode, 0)
+        erros = r.atestado()['erros']
+        self.assertTrue(any('governança' in e and 'sociedade/nota.md' in e for e in erros), erros)
+
+    def test_conferir_arquivos_em_ve_a_origem_da_renomeacao(self):
+        r = self.repo()
+        self._renomear(r, 'pacote/extra.py', 'docs/extra.py')
+        ordem = Path(self.tmp) / 'ordem.md'
+        ordem.write_text(f'# Ordem\n\n```entregas\nE1 | arquivos_em | {r.base}..HEAD | docs/\n```\n', encoding='utf-8')
+        res = rodar(SC, 'conferir', '--ordem', ordem, '--raiz', r.raiz, '--json', cwd=r.raiz, env=AMBIENTE)
+        item = json.loads(res.stdout)['itens'][0]
+        self.assertEqual(item['estado'], 'não feito', item)
+        self.assertIn('pacote/extra.py', item['detalhe'])
+
+
+class TestMenores(Base):
+    """F1c, achado 5: testes que falham com código 0; arquivo escondido do `status` pelo Git."""
+
+    def test_testes_que_falham_com_codigo_zero_reprovam(self):
+        falso = "python3 -B -c \"print('Ran 2 tests in 0.1s'); print('FAILED (failures=1)')\""
+        r = self.repo(pacote=falso)
+        r.commitar('pacote/mod.py')
+        self.assertNotEqual(r.entregar().returncode, 0)
+        area = r.atestado()['portao']['areas'][0]
+        self.assertEqual((area['codigo'], area['testes']['falhos']), (0, 1))
+        self.assertFalse(area['ok'])
+        self.assertTrue(any('falharam' in m for m in area['motivos']), area['motivos'])
+
+    def test_assume_unchanged_e_skip_worktree_contam_como_arvore_suja(self):
+        for marca in ('--assume-unchanged', '--skip-worktree'):
+            with self.subTest(marca):
+                with tempfile.TemporaryDirectory() as tmp:
+                    r = Repo(tmp)
+                    r.commitar('pacote/mod.py')
+                    git(r.raiz, 'update-index', marca, 'pacote/mod.py')
+                    if marca == '--assume-unchanged':
+                        r.escrever('pacote/mod.py', 'x = 2\n')  # a mudança some do `git status`
+                    self.assertNotIn('pacote/mod.py', git(r.raiz, 'status', '--porcelain'))
+                    res = r.entregar()
+                    self.assertNotEqual(res.returncode, 0, res.stdout)
+                    at = r.atestado()
+                    self.assertEqual(at['status'], 'REPROVADO')
+                    self.assertIn('pacote/mod.py', at['verificacoes']['arvore_limpa']['suja'])
+
+
+class TestFormaDoAtestado(unittest.TestCase):
+    PERFIL = 'a' * 64
+
+    def atestado(self, **portao):
+        base = {'modo': 'por_area', 'commit': 'c1', 'perfil_sha256': self.PERFIL, 'areas_tocadas': ['app'],
+                'cobertura_completa': True, 'areas': [{'area': 'app', 'ok': True}]}
+        base.update(portao)
+        return {'commit': 'c1', 'portao': base}
+
+    def forma(self, at, perfil=PERFIL):
+        return sc_status.forma_do_atestado(at, perfil)
+
+    def test_completo_passa(self):
+        self.assertTrue(self.forma(self.atestado())[0])
+
+    def test_recusa_cada_defeito(self):
+        casos = {
+            'sem portao': ({'commit': 'c1'}, 'portão por área'),
+            'modo errado': (self.atestado(modo='livre'), 'portão por área'),
+            'commit do portão diferente': (self.atestado(commit='c2'), 'commit do portão'),
+            'sem áreas': (self.atestado(areas=[]), 'nenhuma área rodada'),
+            'área reprovada': (self.atestado(areas=[{'area': 'app', 'ok': False}]), 'não passaram'),
+            'sem áreas tocadas': (self.atestado(areas_tocadas=[]), 'áreas que base..HEAD toca'),
+            'área tocada sem rodar': (self.atestado(areas_tocadas=['app', 'pacote']), 'faltam: pacote'),
+            'cobertura falsa': (self.atestado(cobertura_completa=False), 'não cobre'),
+            'perfil diferente': (self.atestado(perfil_sha256='b' * 64), 'perfil mudou'),
+        }
+        for nome, (at, trecho) in casos.items():
+            with self.subTest(nome):
+                ok, motivo = self.forma(at)
+                self.assertFalse(ok)
+                self.assertIn(trecho, motivo)
+
+    def test_sem_como_conferir_o_perfil_recusa(self):
+        self.assertFalse(self.forma(self.atestado(), perfil=None)[0])
 
 
 class TestTextosDoCiclo(unittest.TestCase):
