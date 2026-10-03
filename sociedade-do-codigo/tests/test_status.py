@@ -24,6 +24,14 @@ PERFIL_TEXTO = '# Perfil sintético\n\n## Portão por área\n| Área | Pasta | T
 PERFIL = 'sociedade/perfil.md'
 
 
+CAMPOS_DO_HASH = ('commit', 'base', 'papel', 'etapa_id', 'fatia_id', 'status', 'verificacoes', 'hashes_artefatos', 'portao', 'erros')
+
+
+def hash_do_atestado(at):
+    """Cópia deliberada da fórmula do `sc_pre_devolucao`: o teste não usa o código que vigia."""
+    return hashlib.sha256(json.dumps({k: at.get(k) for k in CAMPOS_DO_HASH}, sort_keys=True).encode('utf-8')).hexdigest()
+
+
 def atestado(commit, **extra):
     """Atestado na forma 1.3.0 (B11): é a única que o status `portao` aceita; o perfil é o de `PERFIL_TEXTO`."""
     base = {'tipo': 'atestado_pre_devolucao', 'status': 'APROVADO', 'etapa_id': ETAPA, 'commit': commit,
@@ -36,7 +44,7 @@ def atestado(commit, **extra):
     base.setdefault('hashes_artefatos', {'src/a.py': 'a' * 64})
     base.setdefault('arquivos_inspecionados', sorted(base['hashes_artefatos']))
     base['total_arquivos_inspecionados'] = len(base['hashes_artefatos']) if 'total_arquivos_inspecionados' not in extra else extra['total_arquivos_inspecionados']
-    base.setdefault('atestado_hash', sc_status.hash_do_atestado(base))
+    base.setdefault('atestado_hash', hash_do_atestado(base))
     return base
 
 

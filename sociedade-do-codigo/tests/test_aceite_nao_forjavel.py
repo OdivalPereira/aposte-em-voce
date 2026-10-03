@@ -264,6 +264,16 @@ class RodadaLegadoSemDeclaracao(Base):
         self.ok(p.rodada('encerrar', '--resumo', 'com decisão'))
         self.assertEqual(p.etapa('leg')['estado'], 'encerrada')
 
+    def test_B15_encerrar_forcar_tambem_exige_a_decisao(self):
+        """`--forcar` com motivo e decisão-ref válidos dispensa fatia aberta, mas não o evento de decisão."""
+        p = self.p
+        self.abrir_legado()  # a fatia segue aberta
+        r = p.rodada('encerrar', '--forcar', '--regra', 'fatias_pendentes', '--motivo', 'motivo substantivo longo',
+                     '--decisao-ref', 'DEC-ODIVAL-001')
+        self.recusa(r, 'decisão')
+        self.assertEqual(p.eventos('excecao_registrada'), [], 'a recusa não pode deixar exceção registrada')
+        self.assertNotEqual(p.etapa('leg')['estado'], 'encerrada')
+
 
 class RevisarLevaOsPapeis(Base):
     def test_B17b_revisar_usa_o_worktree_da_etapa_e_leva_ordem_atestado_e_perfil(self):

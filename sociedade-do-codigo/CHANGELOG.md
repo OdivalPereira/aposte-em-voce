@@ -13,6 +13,17 @@ Etapa `fechamento-nuvem`, fatia 1: economia de contexto; o uso sai do log da ses
 - **Regras de economia** nos textos do núcleo e das skills: conversa curta com estado em arquivo e agente novo; saída curta (resumo e falhas) e leitura por trecho; retorno de até 2 KB no chat, com o detalhe em arquivo (revisa a Q99, antes 8 KB); cada agente lê só o que a ordem ou a subordem indicou (Q21).
 - **Medir pelo log é permitido; estimar continua proibido** (ajusta a regra 8): o `validar_pacote.py` aceita "medir" com menção ao log e recusa estimar, calcular e relatar; `avaliacao-modelo.md` mantém a "Proibição Absoluta" e ganha a exceção.
 
+Etapa `fechamento-nuvem`, fatia 3: integridade do aceite (B15 e B17b). **Adulteração detectada, não aceite à prova de forja.**
+
+**Entrou**
+
+- **`atestado_hash` conferido** (`sc_status.py`, `sc_ciclo.py`, `sc_conferir.py`): o `decidir`, a conferência (`atestado_aprovado`, que também aplica `forma_do_atestado`: recusa atestado avulso e `--area` parcial) e o status `aceite` recalculam o hash e recusam atestado sem hash ou com conteúdo alterado. O `decidir` grava o `atestado_hash` na decisão e o `aceite` confere que o atestado do head é esse.
+- **Limite**: o hash é um SHA-256 sem chave. Um atestado reescrito à mão com o hash recalculado **continua aceito** até a reexecução do portão (o `sc.py entregar` no CI); só a adulteração por descuido ou sem refazer o hash é detectada. O status `portao` ainda não confere o hash.
+- **`aceite` e `.github/workflows/`**: fica vermelho se o PR altera workflows sem que a ordem, com o hash da abertura, os liste no escreva-só.
+- **Legado `sc_rodada`**: `evidencia` executa o comando e grava o código de saída medido (saem `--exit-code` e `--saida`); `parecer` vem de `--arquivo` com lint (saem `--veredito`, `--implementador`, `--revisor`, `--fornecedor`, `--criterio-ok`, `--nivel-independencia`); `encerrar` exige o evento de decisão, também com `--forcar`.
+- **Independência**: o fornecedor do perfil prevalece sobre `--implementador Nome:Fornecedor` (declaração contrária é recusada) e o fornecedor declarado pelo revisor é conferido com o perfil. O `decidir` recusa como decisor papel, agente e modelo do perfil.
+- **`sc.py revisar`** sem `--parecer` usa o worktree da etapa e leva ordem, atestado e perfil à cópia do revisor.
+
 Etapa `m0-destravar`: uma etapa fecha só com comandos documentados.
 
 **Entrou**
