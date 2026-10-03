@@ -3,13 +3,16 @@
 
   sc.py ordem    --etapa <ID>                      2. cria sociedade/ordens/<ID>.md a partir do modelo
   sc.py abrir    --etapa <ID> --ordem <arquivo> --base <commit>   3. abre a etapa no registro, a partir da ordem
-  sc.py entregar --etapa <ID> --base <commit>      3. portão sobre base..HEAD e atestado em sociedade/pareceres/
+  sc.py entregar --etapa <ID> --base <commit> [--area <nome>]   3. portão por área sobre base..HEAD e atestado em sociedade/pareceres/
   sc.py conferir --ordem <arquivo> [--registrar]   4. marca cada entrega como feita ou não feita
   sc.py sessao   <antigravity|codex|claude>        4. mede uma sessão pelo log do aplicativo
   sc.py revisar  --etapa <ID> --base <commit>      5. cópia descartável do candidato para o revisor
   sc.py revisar  --etapa <ID> --parecer <arquivo> --head <commit>   5. registra o parecer (lint e commit conferidos)
   sc.py decidir  --etapa <ID> aceitar|corrigir|rejeitar|sem-aceite --por <nome>   6. decisão, métricas e encerramento
   sc.py estado [--artefato <arquivo>]              6. gera sociedade/estado.md, estado.html e, se pedido, o painel
+
+Durante a etapa, os comandos com --etapa (e `conferir`, pelo nome da ordem) leem e gravam a `sociedade/` do worktree da
+etapa (`~/.sociedade/trabalho/<projeto>/<etapa>/sociedade`) se ela existir; `--pasta-sociedade` vale antes de tudo.
 
 Cada subcomando mostra a ajuda completa com -h. Os scripts de baixo nível continuam disponíveis.
 """
@@ -22,7 +25,7 @@ from pathlib import Path
 
 AQUI = Path(__file__).resolve().parent
 sys.path.insert(0, str(AQUI))
-from sc_registro import localizar_sociedade_canonica  # noqa: E402
+from sc_registro import localizar_sociedade_canonica, localizar_sociedade_da_etapa  # noqa: E402
 import sc_ciclo  # noqa: E402
 
 ID_VALIDO = re.compile(r'^[A-Za-z0-9][A-Za-z0-9._-]*$')
@@ -55,15 +58,20 @@ def cmd_ordem(a):
 
 def cmd_entregar(a):
     import sc_pre_devolucao
-    soc = Path(a.pasta_sociedade) if a.pasta_sociedade else localizar_sociedade_canonica(Path(a.pasta_projeto))
-    nome = f'atestado-{_id(a.etapa)}' + (f'-{_id(a.fatia)}' if a.fatia else '') + '.json'
+    if a.comando_teste is not None:
+        print('erro: --comando-teste é recusado. O comando e o timeout dos testes vêm só da seção "Portão por área" do '
+              'perfil (sociedade/perfil.md); use --area <nome> para rodar uma área só.', file=sys.stderr)
+        return 2
+    etapa = _id(a.etapa)
+    soc = Path(a.pasta_sociedade) if a.pasta_sociedade else localizar_sociedade_da_etapa(etapa, Path(a.pasta_projeto))
+    nome = f'atestado-{etapa}' + (f'-{_id(a.fatia)}' if a.fatia else '') + '.json'
     saida = soc / 'pareceres' / nome
     argv = ['--etapa', a.etapa, '--pasta-projeto', a.pasta_projeto, '--base', a.base,
-            '--papel', a.papel, '--saida-json', str(saida), '--pasta-sociedade', str(soc)]
+            '--papel', a.papel, '--saida-json', str(saida), '--pasta-sociedade', str(soc), '--portao-por-area']
     if a.fatia:
         argv += ['--fatia', a.fatia]
-    if a.comando_teste:
-        argv += ['--comando-teste', a.comando_teste]
+    if a.area:
+        argv += ['--area', a.area]
     rc = sc_pre_devolucao.main(argv)
     print(f'\natestado: {saida}')
     return rc
@@ -71,8 +79,11 @@ def cmd_entregar(a):
 
 def cmd_conferir(a):
     import sc_conferir
+    soc = a.pasta_sociedade
+    if not soc and a.registrar:  # B11a: a ordem é <etapa>.md; o registro é o da sociedade/ da etapa
+        soc = str(localizar_sociedade_da_etapa(Path(a.ordem).stem))
     argv = ['--ordem', a.ordem] + (['--registrar'] if a.registrar else []) + (['--raiz', a.raiz] if a.raiz else []) \
-        + (['--json'] if a.json else [])
+        + (['--pasta-sociedade', soc] if soc else []) + (['--json'] if a.json else [])
     return sc_conferir.main(argv)
 
 
@@ -87,16 +98,19 @@ def _executar(funcao, *args, **kw):
     return 0
 
 
-def _soc(a):
-    return Path(a.pasta_sociedade) if a.pasta_sociedade else localizar_sociedade_canonica()
+def _soc(a, etapa=None):
+    """B11a: `--pasta-sociedade`; senão a `sociedade/` do worktree da etapa, se existir; senão a canônica."""
+    if a.pasta_sociedade:
+        return Path(a.pasta_sociedade)
+    return localizar_sociedade_da_etapa(etapa) if etapa else localizar_sociedade_canonica()
 
 
 def cmd_abrir(a):
-    return _executar(sc_ciclo.abrir, _soc(a), a.etapa, a.ordem, a.base, a.bastao)
+    return _executar(sc_ciclo.abrir, _soc(a, a.etapa), a.etapa, a.ordem, a.base, a.bastao)
 
 
 def cmd_decidir(a):
-    return _executar(sc_ciclo.decidir, _soc(a), _id(a.etapa), a.acao, a.por, a.head, a.motivo, a.minutos, a.intervencoes,
+    return _executar(sc_ciclo.decidir, _soc(a, _id(a.etapa)), _id(a.etapa), a.acao, a.por, a.head, a.motivo, a.minutos, a.intervencoes,
                      a.escaparam, a.log, a.sessao, a.projetos)
 
 
@@ -110,7 +124,8 @@ def cmd_sessao(a):
 
 def cmd_estado(a):
     import sc_resumo
-    argv = (['--pasta-sociedade', a.pasta_sociedade] if a.pasta_sociedade else []) \
+    soc = a.pasta_sociedade or str(localizar_sociedade_da_etapa(a.etapa))  # B11a: worktree da etapa, se existir
+    argv = ['--pasta-sociedade', soc] \
         + (['--sem-html'] if a.sem_html else []) + (['--imprimir'] if a.imprimir else []) \
         + (['--artefato', a.artefato] if a.artefato else [])
     return sc_resumo.main(argv)
@@ -118,9 +133,12 @@ def cmd_estado(a):
 
 def cmd_revisar(a):
     """Prepara a cópia descartável para o revisor; com --parecer, registra o parecer pronto no registro."""
-    soc = Path(a.pasta_sociedade) if a.pasta_sociedade else localizar_sociedade_canonica()
-    raiz = soc.parent
     etapa = _id(a.etapa)
+    if a.parecer:  # B11a: o parecer vai para o registro da sociedade/ da etapa
+        soc = _soc(a, etapa)
+    else:
+        soc = Path(a.pasta_sociedade) if a.pasta_sociedade else localizar_sociedade_canonica()
+    raiz = soc.parent
     if a.parecer:
         return _executar(sc_ciclo.registrar_parecer, soc, etapa, a.parecer, a.head, a.implementador or None)
     if not a.base:
@@ -194,7 +212,8 @@ def main(argv=None):
     p.add_argument('--base', required=True, help='commit de partida (da fatia ou da etapa)')
     p.add_argument('--fatia')
     p.add_argument('--pasta-projeto', default='.', help='pasta onde os testes rodam')
-    p.add_argument('--comando-teste')
+    p.add_argument('--area', help='roda só esta área do "Portão por área" (padrão: as que base..HEAD toca)')
+    p.add_argument('--comando-teste', help=argparse.SUPPRESS)  # recusado: o comando vem só do perfil (B11)
     p.add_argument('--papel', default='Coordenador')
     p.add_argument('--pasta-sociedade')
     p.set_defaults(func=cmd_entregar)
@@ -203,6 +222,7 @@ def main(argv=None):
     p.add_argument('--ordem', required=True)
     p.add_argument('--registrar', action='store_true')
     p.add_argument('--raiz')
+    p.add_argument('--pasta-sociedade', help='pasta do registro (padrão: sociedade/ do worktree da etapa, se existir)')
     p.add_argument('--json', action='store_true')
     p.set_defaults(func=cmd_conferir)
 
@@ -242,6 +262,7 @@ def main(argv=None):
     p.set_defaults(func=cmd_decidir)
 
     p = sub.add_parser('estado', help='gera sociedade/estado.md e estado.html')
+    p.add_argument('--etapa', help='etapa cujo worktree tem a sociedade/ (padrão: o worktree em que a pasta atual está)')
     p.add_argument('--pasta-sociedade')
     p.add_argument('--sem-html', action='store_true')
     p.add_argument('--imprimir', action='store_true')

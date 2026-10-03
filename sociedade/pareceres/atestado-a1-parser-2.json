@@ -1,0 +1,93 @@
+{
+  "tipo": "atestado_pre_devolucao",
+  "versao": "1.2.0",
+  "timestamp": "2026-10-03T18:41:08.056183Z",
+  "papel": "Coordenador",
+  "etapa_id": "a1-parser",
+  "fatia_id": "2",
+  "status": "APROVADO",
+  "verificacoes": {
+    "higiene_pastas": {
+      "ok": true,
+      "erros": []
+    },
+    "build": {
+      "ok": true,
+      "comando": "npm run build",
+      "detalhes": "dist/assets/pdf.worker-DUCzcP-s.js  1,245.50 kB\ndist/assets/index-B1ZwZmOK.css          2.16 kB │ gzip: 0.92 kB\ndist/assets/index-Df7_MXb7.js          22.69 kB │ gzip: 9.25 kB\n\n✓ built in 1.64s",
+      "codigo": 0
+    },
+    "tipos_estaticos": {
+      "ok": true,
+      "comando": "npm run lint",
+      "detalhes": "> aposte-em-voce@0.1.0 lint\n> tsc --noEmit && eslint .",
+      "codigo": 0
+    },
+    "compilacao": {
+      "ok": true,
+      "erros": []
+    },
+    "seguranca_antitoken": {
+      "ok": true,
+      "erros": []
+    },
+    "disjuncao": {
+      "ok": true,
+      "erros": []
+    },
+    "testes": {
+      "ok": true,
+      "detalhes": "  ✓  5 tests/e2e/leitura.spec.ts:88:3 › jornada de leitura (T08, T09, T99) em perfil de celular › arquivo corrompido: mensagem clara (699ms)\n  ✓  7 tests/e2e/leitura.spec.ts:119:3 › jornada de leitura (T08, T09, T99) em perfil de celular › alvos de toque de 44 px ou mais nos botões (248ms)\n  ✓  6 tests/e2e/leitura.spec.ts:96:3 › jornada de leitura (T08, T09, T99) em perfil de celular › PDF com senha: pede a senha, recusa a errada, lê com a certa; a senha não sai do aparelho (774ms)\n\n  7 passed (8.8s)",
+      "comando": "npm test",
+      "totais": {}
+    }
+  },
+  "commit": "5ff94f77c2c7b201d5f590e4cea84586cfb5c9bb",
+  "base": "d86e90cb84adac9dfd84699d10a216602a7b19c4",
+  "origem_arquivos": "git",
+  "total_arquivos_inspecionados": 38,
+  "arquivos_removidos": [],
+  "python": "3.11.15",
+  "hashes_artefatos": {
+    ".github/workflows/ci.yml": "3d2d045dd450f73b2c1d556513377d8fe26aa6aed345248bfe19db6373f6e89f",
+    "eslint.config.js": "31f8dbf6fa11b81280a992134df89ae0590048b13b3dcab5b4f03ef9f6dbf693",
+    "index.html": "39a229fc66559a2b584a3ec852835976fcb0c84d4e2104565c2d223c087674f5",
+    "package-lock.json": "aa8e0724a1992746398cd24d4798cc04edfe60d1bddff4ae08151c457e329663",
+    "package.json": "d0c3a4fd25e9dc82a0f46e0d0ce5210c5a000b6450408043544cb8b4a4cd186f",
+    "playwright.config.ts": "0a617a4b79fc14fd8d22fce88d3ba3ec8105d288b040d6464a7173aec1e5cc48",
+    "src/app.tsx": "e9710c025b0c4c6bdfb10f14bacaee265f95dea904056335b2c361ea889be89a",
+    "src/leitura/LEIAME.md": "b2c7093f183f41281509757da6ceeba6978bc251a677a19a5a425e97c647f8fd",
+    "src/leitura/cliente.ts": "ecda12f113736a0a2049a1dd79b8406f87d500994f75791b02c477f360cc9aa4",
+    "src/leitura/conferir.ts": "c955bc78af7fa5dc9bef5d0a160214237404f358c079a72285b316c9b38bfe18",
+    "src/leitura/consolidar.ts": "ae757592810834c913dec991afbe30133f2ab6becc4093cb3b04865a96b27fca",
+    "src/leitura/diagnostico.ts": "454a06d12f4c0328bd68e8fa1624d559392557d25d5feaf6119ab3a72236a0d3",
+    "src/leitura/extrair.ts": "3dae41e6d3cea3449bd95cd753ca15c37f77bcbd9471f12bd19b905c0d30856e",
+    "src/leitura/index.ts": "ca8db14de212409bd6dce3f3eb0ca4fe4d0b871fcef06530a615c2e279a56cbb",
+    "src/leitura/normalizar.ts": "ca2a888724726242e8c9ea335d5ac367ee1930e150c225c8cd401f5b2d3bd1e5",
+    "src/leitura/pdfjs.d.ts": "3da0184aab5dbb63738dc25e21c7788af302d0dbc907c80ec52b289ed7003611",
+    "src/leitura/reconstruir.ts": "5079b9166b085bfc3513f72e3f68a31bcc9a81e13c5730a218c8a7ada8fd140d",
+    "src/leitura/tipos.ts": "65605bea83d9f360f74e4988a719fdb64862bdda475944fba4067647d46ea8c7",
+    "src/leitura/worker.ts": "72674826e5300a73a86c1bc5260ae05e33f50ce53badd58d4ff3f9c6ce890ce9",
+    "src/main.tsx": "c09d7e40807ec4b24bd528f8a0d34efbeb8174ab0890caaae9281360141ad5dc",
+    "src/telas/Diagnostico.tsx": "54049a584309a6e6f84e54d56f7ae77d6428ffa6520db2cec72d87eff7c58161",
+    "src/telas/Extratos.tsx": "28cb097810a6c0ab95602bfbdf758cd6c6fba06062cb8d86988980b14f740dca",
+    "src/telas/ResultadoLeitura.tsx": "bf2d074d116ca3f4b4e9eb65c385ad3d47122f997571505fc2994c305d5af29d",
+    "src/ui/estilos.css": "dc7c24c98524711265631354995fd15e3eb5d620422696c1416fd6bd4007cccc",
+    "src/ui/formatar.ts": "e5c54474bf11ddc0d8ad45dde3bc36047bfa2ff422f8e5a471dfa727ff660eb2",
+    "tests/e2e/auxiliar.ts": "f77cf975f684b929a8ba13c019a0fce74588ff62f644dc6fef8b778412304054",
+    "tests/e2e/leitura.spec.ts": "cf15d98fd4cf5c51f14fb936fe82c6ad13cc5dd5917084cc2c2a8cb324bd847a",
+    "tests/unit/auxiliar/montar.ts": "edd075d4d8921e9d1a27d3fbb4a2fd777ef6b744e4f1d2d268d24ba4cf026fb9",
+    "tests/unit/auxiliar/pdf-com-senha.ts": "009c2383ced166e850fc8e5aed58ede6d3ebc3e9aa443f4c14b8b181617e7d94",
+    "tests/unit/auxiliar/pdf-sintetico.ts": "f78aa6ce168285425117b3573bb8a5d4e91b2278a3125110211934fe74c4f9c0",
+    "tests/unit/consolidar.test.ts": "ad261c620b933e27d8cfebc2e2c992e16ec71ed5bc26f2a5d925da9a410ec231",
+    "tests/unit/normalizar.test.ts": "a0299d190c2957feb3dc1502e596b794ca72d3467e69ce3a221b9e1f5103a3f8",
+    "tests/unit/pdf.test.ts": "7e72842e17f9bb69193211232eac8ef43af0ada16fb81a435d5bb9940961c655",
+    "tests/unit/pipeline.test.ts": "5dd000144694605150650bfc5eecb84dc95b3d07dc67e9736b89b9f579609132",
+    "tsconfig.json": "d3ca48819a168cf211143966dab1698b732d21da7ba7e9d70d467bfa2782a2d2",
+    "vercel.json": "a0183a87e4860f04e416c9cfb3577ca99e607b28f720121610ecd6b6b28e22aa",
+    "vite.config.ts": "536b3a9bdbb59e34afb189c4a5bb7de4797ddf15bd56ed6c82c0550dc47aad10",
+    "vitest.config.ts": "23bee0b454730da498eb7b7f4fa00364e0a6076b661329aebfd214d35ecf9228"
+  },
+  "erros": [],
+  "atestado_hash": "be90a30425fbea2b763c7425edf795f87f0a7c3be238da95594c41561cd29da2"
+}

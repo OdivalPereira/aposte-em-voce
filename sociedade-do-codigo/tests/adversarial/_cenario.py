@@ -3,6 +3,7 @@
 Copiado de `tests/test_ciclo.py` (classe `Projeto`) de propósito: as sondas não podem mudar junto com um teste
 que elas vigiam. Nada aqui é teste (o nome começa com `_`); os arquivos `test_dg0N_*.py` importam este módulo.
 """
+import hashlib
 import json
 import os
 import re
@@ -25,7 +26,7 @@ SC = NUCLEO / 'scripts' / 'sc.py'
 SC_RODADA = NUCLEO / 'scripts' / 'sc_rodada.py'
 LINT = SKILLS / 'sc-revisao' / 'scripts' / 'lint_parecer.py'
 MODELO_PARECER = SKILLS / 'sc-revisao' / 'assets' / 'parecer-modelo.md'
-TESTE_PROJETO = 'python3 -B -m unittest discover -s tests'
+TESTE_PROJETO = 'python3 -B -m unittest discover -s tests'  # o comando que o perfil sintético declara no Portão por área
 # Sem configuração global de git: a falta de `user.name` precisa ser real nas sondas.
 AMBIENTE = {**os.environ, 'GIT_CONFIG_GLOBAL': os.devnull, 'GIT_CONFIG_NOSYSTEM': '1'}
 
@@ -40,6 +41,11 @@ Projeto sintético das sondas.
 | Arquiteto | Círdan | Claude Code (nuvem) | Anthropic | Modelo A | high | ativo | 2026-10-03 | sessão principal |
 | Revisor Independente | Barbárvore | Claude Code (nuvem) | Anthropic | Modelo A | high | ativo | 2026-10-03 | subagente |
 | Coordenador | Gandalf | Claude Code (nuvem) | Anthropic | Modelo B | high | ativo | 2026-10-03 | subagente |
+
+## Portão por área
+| Área | Pasta | Testes | Timeout (s) | Prefixos |
+|---|---|---|---|---|
+| projeto | `.` | `{TESTES}` | 120 | `*` |
 {MODO}"""
 
 MODO_EMULACAO = """
@@ -59,11 +65,12 @@ def commit(raiz, msg):
     return git(raiz, 'rev-parse', 'HEAD')
 
 
-def texto_perfil(emulacao='sim', modo=None, extra_missao=''):
-    """`emulacao`: 'sim', 'não' ou None (sem a seção). `modo` troca a seção inteira (casos de falsificação)."""
+def texto_perfil(emulacao='sim', modo=None, extra_missao='', testes=None):
+    """`emulacao`: 'sim', 'não' ou None (sem a seção). `modo` troca a seção inteira (casos de falsificação).
+    `testes`: o comando da coluna Testes do "Portão por área" (padrão: `TESTE_PROJETO`)."""
     if modo is None:
         modo = MODO_EMULACAO.replace('{VALOR}', emulacao) if emulacao is not None else ''
-    return PERFIL.replace('{EXTRA_MISSAO}', extra_missao).replace('{MODO}', modo)
+    return PERFIL.replace('{EXTRA_MISSAO}', extra_missao).replace('{MODO}', modo).replace('{TESTES}', testes or TESTE_PROJETO)
 
 
 def parecer_texto(head, base, veredito='aceitar', nivel='Nível C (mesmo fornecedor)', etapa='soma',
@@ -134,9 +141,9 @@ class Projeto:
     def abrir(self, etapa='soma', base=None):
         return self.sc('abrir', f'--etapa={etapa}', '--ordem', self.soc / 'ordens' / 'soma.md', '--base', base or self.base)
 
-    def entregar(self, etapa='soma'):
-        return self.sc('entregar', '--etapa', etapa, '--base', self.base, '--pasta-projeto', self.raiz,
-                       '--comando-teste', TESTE_PROJETO)
+    def entregar(self, etapa='soma', *extra):
+        """Portão por área: o comando e o timeout vêm do perfil sintético (`--comando-teste` é recusado, B11)."""
+        return self.sc('entregar', '--etapa', etapa, '--base', self.base, '--pasta-projeto', self.raiz, *extra)
 
     def revisar(self, arquivo, head=None, *extra):
         return self.sc('revisar', '--etapa', 'soma', '--parecer', arquivo, '--head', head or self.head, *extra)
@@ -253,10 +260,20 @@ def preencher_modelo_de_parecer(head, base, etapa='soma', nivel='Nível C (mesmo
     return texto
 
 
-def atestado_a_mao(commit_sha, etapa='soma'):
-    """Atestado escrito à mão, com todos os campos que o `decidir` e a conferência leem e nenhum teste rodado."""
-    return {'tipo': 'atestado_pre_devolucao', 'etapa_id': etapa, 'status': 'APROVADO', 'commit': commit_sha,
-            'total_arquivos_inspecionados': 3, 'verificacoes': {}, 'erros': []}
+def atestado_a_mao(commit_sha, etapa='soma', perfil=None, completo=True):
+    """Atestado escrito à mão, com todos os campos que o `decidir` e a conferência leem e nenhum teste rodado.
+
+    `completo` (padrão): na forma 1.3.0 que o `decidir` e o status exigem desde a B11 (bloco `portao` com uma área ok,
+    cobertura completa e o SHA-256 do `perfil`); é o atestado forjado que só a B15 (hash conferido) vai fechar.
+    `completo=False`: o atestado avulso, sem `portao`, que a B11 recusa."""
+    at = {'tipo': 'atestado_pre_devolucao', 'etapa_id': etapa, 'status': 'APROVADO', 'commit': commit_sha,
+          'total_arquivos_inspecionados': 3, 'verificacoes': {}, 'erros': []}
+    if completo:
+        sha = hashlib.sha256(Path(perfil).read_bytes()).hexdigest() if perfil else None
+        at['portao'] = {'modo': 'por_area', 'commit': commit_sha, 'perfil_sha256': sha, 'areas_tocadas': ['projeto'],
+                        'cobertura_completa': True,
+                        'areas': [{'area': 'projeto', 'ok': True, 'testes': {'total': 1, 'pulados': 0, 'falhos': 0}}]}
+    return at
 
 
 def eventos_do_arquivo(soc):

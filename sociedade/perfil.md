@@ -97,6 +97,14 @@ Stack: TypeScript, Vite, Preact, PDF.js e pdf-lib; site estático na Vercel. Esp
 - Testes: `npm test`
 - Lint e tipos: `npm run lint`
 
+## Portão por área
+*Lida pelo `sc.py entregar` (B11, B11c). Comando e timeout só daqui; `--comando-teste` é recusado. A área de um caminho é a do prefixo mais longo; `.github/` conta para as duas; `sociedade/` e `docs/` não são de área nenhuma.*
+
+| Área | Pasta | Testes | Timeout (s) | Prefixos |
+|---|---|---|---|---|
+| app | `.` | `npm test` | 900 | `*` (tudo fora de `sociedade-do-codigo/`, `sociedade/` e `docs/`) |
+| pacote | `sociedade-do-codigo` | `python3 -B -m unittest discover -s tests` | 600 | `sociedade-do-codigo/` |
+
 ## Estado
 - Fonte dos eventos: `sociedade/registro.json` (só scripts gravam)
 - Resumo de uma tela: `sociedade/estado.md` (gerado por `sc.py estado`)

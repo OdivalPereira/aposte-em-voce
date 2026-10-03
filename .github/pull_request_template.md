@@ -6,6 +6,7 @@
 - [ ] `portao` verde no SHA revisado (atestado: `sociedade/pareceres/atestado-<ID>.json`)
 - [ ] `ci` verde no mesmo SHA
 - [ ] Commits depois do SHA revisado só tocam `sociedade/` (cauda de governança, Q149)
+- [ ] Conferi o diff de `.github/` e `sociedade/pareceres/`
 
 ## Revisão (Q150)
 - Barbárvore: [ ] completa · [ ] reduzida — parecer `revisao-saida/parecer.md`, SHA-256 `…`, veredito `…`

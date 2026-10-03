@@ -20,9 +20,17 @@ RAMO = f'etapa/{ETAPA}'
 ATESTADO = f'sociedade/pareceres/atestado-{ETAPA}.json'
 
 
+PERFIL_TEXTO = '# Perfil sintético\n\n## Portão por área\n| Área | Pasta | Testes | Timeout (s) | Prefixos |\n|---|---|---|---|---|\n| p | `.` | `x` | 10 | `*` |\n'
+PERFIL = 'sociedade/perfil.md'
+
+
 def atestado(commit, **extra):
+    """Atestado na forma 1.3.0 (B11): é a única que o status `portao` aceita; o perfil é o de `PERFIL_TEXTO`."""
     base = {'tipo': 'atestado_pre_devolucao', 'status': 'APROVADO', 'etapa_id': ETAPA, 'commit': commit,
-            'total_arquivos_inspecionados': 3}
+            'total_arquivos_inspecionados': 3,
+            'portao': {'modo': 'por_area', 'commit': commit, 'areas_tocadas': ['p'], 'cobertura_completa': True,
+                       'perfil_sha256': hashlib.sha256(PERFIL_TEXTO.encode('utf-8')).hexdigest(),
+                       'areas': [{'area': 'p', 'ok': True, 'testes': {'total': 1, 'pulados': 0, 'falhos': 0}}]}}
     base.update(extra)
     return base
 
@@ -53,7 +61,7 @@ class Repo(unittest.TestCase):
         return self.commit({nome: 'x = 1\n'}, f'produto {nome}')
 
     def com_atestado(self, commit, **extra):
-        return self.commit({ATESTADO: json.dumps(atestado(commit, **extra))}, 'sociedade: atestado')
+        return self.commit({ATESTADO: json.dumps(atestado(commit, **extra)), PERFIL: PERFIL_TEXTO}, 'sociedade: atestado')
 
     def portao(self, head=None, ramo=RAMO):
         return sc_status.verificar_portao(self.r, ramo, head or self.git('rev-parse', 'HEAD'))

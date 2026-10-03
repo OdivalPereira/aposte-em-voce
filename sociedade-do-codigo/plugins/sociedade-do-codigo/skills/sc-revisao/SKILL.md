@@ -43,7 +43,7 @@ O veredito só sai com a matriz completa.
 - Escreva o parecer pelo modelo `assets/parecer-modelo.md` e confira com `scripts/lint_parecer.py <arquivo>`.
 - O cabeçalho traz `- commit: <SHA revisado>` (7 a 40 hexadecimais, igual ao head de `base..head`); sem ele o lint reprova, e o parecer só vale para esse commit.
 - Informe o SHA-256 do parecer na mensagem de retorno (Q103).
-- O registro no `registro.json` é feito com `sc_rodada.py parecer` (skill `sociedade-do-codigo`); ele recusa revisor do mesmo fornecedor de um implementador.
+- O registro no `registro.json` é feito com `sc.py revisar --etapa <ID> --parecer <arquivo> --head <SHA>` (skill `sociedade-do-codigo`): ele roda o `lint_parecer`, confere que o `commit:` é o SHA revisado e grava o parecer. Fora do modo emulação, o registro recusa revisor do mesmo fornecedor de um implementador.
 
 ## Arquivos desta skill
 
