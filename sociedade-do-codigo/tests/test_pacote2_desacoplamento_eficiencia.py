@@ -262,6 +262,7 @@ class TestePacote2LintParecerECLIRodada(unittest.TestCase):
 - rodada: TESTE-01
 - fatia ou fechamento: 1
 - entrega: PR 10
+- commit: e4f5a6b
 - base..head: a1b2c3d..e4f5a6b
 - revisor: Claude Code · fornecedor: Anthropic · sessão: sess_abc123
 - independência: Nível A (fornecedor externo)

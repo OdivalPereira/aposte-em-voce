@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Confere estrutura e coerência de um parecer do Revisor Independente (modelo assets/parecer-modelo.md).
 
-Regras: campos do cabeçalho; seções Independência, Critérios e evidências, Achados e "O que não verifiquei"
+Regras: campos do cabeçalho (rodada ou etapa, entrega, commit, base..head, revisor, veredito); `commit:` é o SHA
+do commit revisado (7 a 40 hexadecimais) e tem de ser compatível com o head de `base..head`; seções Independência, Critérios e evidências, Achados e "O que não verifiquei"
 (não vazia); estados da tabela em {executada, lida, não verificada}; "aceitar" não convive com critério não
 verificada nem com achado bloqueador; achado bloqueador pede "não aceitar".
 Código de saída 1 se houver erro; 0 caso contrário. Sem dependências externas.
@@ -16,6 +17,8 @@ TITULO = re.compile(r'^##\s+Parecer do Revisor Independente\s*$', re.M | re.I)
 CAMPO = re.compile(r'^-\s+([^:\n]+):\s*(.*)$')
 CABECALHO = re.compile(r'^#{2,3}\s+(.+?)\s*$')
 SHAS = re.compile(r'^[0-9a-fA-F]{7,40}\.\.\.?[0-9a-fA-F]{7,40}$')
+SHA = re.compile(r'^[0-9a-fA-F]{7,40}$')
+INSTRUCAO = re.compile(r'^\*[^*\s][^*\n]*\*$')  # linha de instrução do modelo, toda em itálico
 MARCADOR = re.compile(r'<[^<>\n]{1,120}>')
 VEREDITOS = ('aceitar', 'aceitar com ressalvas', 'nao aceitar')
 ESTADOS = ('executada', 'lida', 'nao verificada')
@@ -53,7 +56,7 @@ def dividir(bloco):
                 campos[norm(m.group(1))] = m.group(2).strip()
         else:
             secoes[atual].append(linha)
-    return campos, {k: '\n'.join(v).strip() for k, v in secoes.items()}
+    return campos, {k: '\n'.join(l for l in v if not INSTRUCAO.match(l.strip())).strip() for k, v in secoes.items()}
 
 
 def linhas_tabela(texto):
@@ -76,8 +79,10 @@ def analisar(texto):
     erros, avisos = [], []
     campos, secoes = dividir(bloco)
 
-    for chave, nome in (('rodada', 'rodada'), ('entrega', 'entrega'), ('base..head', 'base..head'),
-                        ('revisor', 'revisor'), ('veredito', 'veredito')):
+    if 'etapa' in campos and 'rodada' not in campos:
+        campos['rodada'] = campos['etapa']  # o modelo atual usa "etapa"; "rodada" segue aceito
+    for chave, nome in (('rodada', 'etapa (ou rodada)'), ('entrega', 'entrega'), ('commit', 'commit'),
+                        ('base..head', 'base..head'), ('revisor', 'revisor'), ('veredito', 'veredito')):
         v = campos.get(chave)
         if v is None or not v:
             erros.append(f'campo ausente ou vazio: {nome}')
@@ -86,6 +91,14 @@ def analisar(texto):
     bh = campos.get('base..head', '')
     if bh and not MARCADOR.search(bh) and not SHAS.match(bh):
         erros.append('base..head deve ser <sha7>..<sha7> (7 a 40 hexadecimais)')
+    commit = campos.get('commit', '')
+    if commit and not MARCADOR.search(commit):
+        if not SHA.match(commit):
+            erros.append('commit deve ser só o SHA revisado (7 a 40 hexadecimais, sem crases nem texto)')
+        elif bh and SHAS.match(bh):
+            head = bh.split('..')[-1].lower()
+            if not (head.startswith(commit.lower()) or commit.lower().startswith(head)):
+                erros.append(f'commit ({commit[:12]}) difere do head de base..head ({head[:12]})')
     revisor = norm(campos.get('revisor', ''))
     if revisor and not MARCADOR.search(revisor):
         if 'sessao' not in revisor:
@@ -165,6 +178,15 @@ def analisar(texto):
     if bloqueante and veredito in ('aceitar com ressalvas',):
         erros.append('achado bloqueador pede veredito "não aceitar"')
     return erros, avisos, campos
+
+
+def commit_revisado(texto):
+    """SHA da linha `- commit:` do último parecer do texto, ou None se faltar ou for inválido."""
+    bloco = ultimo_parecer(texto)
+    if bloco is None:
+        return None
+    valor = dividir(bloco)[0].get('commit', '')
+    return valor if SHA.match(valor) else None
 
 
 def main(argv=None):

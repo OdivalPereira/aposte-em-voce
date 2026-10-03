@@ -35,6 +35,7 @@ Leia o plano e os critérios da etapa e registre no parecer:
 
 ## Saída obrigatória no parecer
 
+0. Cabeçalho completo, com `commit:` (o SHA revisado, igual ao head de `base..head`). O parecer só vale para esse commit.
 1. Mapa da entrega (passo 0).
 2. **Matriz de cobertura:** uma linha por critério e uma coluna por lente. Cada célula traz o identificador da sonda executada, "lida" ou "n/a (motivo)". Nenhuma célula aplicável fica vazia.
 3. Achados numerados. Cada um com severidade (bloqueador, relevante ou opcional), condição, efeito, critério afetado, lente, evidência reproduzível e correção esperada.

@@ -14,7 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        shell: bash
+        # pipefail em todo passo (DG-13): um pipe com `tee` não pode mascarar a falha do comando da esquerda.
+        shell: bash -eo pipefail {0}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
