@@ -116,6 +116,52 @@ test.describe('jornada de leitura (T08, T09, T99) em perfil de celular', () => {
     expect(rede.some((r) => r.url.includes('segredo'))).toBe(false);
   });
 
+  test('falhas na leitura nunca travam a jornada (princípio 8)', async ({ page }) => {
+    await test.step('worker que não carrega: o item termina como não suportado e pode ser pulado', async () => {
+      await page.route('**/assets/worker-*.js', (rota) => rota.abort());
+      await page.goto('/');
+      await page.setInputFiles('#escolher-pdf', arquivoPdf('qualquer.pdf', await extratoSintetico()));
+      await expect(page.getByText(/Não conseguimos abrir este arquivo/)).toBeVisible();
+      await expect(page.getByText('Abrindo o arquivo…')).toHaveCount(0);
+      await expect(page.getByRole('button', { name: 'Ver o resultado da leitura' })).toBeEnabled();
+      await page.getByRole('button', { name: 'Seguir sem este arquivo' }).click();
+      await expect(page.locator('li')).toHaveCount(0);
+      await page.getByRole('button', { name: 'Continuar sem extrato' }).click();
+      await expect(page.getByText('Nenhum extrato lido')).toBeVisible();
+    });
+
+    await test.step('worker que nunca responde: o item "lendo" também pode ser pulado', async () => {
+      await page.unroute('**/assets/worker-*.js');
+      await page.route('**/assets/worker-*.js', () => {}); // a requisição fica pendurada de propósito
+      await page.goto('/');
+      await page.setInputFiles('#escolher-pdf', arquivoPdf('pendurado.pdf', await extratoSintetico()));
+      await expect(page.getByText('Abrindo o arquivo…')).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Ver o resultado da leitura' })).toBeDisabled();
+      await page.getByRole('button', { name: 'Seguir sem este arquivo' }).click();
+      await expect(page.locator('li')).toHaveCount(0);
+      await expect(page.getByRole('button', { name: 'Continuar sem extrato' })).toBeEnabled();
+    });
+  });
+
+  test('arquivo que o navegador não consegue ler: não suportado, sem vazar o erro, e pode ser pulado', async ({ page }) => {
+    await page.addInitScript(() => {
+      const original = Blob.prototype.arrayBuffer;
+      Blob.prototype.arrayBuffer = function (this: Blob) {
+        if ((this as File).name === 'ilegivel.pdf') return Promise.reject(new Error('erro interno com conteúdo'));
+        return original.call(this);
+      };
+    });
+    await page.goto('/');
+    await page.setInputFiles('#escolher-pdf', arquivoPdf('ilegivel.pdf', await extratoSintetico()));
+    await expect(page.getByText(/Não conseguimos abrir este arquivo/)).toBeVisible();
+    await expect(page.getByText('erro interno')).toHaveCount(0);
+    await page.getByRole('button', { name: 'Ver o resultado da leitura' }).click();
+    await expect(page.locator('article')).toContainText('Não suportado');
+    await page.getByRole('button', { name: 'Voltar aos extratos' }).click();
+    await page.getByRole('button', { name: 'Seguir sem este arquivo' }).click();
+    await expect(page.locator('li')).toHaveCount(0);
+  });
+
   test('alvos de toque de 44 px ou mais nos botões', async ({ page }) => {
     await page.goto('/');
     for (const botao of await page.locator('button, label.botao').all()) {

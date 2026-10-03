@@ -72,7 +72,7 @@ export function Extratos({ itens, aoEscolher, aoEnviarSenha, aoPular, aoContinua
             )}
             {item.estado === 'pronto' && item.resultado && <p>Lido. {item.resultado.status === 'nao-suportado' ? item.resultado.mensagem : ''}</p>}
             {item.estado === 'senha' && <PedidoDeSenha item={item} aoEnviar={(s) => aoEnviarSenha(item.id, s)} aoPular={() => aoPular(item.id)} />}
-            {item.estado === 'pronto' && (
+            {(item.estado === 'pronto' || item.estado === 'lendo') && (
               <button type="button" class="secundario" onClick={() => aoPular(item.id)}>
                 Seguir sem este arquivo
               </button>

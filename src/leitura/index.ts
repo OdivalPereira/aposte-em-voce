@@ -19,9 +19,67 @@ const SEM_CONFERENCIA: ConferenciaSaldo = {
   progressao: null,
 };
 
+/** SHA-256 em JS puro, só para quando o `crypto.subtle` não existe (por exemplo, http na rede local). */
+function sha256Local(dados: Uint8Array): string {
+  const K: number[] = [];
+  const H = new Array<number>(8);
+  for (let n = 2, achados = 0; achados < 64; n++) {
+    let primo = true;
+    for (let d = 2; d * d <= n; d++) if (n % d === 0) primo = false;
+    if (!primo) continue;
+    if (achados < 8) H[achados] = (Math.pow(n, 0.5) * 2 ** 32) | 0;
+    K[achados++] = (Math.pow(n, 1 / 3) * 2 ** 32) | 0;
+  }
+  const comprimento = dados.length;
+  const blocos = Math.ceil((comprimento + 9) / 64);
+  const m = new Uint8Array(blocos * 64);
+  m.set(dados);
+  m[comprimento] = 0x80;
+  const visao = new DataView(m.buffer);
+  visao.setUint32(m.length - 8, Math.floor((comprimento * 8) / 2 ** 32));
+  visao.setUint32(m.length - 4, (comprimento * 8) >>> 0);
+  const w = new Array<number>(64);
+  const rot = (x: number, n: number) => (x >>> n) | (x << (32 - n));
+  for (let b = 0; b < blocos; b++) {
+    for (let i = 0; i < 16; i++) w[i] = visao.getUint32(b * 64 + i * 4);
+    for (let i = 16; i < 64; i++) {
+      const w15 = w[i - 15] as number;
+      const w2 = w[i - 2] as number;
+      const s0 = rot(w15, 7) ^ rot(w15, 18) ^ (w15 >>> 3);
+      const s1 = rot(w2, 17) ^ rot(w2, 19) ^ (w2 >>> 10);
+      w[i] = ((w[i - 16] as number) + s0 + (w[i - 7] as number) + s1) | 0;
+    }
+    let [a, bb, c, d, e, f, g, h] = H as [number, number, number, number, number, number, number, number];
+    for (let i = 0; i < 64; i++) {
+      const t1 = (h + (rot(e, 6) ^ rot(e, 11) ^ rot(e, 25)) + ((e & f) ^ (~e & g)) + (K[i] as number) + (w[i] as number)) | 0;
+      const t2 = ((rot(a, 2) ^ rot(a, 13) ^ rot(a, 22)) + ((a & bb) ^ (a & c) ^ (bb & c))) | 0;
+      h = g;
+      g = f;
+      f = e;
+      e = (d + t1) | 0;
+      d = c;
+      c = bb;
+      bb = a;
+      a = (t1 + t2) | 0;
+    }
+    const novo = [a, bb, c, d, e, f, g, h];
+    for (let i = 0; i < 8; i++) H[i] = ((H[i] as number) + (novo[i] as number)) | 0;
+  }
+  return H.map((x) => (x >>> 0).toString(16).padStart(8, '0')).join('');
+}
+
+/** SHA-256 (hex). Usa o `crypto.subtle`; se faltar ou falhar, cai no cálculo local, nunca rejeita. */
 export async function sha256Hex(bytes: Uint8Array): Promise<string> {
-  const h = await globalThis.crypto.subtle.digest('SHA-256', bytes.slice());
-  return [...new Uint8Array(h)].map((b) => b.toString(16).padStart(2, '0')).join('');
+  try {
+    const subtle = globalThis.crypto?.subtle;
+    if (subtle) {
+      const h = await subtle.digest('SHA-256', bytes.slice());
+      return [...new Uint8Array(h)].map((b) => b.toString(16).padStart(2, '0')).join('');
+    }
+  } catch {
+    // segue para o cálculo local
+  }
+  return sha256Local(bytes);
 }
 
 function naoSuportado(hash: string, motivo: Motivo, paginas: number): ResultadoArquivo {
@@ -38,6 +96,11 @@ function naoSuportado(hash: string, motivo: Motivo, paginas: number): ResultadoA
     lancamentos: [],
     conferencia: SEM_CONFERENCIA,
   };
+}
+
+/** Resultado para qualquer falha inesperada da leitura: sem conteúdo, nome nem valor; o item pode ser pulado. */
+export function falhaDeLeitura(): ResultadoArquivo {
+  return naoSuportado('', 'corrompido', 0);
 }
 
 const BANCOS: [string, RegExp][] = [
@@ -113,9 +176,10 @@ export interface OpcoesLeitura {
  * ilegível, com senha, imagem, fatura ou grande demais voltam como `status: 'nao-suportado'` com `motivo`.
  */
 export async function lerExtrato(bytes: Uint8Array, senha?: string, opcoes: OpcoesLeitura = {}): Promise<ResultadoArquivo> {
-  const hash = await sha256Hex(bytes);
-  if (bytes.length > LIMITE_BYTES) return naoSuportado(hash, 'muito-grande', 0);
+  let hash = '';
   try {
+    hash = await sha256Hex(bytes);
+    if (bytes.length > LIMITE_BYTES) return naoSuportado(hash, 'muito-grande', 0);
     const pdf = await extrairTexto(bytes, senha, opcoes.onProgresso);
     return analisarPaginas(pdf.paginas, hash, pdf.totalPaginas);
   } catch (e) {

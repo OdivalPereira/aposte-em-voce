@@ -3,6 +3,7 @@
 import {
   centavosComSinal,
   descricaoNormalizada,
+  diasNoMes,
   inferirAno,
   iso,
   lerData,
@@ -437,7 +438,7 @@ export function periodoDoDocumento(textoFora: string, datasDasLinhas: string[]):
   if (mesAno && Number(mesAno[1]) >= 1 && Number(mesAno[1]) <= 12) {
     const mes = Number(mesAno[1]);
     const ano = Number(mesAno[2]);
-    return paraReferencia(iso(ano, mes, 1), iso(ano, mes, 28 + (mes === 2 ? 0 : 2)));
+    return paraReferencia(iso(ano, mes, 1), iso(ano, mes, diasNoMes(mes, ano)));
   }
   const proprias = [...datasDasLinhas].sort();
   if (proprias.length > 0) return paraReferencia(proprias[0] as string, proprias[proprias.length - 1] as string);

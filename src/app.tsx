@@ -1,5 +1,6 @@
 // Estado só na memória da página: nada em localStorage, IndexedDB ou cookies (princípio 2).
 import { useState } from 'preact/hooks';
+import { falhaDeLeitura } from './leitura';
 import { lerNoWorker } from './leitura/cliente';
 import type { ResultadoArquivo } from './leitura/tipos';
 import { Diagnostico } from './telas/Diagnostico';
@@ -28,7 +29,12 @@ export function App() {
 
   async function ler(id: number, bytes: Uint8Array, senha?: string) {
     atualizar(id, { estado: 'lendo', progresso: null });
-    const resultado = await lerNoWorker(bytes, senha, (feito, total) => atualizar(id, { progresso: { feito, total } }));
+    let resultado: ResultadoArquivo;
+    try {
+      resultado = await lerNoWorker(bytes, senha, (feito, total) => atualizar(id, { progresso: { feito, total } }));
+    } catch {
+      resultado = falhaDeLeitura();
+    }
     const pedeSenha = resultado.motivo === 'senha-necessaria' || resultado.motivo === 'senha-incorreta';
     atualizar(id, { estado: pedeSenha ? 'senha' : 'pronto', resultado, bytes: pedeSenha ? bytes : null, progresso: null });
   }
@@ -37,7 +43,14 @@ export function App() {
     const novos = arquivos.map((f) => ({ id: proximoId++, nome: f.name, arquivo: f }));
     setItens((atual) => [...atual, ...novos.map((n): ItemArquivo => ({ id: n.id, nome: n.nome, bytes: null, estado: 'lendo', progresso: null, resultado: null }))]);
     for (const n of novos) {
-      const bytes = new Uint8Array(await n.arquivo.arrayBuffer());
+      let bytes: Uint8Array;
+      try {
+        bytes = new Uint8Array(await n.arquivo.arrayBuffer());
+      } catch {
+        // arquivo ilegível (apagado, sem permissão, sem memória): o item termina como não suportado e pode ser pulado
+        atualizar(n.id, { estado: 'pronto', resultado: falhaDeLeitura(), bytes: null, progresso: null });
+        continue;
+      }
       await ler(n.id, bytes);
     }
   }

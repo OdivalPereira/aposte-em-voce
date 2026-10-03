@@ -74,10 +74,15 @@ describe('consolidar (5.3)', () => {
     expect(c.repetidos).toEqual(['copia de a.pdf']);
   });
 
-  it('períodos que não se sobrepõem: a mesma chave em arquivos distintos são operações distintas', () => {
+  it('mesma descrição e valor em meses sem sobreposição: a data faz parte da chave, então são operações distintas', () => {
+    // Dois arquivos só podem compartilhar uma chave se compartilham a data, logo seus períodos já se sobrepõem:
+    // a regra de sobreposição da 5.3 é consequência da chave. O que protege é a data na chave.
     const a = arquivo('a.pdf', 'h1', [lanc('2026-08-10', 5000, 'saida', 'PIX ENVIADO LOJA FICTICIA')]);
     const b = arquivo('b.pdf', 'h2', [lanc('2026-09-10', 5000, 'saida', 'PIX ENVIADO LOJA FICTICIA')]);
-    expect(consolidar([a, b]).lancamentos).toHaveLength(2);
+    const c = consolidar([a, b]);
+    expect(c.lancamentos).toHaveLength(2);
+    expect(c.lancamentos.every((l) => !l.apareceEmDoisExtratos)).toBe(true);
+    expect(c.saidasCentavos).toBe(10000);
   });
 
   it('chaves diferentes (data, valor, direção) nunca se fundem', () => {

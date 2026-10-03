@@ -118,7 +118,7 @@ describe('formatos de data e valor no pipeline', () => {
     ]);
   });
 
-  it('sem ano em lugar nenhum: não inventa, a linha fica não lida e o status é parcial', () => {
+  it('sem ano em lugar nenhum: não inventa, a linha fica não lida e, sem lançamento algum, o status é não suportado', () => {
     const r = analisarPaginas([pagina({ colunas: COLUNAS_PADRAO, linhas: [['02/09', 'PIX ENVIADO FICTICIO UM', '-50,00', ''], ['03/09', 'PIX ENVIADO FICTICIO DOIS', '-10,00', '']] })], H);
     expect(r.lancamentos).toHaveLength(0);
     expect(r.linhasCandidatas).toBe(2);
@@ -458,5 +458,25 @@ describe('outros desenhos de tabela (genérico, sem parser por banco)', () => {
     const ruim = analisarPaginas([pagina({ cabecalho: false, antes: ['01/09/2026 a 30/09/2026'], colunas: cols, linhas: [['02/09/2026', 'PIX FICTICIO UM', '-50,00', '950,00'], ['03/09/2026', 'PIX FICTICIO DOIS', '+10,00', '999,00']] })], H);
     expect(ruim.status).toBe('ambigua');
     expect(ruim.motivo).toBe('colunas-incertas');
+  });
+});
+
+describe('período "mm/aaaa" (último dia do mês)', () => {
+  const lerMes = (referencia: string, dd: string) =>
+    analisarPaginas([pagina({ antes: [`Extrato referente a ${referencia}`], colunas: COLUNAS_PADRAO, linhas: [[dd, 'PIX ENVIADO FICTICIO', '-5,00', '']] })], H);
+
+  it.each([
+    ['01/2026', '31/01', '2026-01-31'],
+    ['02/2028', '29/02', '2028-02-29'],
+    ['02/2026', '28/02', '2026-02-28'],
+    ['04/2026', '30/04', '2026-04-30'],
+    ['02/2100', '28/02', '2100-02-28'],
+  ])('%s: o dia %s é lido como %s', (referencia, dd, esperado) => {
+    const r = lerMes(referencia, dd);
+    expect(r.lancamentos.map((l) => l.data)).toEqual([esperado]);
+  });
+
+  it('dia que não existe no mês continua não lido (2100 não é bissexto)', () => {
+    expect(lerMes('02/2100', '29/02').lancamentos).toEqual([]);
   });
 });
