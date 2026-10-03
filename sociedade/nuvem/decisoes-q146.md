@@ -25,3 +25,8 @@
 | Q162 | 03/10/2026 | **Portão por área** (app e pacote) no perfil, na A1 com a B11 | m0-destravar, proposta 2 | — |
 | Q163 | 03/10/2026 | **`sociedade/` canônica no worktree da etapa** durante a etapa | m0-destravar, proposta 3 | Ajusta Q60 |
 | Q164 | 03/10/2026 | **Ajuste de integração do coordenador:** até 30 linhas de produto por etapa e sem lógica nova; acima disso, vira fatia delegada | m0-destravar, proposta 4 | Detalha Q28 |
+| Q165 | 03/10/2026 | **Fatias em paralelo no mesmo worktree:** o especialista não comita; o coordenador comita por fatia e roda o portão num checkout limpo do commit. A base da fatia é o commit anterior a ela | a1-parser, P1 | Detalha Q60 e Q161 |
+| Q166 | 03/10/2026 | **`sociedade/` canônica durante a etapa = a do worktree.** O portão ignora `sociedade/` e os arquivos do `.gitignore` na árvore suja; o `decidir` e o status conferem o `perfil_sha256` do atestado contra o perfil do commit julgado | a1-parser, P2 e ajuste 1 | Detalha Q163 |
+| Q167 | 03/10/2026 | **Dados de teste com estrutura imitada:** o especialista dono do leitor desenha um layout de referência e o Jules só replica. A tarefa do Jules proíbe derivar o esperado do código sob teste e traz o comando exato | a1-parser, P3 (B13) | Detalha Q48 |
+| Q168 | 03/10/2026 | **Linhas de produto contadas por script, por área** (linhas adicionadas sem brancos nem comentários; sem testes, gerador e fixtures) | a1-parser, P4 | Detalha Q87 |
+| Q169 | 03/10/2026 | **Telas com referência visual.** Toda tela parte de uma referência visual aprovada por Odival; fatia com tela é sempre do Legolas; o PR traz capturas de cada tela em 360 px como entrega verificável, e a revisão as compara com a referência | a1-parser, P5 (Odival) | — |

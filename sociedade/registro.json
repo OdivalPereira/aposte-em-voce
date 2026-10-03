@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-10-03T19:27:20.053219+00:00",
+  "atualizado_em": "2026-10-03T19:45:05.119673+00:00",
   "caminho_canonico": "/home/odival/Documentos/Projetos/aposte-em-voce",
   "criado_em": "2026-10-03T13:50:17.697161+00:00",
   "eventos": [
@@ -558,10 +558,64 @@
       "simulacao": false,
       "timestamp": "2026-10-03T19:27:20.053198+00:00",
       "tipo": "conferencia_registrada"
+    },
+    {
+      "autor": "Odival",
+      "dados": {
+        "ambiente": "local",
+        "comando": "sc.py entregar --etapa a1-parser",
+        "criterio_id": "portao",
+        "etapa_id": "a1-parser",
+        "evidencia_id": "EVD-portao-20261003194505114659_0018",
+        "exit_code": 0,
+        "motivo_invalida": null,
+        "saida_hash": "e5dcb798856f7c014a37c48611392a3709cf3c9d0aa6c45bad8073047bcf1a8a",
+        "saida_resumo": "atestado APROVADO do commit 6f2c4fdc488f, hash 67335bc103c66c31, 60 arquivos inspecionados",
+        "valida": true,
+        "verificador": "Odival",
+        "versao_entrega": "6f2c4fdc488ffb3b8aeae50f44c68785e602dd90"
+      },
+      "id": "EVT-000018",
+      "seq": 18,
+      "simulacao": false,
+      "timestamp": "2026-10-03T19:45:05.114882+00:00",
+      "tipo": "evidencia_registrada"
+    },
+    {
+      "autor": "Odival",
+      "dados": {
+        "acao": "aceitar",
+        "aceite_em_emulacao": true,
+        "alcance": "etapa",
+        "commit": "6f2c4fdc488ffb3b8aeae50f44c68785e602dd90",
+        "decisao_id": "DEC-a1-parser-aceitar-19",
+        "etapa_id": "a1-parser",
+        "independencia": "não",
+        "quem": "Odival",
+        "referencia": "Aceite com ressalva de design: visual das telas reprovado (escapou ao aceite); F3 e resto do E3 para a a2"
+      },
+      "id": "EVT-000019",
+      "seq": 19,
+      "simulacao": false,
+      "timestamp": "2026-10-03T19:45:05.117765+00:00",
+      "tipo": "decisao_registrada"
+    },
+    {
+      "autor": "Odival",
+      "dados": {
+        "elegivel_publicacao": false,
+        "etapa_id": "a1-parser",
+        "resumo": "aceite de Odival: parecer do commit 6f2c4fdc488f"
+      },
+      "id": "EVT-000020",
+      "seq": 20,
+      "simulacao": false,
+      "timestamp": "2026-10-03T19:45:05.119663+00:00",
+      "tipo": "etapa_encerrada"
     }
   ],
   "projeto_id": "aposte-em-voc",
   "resumos_externos": {},
-  "revisao": 18,
+  "revisao": 21,
   "versao_formato": "2.1.0"
 }
