@@ -41,15 +41,36 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-      - name: App — instalar, lint, testes e build
+      - name: App — instalar dependências e o Chromium do Playwright
         if: steps.app.outputs.existe == 'sim'
         run: |
           set -euo pipefail
           npm ci
           npx playwright install --with-deps chromium
-          npm run lint
-          npm test
-          npm run build
+      - name: App — lint e tipos
+        if: steps.app.outputs.existe == 'sim'
+        run: |
+          set -euo pipefail
+          npm run lint 2>&1 | tee app-lint.txt
+      - name: App — testes (Vitest e Playwright)
+        if: steps.app.outputs.existe == 'sim'
+        run: |
+          set -euo pipefail
+          npm test 2>&1 | tee app-testes.txt
+      - name: App — build
+        if: steps.app.outputs.existe == 'sim'
+        run: |
+          set -euo pipefail
+          npm run build 2>&1 | tee app-build.txt
+      - name: App — relatório do Playwright (se falhou)
+        if: failure() && steps.app.outputs.existe == 'sim'
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
       - name: Resumo
         if: always()
         run: |
@@ -60,5 +81,6 @@ jobs:
             echo "|---|---|"
             echo "| Suíte do pacote | $(grep -E '^(Ran|OK|FAILED)' suite-pacote.txt 2>/dev/null | tr '\n' ' ' || echo 'não executada') |"
             echo "| Validador do pacote | $(tail -1 validador-pacote.txt 2>/dev/null || echo 'não executado') |"
+            echo "| App — testes | $(grep -E '^ +(Tests|Test Files) |^ +[0-9]+ (passed|failed|skipped)' app-testes.txt 2>/dev/null | tr -s ' ' | tr '\n' ';' || true) |"
             echo "| App | ${{ steps.app.outputs.existe == 'sim' && 'executado (ver passos)' || 'ainda sem package.json' }} |"
           } >> "$GITHUB_STEP_SUMMARY"
