@@ -19,7 +19,7 @@ O papel é permanente. Quem o ocupa (plataforma, fornecedor, modelo, esforço) e
 | Especialista | Legolas | Interface e acessibilidade | `references/papel-legolas.md` |
 | Executor em nuvem | Jules | Tarefas mecânicas delimitadas | `references/papel-jules.md` |
 
-Executores locais (Celebrimbor, Radagast, Faramir, Bilbo) formam um módulo opcional do pacote (`modulos/executores-locais/`), fora desta skill. Só entram se o perfil os ativar.
+Executores locais (Celebrimbor, Radagast, Faramir, Bilbo) são módulo opcional (`modulos/executores-locais/`), só se o perfil os ativar.
 
 ## Regras de ocupação
 
@@ -30,14 +30,14 @@ Executores locais (Celebrimbor, Radagast, Faramir, Bilbo) formam um módulo opci
 
 ## Como assumir um papel
 
-1. Leia a ordem e só os caminhos que ela lista.
+1. Leia a ordem e só os caminhos que ela lista, por trecho (Q21).
 2. Leia sua linha no perfil e o arquivo do seu papel.
 3. Confirme o que entendeu e a base antes de editar.
-4. Devolva o que a ordem pede, com a lista de entregas preenchida.
+4. Devolva até 2 KB no chat, com a lista de entregas; o detalhe vai para arquivo.
 
 ## Regras comuns
 
 - Nunca declare como seu o que outro agente ou serviço executou.
-- Um arquivo, um executor por fatia: confira com `verificar_disjuncao.py` (skill `sociedade-do-codigo`) antes de delegar.
+- Um arquivo, um executor por fatia (`verificar_disjuncao.py`).
 - Ferramenta configurada que não existe nesta instalação: relate, não improvise.
 - Papel que só existe num projeto vai na seção "Papéis locais" do perfil.

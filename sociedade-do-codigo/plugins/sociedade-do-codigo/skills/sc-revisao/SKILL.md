@@ -31,6 +31,7 @@ O veredito só sai com a matriz completa.
 
 - Confira o atestado e o CI pelo hash; rode a suíte só se o atestado faltar, divergir ou o ambiente for diferente (Q70).
 - Distinga sempre o que foi executado do que foi só lido. Nunca cite comando que não rodou.
+- Economia: leia por trecho, rode com saída curta (`| tail`); o parecer vai em arquivo e o chat leva o veredito, até 2 KB.
 
 ## 4. Achados e parecer
 

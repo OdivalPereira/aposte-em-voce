@@ -95,6 +95,8 @@ export interface EntradaStatus {
   lancamentos: number;
   semDirecao: number;
   colunasIncertas: boolean;
+  /** grupos "agrupado por dia" cujo total declarado não bate com a soma das linhas lidas */
+  totaisDivergentes?: number;
   conferencia: ConferenciaSaldo;
 }
 
@@ -112,6 +114,7 @@ export const MENSAGEM: Record<Motivo | 'ok', string> = {
   'colunas-incertas': 'Não ficou claro qual coluna é o valor e qual é o saldo. Confira com atenção.',
   'saldo-nao-fecha': 'Lemos lançamentos, mas o saldo não fecha. Pode haver linhas faltando; confira com atenção.',
   'linhas-nao-lidas': 'Algumas linhas não puderam ser lidas. Confira com atenção.',
+  'total-do-dia-diverge': 'O total de algum dia não bate com as linhas lidas desse dia. Confira com atenção.',
 };
 
 /** Status da seção 5.5 para um arquivo que foi lido (os casos da 5.4 são decididos antes, em `index.ts`). */
@@ -122,6 +125,7 @@ export function decidirStatus(e: EntradaStatus): { status: Status; motivo: Motiv
   const colunasConfirmadas = !e.colunasIncertas || (saldo === 'fecha' && (e.conferencia.progressao?.verificadas ?? 0) > 0);
   if (e.semDirecao > 0) return { status: 'ambigua', motivo: 'direcao-incerta' };
   if (e.colunasIncertas && !colunasConfirmadas) return { status: 'ambigua', motivo: 'colunas-incertas' };
+  if ((e.totaisDivergentes ?? 0) > 0) return { status: 'ambigua', motivo: 'total-do-dia-diverge' };
   if (saldo === 'nao-fecha') return { status: 'parcial', motivo: 'saldo-nao-fecha' };
   const razao = e.linhasCandidatas === 0 ? 1 : e.lancamentos / e.linhasCandidatas;
   if (razao < 0.95) return { status: 'parcial', motivo: 'linhas-nao-lidas' };

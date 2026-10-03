@@ -1,8 +1,13 @@
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 
 from util import NUCLEO, rodar
+
+sys.path.insert(0, str(NUCLEO / 'scripts'))
+from adversarial._cenario import parecer_texto  # noqa: E402
+from sc_registro import Registro  # noqa: E402
 
 RODADA = NUCLEO / 'scripts' / 'sc_rodada.py'
 MODELO = NUCLEO / 'assets' / 'rodada-modelo.md'
@@ -15,6 +20,12 @@ class TesteRodada(unittest.TestCase):
         self.p = Path(self._tmp.name)
         self.arq = self.p / 'sociedade' / 'rodada.md'
         self.hist = self.p / 'sociedade' / 'historico.md'
+        (self.p / 'sociedade').mkdir()  # B15: o fornecedor do implementador vem do perfil, não de argumento
+        (self.p / 'sociedade' / 'perfil.md').write_text(
+            '# Perfil sintético\n\n## Papel × ferramenta\n'
+            '| Papel | Nome | Plataforma | Fornecedor | Modelo | Esforço | Estado (ativo/reserva/espera) | Desde | Motivo |\n'
+            '|---|---|---|---|---|---|---|---|---|\n'
+            '| Coordenador | Gandalf | Antigravity | Google | Modelo G | high | ativo | 2026-10-03 | teste |\n', encoding='utf-8')
 
     def sc(self, *args, aplicar=True):
         extra = ['--aplicar'] if aplicar else []
@@ -31,6 +42,18 @@ class TesteRodada(unittest.TestCase):
 
     def texto(self):
         return self.arq.read_text(encoding='utf-8')
+
+    def parecer(self, veredito='aceitar', etapa='R-01', nivel='Nível A (fornecedor diferente)', *args):
+        """B15: o parecer vem de um arquivo (com lint); revisor, fornecedor e veredito saem dele."""
+        arq = self.p / 'parecer-sintetico.md'
+        arq.write_text(parecer_texto('a1b2c3d', 'a1b2c3d', veredito=veredito, nivel=nivel, etapa=etapa,
+                                     revisor='Claude (revisor externo)', fornecedor='Anthropic'), encoding='utf-8')
+        return self.sc('parecer', '--arquivo', str(arq), '--versao', 'main@a1b2c3d', *args)
+
+    def decidir(self, etapa='R-01'):
+        """B15: o `encerrar` exige o evento da decisão de uma pessoa; aqui o registro a grava (sem passar pelo `sc.py decidir`)."""
+        Registro(self.p / 'sociedade').registrar_decisao(etapa, f'DEC-{etapa}-1', 'Odival Sintético', 'teste', 'aceitar',
+                                                         autor='Odival Sintético')
 
     # ---------- abertura ----------
 
@@ -146,13 +169,12 @@ class TesteRodada(unittest.TestCase):
         self.abrir(fatias=['unica'])
         self.sc('fatia', '1', '--fechar', '--prova', 'ok')
         self.sc('achado', '--severidade', 'bloqueador', '--onde', 'src/a.ts:1', '--texto', 'quebra no mobile')
-        self.sc('parecer', '--revisor', 'Claude', '--fornecedor', 'Anthropic',
-                '--implementador', 'Gandalf:Google', '--versao', 'main@a1b2c3d',
-                '--veredito', 'aceitar', '--criterio-ok', 'fatia_1')
+        self.parecer()
         r = self.sc('encerrar')
         self.assertEqual(r.returncode, 1)
         self.assertIn('bloqueador', r.stderr)
         self.sc('achado', '--fechar', 'REV-001', '--estado', 'corrigido')
+        self.decidir()
         r = self.sc('encerrar', '--resumo', 'pronto')
         self.assertEqual(r.returncode, 0, r.stderr)
 
@@ -166,9 +188,8 @@ class TesteRodada(unittest.TestCase):
     def test_encerrar_limpa_o_estado_e_abre_avaliacao(self):
         self.abrir(fatias=['unica'])
         self.sc('fatia', '1', '--fechar', '--prova', 'ok')
-        self.sc('parecer', '--revisor', 'Claude', '--fornecedor', 'Anthropic',
-                '--implementador', 'Gandalf:Google', '--versao', 'main@a1b2c3d',
-                '--veredito', 'aceitar', '--criterio-ok', 'fatia_1')
+        self.parecer()
+        self.decidir()
         r = self.sc('encerrar', '--resumo', 'entregue')
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertFalse(self.arq.exists())
@@ -319,7 +340,8 @@ class TesteRodada(unittest.TestCase):
         # Registra exceção para revisão independente antes de forçar encerramento
         self.sc('excecao', '--etapa', 'R-01', '--regra', 'revisao_independente',
                 '--motivo', 'dispensa temporaria de revisao em teste', '--decisao-ref', 'DEC-ODIVAL-001')
-        # Com parâmetros válidos humanos, o encerramento forçado via exceção passa
+        # Com parâmetros válidos humanos e a decisão registrada, o encerramento forçado via exceção passa
+        self.decidir()
         r = self.sc('encerrar', '--forcar', '--regra', 'fatias_pendentes',
                     '--motivo', 'excecao aprovada pelo usuario em teste', '--decisao-ref', 'DEC-ODIVAL-999')
         self.assertEqual(r.returncode, 0, r.stderr)
@@ -357,19 +379,19 @@ class TesteRodada(unittest.TestCase):
     def test_cli_subcomando_evidencia(self):
         self.abrir()
         r = self.sc('evidencia', '--etapa', 'R-01', '--criterio', 'fatia_1',
-                    '--comando', 'pytest -q', '--saida', '15 passed in 0.2s', '--exit-code', '0')
+                    '--comando', f'{sys.executable} -c "print(\'15 passed in 0.2s\')"')  # B15: o comando roda e o código é o medido
         self.assertEqual(r.returncode, 0, r.stderr)
         import json
         reg = json.loads((self.p / 'sociedade' / 'registro.json').read_text(encoding='utf-8'))
         eventos_ev = [e for e in reg['eventos'] if e['tipo'] == 'evidencia_registrada']
         self.assertEqual(len(eventos_ev), 1)
         self.assertEqual(eventos_ev[0]['dados']['criterio_id'], 'fatia_1')
+        self.assertEqual(eventos_ev[0]['dados']['exit_code'], 0)
 
     def test_cli_subcomando_parecer_e_excecao(self):
         self.abrir()
-        r = self.sc('parecer', '--etapa', 'R-01', '--revisor', 'Claude', '--fornecedor', 'Anthropic',
-                    '--implementador', 'Gandalf:Google', '--versao', '2.1.0', '--veredito', 'nao_aceitar',
-                    '--achado', 'REV-001:bloqueador:falha de isolamento')
+        r = self.parecer('não aceitar', 'R-01', 'Nível A (fornecedor diferente)',
+                         '--etapa', 'R-01', '--achado', 'REV-001:bloqueador:falha de isolamento')
         self.assertEqual(r.returncode, 0, r.stderr)
         r = self.sc('excecao', '--etapa', 'R-01', '--regra', 'achados_bloqueadores',
                     '--motivo', 'motivo substantivo de excecao', '--decisao-ref', 'DEC-123')
@@ -383,9 +405,8 @@ class TesteRodada(unittest.TestCase):
     def test_cli_subcomando_resumo(self):
         self.abrir(fatias=['unica'])
         self.sc('fatia', '1', '--fechar', '--prova', 'ok')
-        self.sc('parecer', '--revisor', 'Claude', '--fornecedor', 'Anthropic',
-                '--implementador', 'Gandalf:Google', '--versao', 'main@a1b2c3d',
-                '--veredito', 'aceitar', '--criterio-ok', 'fatia_1')
+        self.parecer()
+        self.decidir()
         self.sc('encerrar', '--resumo', 'concluido com sucesso')
         r = self.sc('resumo', '--exportar', 'R-01', aplicar=False)
         self.assertEqual(r.returncode, 0, r.stderr)
@@ -396,6 +417,7 @@ class TesteRodada(unittest.TestCase):
         # S-B: abrir sem --sem-revisao exige revisão independente antes de encerrar
         self.abrir(fatias=['unica'])
         self.sc('fatia', '1', '--fechar', '--prova', 'python3 -m unittest -> OK')
+        self.decidir()  # com a decisão registrada, o que barra o encerramento é a falta do parecer
         r = self.sc('encerrar', '--resumo', 'tentativa sem parecer')
         self.assertEqual(r.returncode, 1)
         self.assertIn('Revisão independente obrigatória', r.stderr)

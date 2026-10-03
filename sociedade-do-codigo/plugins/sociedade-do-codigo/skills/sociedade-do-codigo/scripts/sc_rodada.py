@@ -677,26 +677,33 @@ def cmd_achado(a):
 
 
 def cmd_evidencia(a):
-    """Registra evidência formal para critério no registro estruturado (REV-002)."""
+    """Registra evidência formal para critério (REV-002). B15: o comando é executado aqui e o código de saída e a
+    saída são os medidos; não há `--exit-code` nem `--saida` declarados."""
+    import shlex
     reg = obter_registro_obrigatorio(a.pasta)
     etapa_id = a.etapa or reg.estado().get('etapa_atual', {}).get('id')
     if not etapa_id:
         raise SystemExit('erro: nenhuma etapa ativa encontrada no registro.')
-
+    try:
+        argv = shlex.split(a.comando)
+        r = subprocess.run(argv, cwd=str(Path(a.pasta).resolve().parent), capture_output=True, text=True, timeout=a.timeout)
+        codigo, saida = r.returncode, (r.stdout + r.stderr)[-2000:]
+    except (OSError, ValueError, subprocess.TimeoutExpired) as e:
+        codigo, saida = 127, f'comando não executado: {type(e).__name__}: {str(e)[:150]}'
     try:
         reg.registrar_evidencia(
             etapa_id=etapa_id,
             criterio_id=a.criterio,
             comando=a.comando,
-            exit_code=a.exit_code,
-            saida=a.saida,
+            exit_code=codigo,
+            saida=saida,
             verificador=a.verificador,
             ambiente=a.ambiente,
             versao_entrega=a.versao or '',
             autor=a.verificador,
             aplicar=a.aplicar,
         )
-        print(f'evidência registrada para critério {a.criterio} na etapa {etapa_id}.')
+        print(f'evidência registrada para critério {a.criterio} na etapa {etapa_id} (código de saída medido: {codigo}).')
     except ErroValidacaoRegistro as e:
         raise SystemExit(f'erro ao registrar evidência: {e}')
     return 0
@@ -709,6 +716,19 @@ def cmd_parecer(a):
     if not etapa_id:
         raise SystemExit('erro: nenhuma etapa ativa encontrada no registro.')
 
+    # B15: revisor, fornecedor, veredito, nível e critérios vêm do arquivo (com lint); os implementadores, do registro.
+    try:
+        import sc_ciclo
+        arquivo = Path(a.arquivo)
+        texto = arquivo.read_text(encoding='utf-8')
+        campos, commit_parecer = sc_ciclo._ler_parecer(texto)
+        veredito, revisor, fornecedor, nivel, criterios_verificados, lacunas_arquivo = sc_ciclo._campos_do_parecer(texto, campos)
+    except (OSError, sc_ciclo.ErroCiclo) as e:
+        raise SystemExit(f'erro: parecer recusado: {e}')
+    if campos.get('rodada', '').strip().strip('`') != etapa_id:
+        raise SystemExit(f'erro: o parecer é da etapa "{campos.get("rodada", "").strip()}", não de "{etapa_id}".')
+    implementadores = [(reg.estado().get('etapas', {}).get(etapa_id) or {}).get('responsavel') or 'Coordenador']
+
     if getattr(a, 'sincronizar_git', False):
         p_pasta = Path(a.pasta).resolve()
         p_canonico = p_pasta if p_pasta.name != 'sociedade' else p_pasta.parent
@@ -717,59 +737,39 @@ def cmd_parecer(a):
             raise SystemExit('erro: --sincronizar-git exige que o projeto seja um repositório Git com ao menos um commit.')
         a.versao = commit_git
 
-    if not getattr(a, 'versao', None):
-        raise SystemExit('erro: subcomando parecer exige --versao ou --sincronizar-git.')
+    a.versao = getattr(a, 'versao', None) or commit_parecer
+    if commit_parecer.lower()[:7] not in str(a.versao).lower():
+        raise SystemExit(f'erro: o parecer revisou o commit {commit_parecer[:12]}, mas a versão examinada é {a.versao}.')
 
     # Se a etapa ativa estiver com versão placeholder, atualiza atomicamente para a versão examinada
     est_atual = reg.estado().get('etapa_atual') or {}
     if est_atual.get('versao_atual') in ('<preencher>', '', None):
         try:
             # A versão registrada aqui é a própria versão examinada pelo parecer: não há mudança pós-revisão a classificar.
-            reg.registrar_versao(etapa_id, a.versao, impacto='sem_alto', autor=a.revisor, aplicar=a.aplicar)
+            reg.registrar_versao(etapa_id, a.versao, impacto='sem_alto', autor='revisor', aplicar=a.aplicar)
         except Exception:
             pass
-
-    implementadores = []
-    for imp in a.implementadores:
-        if ':' in imp:
-            parts = imp.split(':', 1)
-            implementadores.append({'agente': parts[0].strip(), 'fornecedor': parts[1].strip()})
-        else:
-            ag_nome = imp.strip()
-            forn = 'desconhecido'
-            try:
-                if reg.perfil:
-                    forn_p = reg.perfil.obter_fornecedor(ag_nome)
-                    if forn_p:
-                        forn = forn_p
-            except Exception:
-                pass
-            implementadores.append({'agente': ag_nome, 'fornecedor': forn})
-
-    criterios_verificados = {c: True for c in a.criterio_ok}
-    for c in a.criterio_pendente:
-        criterios_verificados[c] = False
 
     try:
         pid = f'PAR-{datetime.now().strftime("%Y%m%d%H%M%S")}'
         reg.registrar_parecer(
             etapa_id=etapa_id,
             parecer_id=pid,
-            revisor=a.revisor,
-            fornecedor_revisor=a.fornecedor,
+            revisor=revisor,
+            fornecedor_revisor=fornecedor,
             implementadores=implementadores,
             versao_examinada=a.versao,
-            veredito=a.veredito,
+            veredito=veredito,
             criterios_verificados=criterios_verificados,
             achados_referenciados=a.achado or [],
-            lacunas=a.lacuna or [],
-            autor=a.revisor,
+            lacunas=lacunas_arquivo + (a.lacuna or []),
+            autor=revisor,
             aplicar=a.aplicar,
-            nivel_independencia=getattr(a, 'nivel_independencia', 'A') or 'A',
-            justificativa_independencia=getattr(a, 'justificativa_independencia', '') or '',
-            perfil=getattr(a, 'perfil', None) or reg.perfil,
+            nivel_independencia=nivel,
+            justificativa_independencia=campos.get('independencia', ''),
+            perfil=reg.perfil,
         )
-        print(f'parecer {pid} ({a.veredito}) registrado para etapa {etapa_id}.')
+        print(f'parecer {pid} ({veredito}) registrado para etapa {etapa_id}.')
     except ErroValidacaoRegistro as e:
         raise SystemExit(f'erro ao registrar parecer: {e}')
     return 0
@@ -834,11 +834,19 @@ def cmd_encerrar(a):
             det.append(f'achados bloqueadores abertos ou contestados: {len(bloqueadores)}')
         raise SystemExit('erro: ' + '; '.join(det) + '. Use --forcar só com motivo registrado e autorização humana.')
 
+    def exigir_decisao():
+        # B15: ninguém encerra a etapa sem o evento da decisão de uma pessoa (`sc.py decidir`); nem `--forcar` dispensa.
+        if not any(ev.get('tipo') == 'decisao_registrada' and (ev.get('dados') or {}).get('etapa_id') == etapa_id
+                   and (ev.get('dados') or {}).get('acao') in ('aceitar', 'rejeitar', 'sem-aceite') for ev in reg.eventos):
+            raise SystemExit(f'erro: a etapa {etapa_id} não tem o evento de decisão (aceitar, rejeitar ou sem-aceite): '
+                             f'rode sc.py decidir --etapa {etapa_id} <ação> --por <pessoa> antes de encerrar a rodada.')
+
     if a.forcar and (abertas or bloqueadores):
         if not a.motivo or len(a.motivo.strip()) < 10 or not a.decisao_ref or a.decisao_ref.strip() == 'autorizacao_cli':
             raise SystemExit(
                 'erro: --forcar isolado não é permitido; exceção exige --motivo substantivo (mínimo 10 caracteres) e --decisao-ref com a decisão humana do usuário.'
             )
+        exigir_decisao()
         try:
             regra_exc = a.regra or ('achados_bloqueadores' if bloqueadores else 'criterios_gerais')
             reg.registrar_excecao(
@@ -853,12 +861,14 @@ def cmd_encerrar(a):
         except ErroValidacaoRegistro as e:
             raise SystemExit(f'erro ao registrar exceção de encerramento: {e}')
 
+    exigir_decisao()
     resumo = a.resumo or f'{len(fs)} fatias fechadas'
 
     # VALIDA E GRAVA PRIMEIRO O REGISTRO ESTRUTURADO (REV-002, REV-009)
     # Se falhar, NÃO escreve em historico.md e NÃO remove rodada.md
     try:
-        reg.encerrar_etapa(etapa_id, resumo, autor=campos.get('bastao', 'Gandalf'), aplicar=a.aplicar)
+        if (reg.estado().get('etapas', {}).get(etapa_id) or {}).get('estado') != 'encerrada':  # `sc.py decidir` pode já ter encerrado
+            reg.encerrar_etapa(etapa_id, resumo, autor=campos.get('bastao', 'Gandalf'), aplicar=a.aplicar)
     except (ErroValidacaoRegistro, ErroConcorrenciaRegistro) as e:
         raise SystemExit(f'erro no encerramento da etapa: {e}')
 
@@ -1643,30 +1653,20 @@ def main(argv=None):
     s.add_argument('--etapa')
     s.add_argument('--criterio', required=True)
     s.add_argument('--comando', required=True)
-    s.add_argument('--saida', required=True)
-    s.add_argument('--exit-code', type=int, default=0, dest='exit_code')
+    s.add_argument('--timeout', type=int, default=300, help='segundos para o comando da evidência')
     s.add_argument('--verificador', default='Gandalf')
     s.add_argument('--ambiente', default='local')
     s.add_argument('--versao')
     s.set_defaults(func=cmd_evidencia)
 
-    s = sub.add_parser('parecer')
+    s = sub.add_parser('parecer', help='registra o parecer de um arquivo (lint); revisor, fornecedor, veredito e nível saem dele')
     s.add_argument('--etapa')
-    s.add_argument('--revisor', required=True)
-    s.add_argument('--fornecedor', required=True)
-    s.add_argument('--implementador', action='append', default=[], dest='implementadores')
-    s.add_argument('--versao', required=False, default=None)
+    s.add_argument('--arquivo', required=True, help='arquivo do parecer (modelo do sc-revisao)')
+    s.add_argument('--versao', required=False, default=None, help='versão examinada (padrão: o commit do parecer)')
     s.add_argument('--sincronizar-git', '--versao-git', dest='sincronizar_git', action='store_true',
                    help='Sincroniza a versão examinada com o commit Git HEAD atual')
-    s.add_argument('--veredito', required=True, choices=['aceitar', 'aceitar_com_ressalvas', 'nao_aceitar'])
-    s.add_argument('--criterio-ok', action='append', default=[], dest='criterio_ok')
-    s.add_argument('--criterio-pendente', action='append', default=[], dest='criterio_pendente')
     s.add_argument('--achado', action='append', default=[])
     s.add_argument('--lacuna', action='append', default=[])
-    s.add_argument('--nivel-independencia', default='A', choices=['A', 'B', 'C'], dest='nivel_independencia',
-                   help='escala tripartite de independência do revisor: A (fornecedor externo), B (modelo distinto), C (sessão isolada)')
-    s.add_argument('--justificativa-independencia', default='', dest='justificativa_independencia',
-                   help='justificativa formal obrigatória para níveis B e C de independência')
     s.set_defaults(func=cmd_parecer)
 
     s = sub.add_parser('excecao')

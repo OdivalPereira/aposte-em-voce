@@ -1,8 +1,8 @@
 // T09: por arquivo, banco provável, período, lançamentos lidos, conferência de saldo e status (seção 5.5).
-import { consolidar } from '../leitura/consolidar';
+import { agruparHistoricos } from '../leitura/historico';
 import { ROTULO_STATUS, type ResultadoArquivo } from '../leitura/tipos';
 import type { ItemArquivo } from '../app';
-import { dataBr, reais } from '../ui/formatar';
+import { dataBr, mesBr, reais } from '../ui/formatar';
 
 function textoDoSaldo(r: ResultadoArquivo): string {
   const c = r.conferencia;
@@ -14,12 +14,33 @@ function textoDoSaldo(r: ResultadoArquivo): string {
 
 export function ResultadoLeitura({ itens, aoVoltar }: { itens: ItemArquivo[]; aoVoltar: () => void }) {
   const lidos = itens.filter((i) => i.resultado);
-  const consolidado = consolidar(lidos.map((i) => ({ nome: i.nome, resultado: i.resultado as ResultadoArquivo })));
-  const emDois = consolidado.lancamentos.filter((l) => l.apareceEmDoisExtratos).length;
+  const { historicos, repetidos } = agruparHistoricos(lidos.map((i) => ({ nome: i.nome, resultado: i.resultado as ResultadoArquivo })));
+  const totalLancamentos = historicos.reduce((n, h) => n + h.consolidado.lancamentos.length, 0);
+  const emDois = historicos.reduce((n, h) => n + h.consolidado.lancamentos.filter((l) => l.apareceEmDoisExtratos).length, 0);
   return (
     <section aria-labelledby="titulo-resultado">
       <h1 id="titulo-resultado">Resultado da leitura</h1>
       {lidos.length === 0 && <p>Nenhum extrato lido. Você segue sem extrato; a entrevista e a conferência vêm nas próximas etapas desta versão de teste.</p>}
+      {historicos.map((h, i) => (
+        <section class="cartao" key={i} aria-label={`Histórico ${i + 1}`}>
+          <h2>{`Histórico: ${h.bancoProvavel ?? 'banco não identificado'}${h.contaFinal ? `, conta ${h.contaFinal}` : ''}`}</h2>
+          <dl>
+            <dt>Período total</dt>
+            <dd>{`${dataBr(h.periodo.inicio)} a ${dataBr(h.periodo.fim)}`}</dd>
+            <dt>Arquivos no histórico</dt>
+            <dd>{h.arquivos.length}</dd>
+            <dt>Meses cobertos</dt>
+            <dd>{h.mesesCobertos.map(mesBr).join(', ')}</dd>
+            <dt>Meses faltando</dt>
+            <dd>{h.mesesFaltando.length > 0 ? h.mesesFaltando.map(mesBr).join(', ') : 'nenhum'}</dd>
+          </dl>
+          {h.avisos.map((a, k) => (
+            <p class="aviso" key={k}>
+              {a.mensagem}
+            </p>
+          ))}
+        </section>
+      ))}
       {lidos.map((item) => {
         const r = item.resultado as ResultadoArquivo;
         return (
@@ -46,9 +67,9 @@ export function ResultadoLeitura({ itens, aoVoltar }: { itens: ItemArquivo[]; ao
       })}
       {lidos.length > 0 && (
         <p>
-          Ao todo: {consolidado.lancamentos.length} lançamentos
+          Ao todo: {totalLancamentos} lançamentos
           {emDois > 0 ? `, ${emDois} aparecem em dois extratos e contam uma vez só` : ''}
-          {consolidado.repetidos.length > 0 ? `; ${consolidado.repetidos.length} arquivo(s) repetido(s) foram ignorados` : ''}.
+          {repetidos.length > 0 ? `; ${repetidos.length} arquivo(s) repetido(s) foram ignorados` : ''}.
         </p>
       )}
       <button type="button" class="secundario" onClick={aoVoltar}>

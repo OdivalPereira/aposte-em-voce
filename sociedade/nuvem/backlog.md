@@ -1,5 +1,21 @@
 # Backlog único da sessão em nuvem — rascunho do lote 1 (03/10/2026)
 
+
+## Fila fora da nuvem, em ordem de prioridade (Odival, 03/10/2026)
+
+| # | Etapa | Pedido ou itens | Notas |
+|---|---|---|---|
+| 0 | troca do perfil | Formação real no `sociedade/perfil.md` e desligar a chave `emulacao` | Primeiro passo da primeira etapa local |
+| 1 | **d1-design** | "Quero que o app tenha uma cara moderna, sóbria e acolhedora, com uma referência visual que eu aprovo e que vale para todas as telas, começando por extratos, resultado e diagnóstico." | Q169: referência aprovada, Legolas, capturas em 360 px |
+| 2 | **a2a** | Conferência individual (T10) e catálogo com fonte (seção 6); correções do teste de Odival com os extratos mensais | B17a (PDFs sintéticos, Q167), B17c |
+| 3 | **a2b** | Entrevista (T03–T07: PGSI, complementares, financeiro, relato) | **B14**, **B15r** |
+| 4 | a3 | Documentos e privacidade (B18–B20) | — |
+| 5 | a4 | Publicação (B21–B23) | Só com o "vai" de Odival |
+| 6 | final | Revisão completa da 4.0.0, CHANGELOG, devolução da cópia do pacote (C40) | Formação real |
+| — | depois | B16, B17, resíduos da a1 e da fechamento-nuvem | — |
+
+**B15r — resíduo da B15 (parecer da fechamento-nuvem):** atestado escrito à mão com hash recalculado ainda sai "feito" no `conferir` (o hash é SHA sem chave e o commit não é conferido); `sc_rodada fatia --fechar --prova` e `sc_passagem` gravam `exit_code=0` declarado; `_nome_do_perfil` por igualdade exata ("Revisor", "GPT", "Gemini" passam como pessoa); `verificar_workflows` só cobre `.github/workflows/`; o job `portao` não confere o hash. Correção: o `entregar` grava o hash no registro, ou o CI reexecuta o portão; evidência declarada marcada como tal. Também: uma lista só de termos de consumo (validador e portão); `sc.py revisar` com o projeto do repositório principal e com a regra de rede clara; script de contagem de linhas (Q168); grupo com total e 0 linhas; banco nulo num mês.
+
 **Fontes:**
 - revisão de 25–27/09 (`docs/revisao-claude/`): achados DG-01 a DG-36, etapas G0, E1–E18 e S0, decisões P01–P29;
 - entrevista C01–C61 (`sociedade/entrevista-nuvem-2026-10-03.md`).

@@ -1,0 +1,133 @@
+{
+  "tipo": "atestado_pre_devolucao",
+  "versao": "1.3.0",
+  "timestamp": "2026-10-03T20:21:00.913221Z",
+  "papel": "Coordenador",
+  "etapa_id": "fechamento-nuvem",
+  "fatia_id": "2",
+  "status": "APROVADO",
+  "verificacoes": {
+    "higiene_pastas": {
+      "ok": true,
+      "erros": []
+    },
+    "build": {
+      "ok": true,
+      "comando": "npm run build",
+      "detalhes": "dist/assets/pdf.worker-DUCzcP-s.js  1,245.50 kB\ndist/assets/index-B1ZwZmOK.css          2.16 kB │ gzip:  0.92 kB\ndist/assets/index-DJtdCjSe.js          29.59 kB │ gzip: 11.53 kB\n\n✓ built in 934ms",
+      "codigo": 0
+    },
+    "tipos_estaticos": {
+      "ok": true,
+      "comando": "npm run lint",
+      "detalhes": "> aposte-em-voce@0.1.0 lint\n> tsc --noEmit && eslint .",
+      "codigo": 0
+    },
+    "compilacao": {
+      "ok": true,
+      "erros": []
+    },
+    "seguranca_antitoken": {
+      "ok": true,
+      "erros": []
+    },
+    "disjuncao": {
+      "ok": true,
+      "erros": []
+    },
+    "testes": {
+      "ok": true,
+      "detalhes": "app: 154 testes, 0 pulados, 9.5 s",
+      "comando": "app: npm test",
+      "totais": {
+        "total": 154,
+        "pulados": 0,
+        "falhos": 0
+      }
+    },
+    "arvore_limpa": {
+      "ok": true,
+      "suja": []
+    }
+  },
+  "commit": "e4dbaddff265133718380c895f66895c173d2439",
+  "base": "793012aed9f4af40ecb2a5f02264263ac238e9e4",
+  "origem_arquivos": "git",
+  "total_arquivos_inspecionados": 19,
+  "arquivos_removidos": [],
+  "python": "3.11.15",
+  "hashes_artefatos": {
+    "src/leitura/LEIAME.md": "f0b388e1259fd7de6120172f0ee0dbb8a30965ccd4efa870f00683076c8721e8",
+    "src/leitura/conferir.ts": "d9b59425a40d7906e6677ead0590ba1269b1dfdd0b8aba7c7f5b27f209e57cff",
+    "src/leitura/historico.ts": "03cfa749ea2a14a4c88f80d3580f8d9eb34db6dc51f89d467effd67054af8a16",
+    "src/leitura/index.ts": "f1c24d039ccefce25a0f04ac77540d64f67e00462edda8304584099ec53d9d33",
+    "src/leitura/layout.ts": "fcdf49ecb9772e9289ca10b9d25643048e9b99cec1fdd1119f9c122bd6142003",
+    "src/leitura/reconstruir.ts": "5b38357101fa7f15d1d44ab24fe1e1e21d070d50a82360bd32252bf6f4f507e1",
+    "src/leitura/tipos.ts": "5914e61f2c7469456193fa17ff497dbed0a65df9fd2c54f36ed2fb26750ab84a",
+    "src/telas/Diagnostico.tsx": "3e9027fa2f0e87d52ea4b72ec3166df799928f19c29ca22baad2bad0c9a56949",
+    "src/telas/Extratos.tsx": "bb1aae5763f5c9416af0e8d71e485023ec220a926aa29c71f48d9b25d735bb1d",
+    "src/telas/ResultadoLeitura.tsx": "8c384d62ce118805e7dcc73e00d77373109508a847999a136ff6461585675e32",
+    "src/ui/formatar.ts": "911a65b867abc016d93f11544d9dd90d819b2fd3cb58159d9aa053c07c006b34",
+    "tests/e2e/auxiliar.ts": "d00418cecedc21473eff07fe346bfd842cc77cfb7228402d9a1ff37342e174e6",
+    "tests/e2e/historico.spec.ts": "d580be7ae07662f3b9928a6a2d08f9961f28778695f822a3f02c363294481564",
+    "tests/unit/agrupado-por-dia.test.ts": "cf816fd595ae0cfc4451ba526321972b7513838af5274fff7ec705e90e64733c",
+    "tests/unit/assinatura.test.ts": "3bc2bf997267e09f08ab964944b7414d62a3660cd81345ce964556d430b03439",
+    "tests/unit/auxiliar/extrato-mes.ts": "9e46f617e7ae8260c4a2dd0bd91b9b52b5ed9a94ab775d7fbd570455a8408d83",
+    "tests/unit/auxiliar/montar.ts": "b46282923a57c83344c777df6c680d02762d282997d38c95c21dd5f3fd08372b",
+    "tests/unit/consolidar.test.ts": "7a3985e46a2b6c53baf152f47acb547ddacb0b325e75dbb3191ded72d70f7684",
+    "tests/unit/historico.test.ts": "11df2d918f51196b5c7ca5cfdcf8dc7182b1f7fadb0c57eb8fb511857fd3eac3"
+  },
+  "arquivos_inspecionados": [
+    "src/leitura/LEIAME.md",
+    "src/leitura/conferir.ts",
+    "src/leitura/historico.ts",
+    "src/leitura/index.ts",
+    "src/leitura/layout.ts",
+    "src/leitura/reconstruir.ts",
+    "src/leitura/tipos.ts",
+    "src/telas/Diagnostico.tsx",
+    "src/telas/Extratos.tsx",
+    "src/telas/ResultadoLeitura.tsx",
+    "src/ui/formatar.ts",
+    "tests/e2e/auxiliar.ts",
+    "tests/e2e/historico.spec.ts",
+    "tests/unit/agrupado-por-dia.test.ts",
+    "tests/unit/assinatura.test.ts",
+    "tests/unit/auxiliar/extrato-mes.ts",
+    "tests/unit/auxiliar/montar.ts",
+    "tests/unit/consolidar.test.ts",
+    "tests/unit/historico.test.ts"
+  ],
+  "erros": [],
+  "portao": {
+    "modo": "por_area",
+    "perfil": "sociedade/perfil.md",
+    "perfil_sha256": "daec2bd7d0ce6dd23cd1bdcaa2ddfaa3d2a5191b6fec81540dc3d18d01963143",
+    "commit": "e4dbaddff265133718380c895f66895c173d2439",
+    "area_pedida": null,
+    "areas_tocadas": [
+      "app"
+    ],
+    "cobertura_completa": true,
+    "areas": [
+      {
+        "area": "app",
+        "pasta": ".",
+        "comando": "npm test",
+        "timeout_s": 900,
+        "ok": true,
+        "codigo": 0,
+        "duracao_s": 9.5,
+        "timeout_estourado": false,
+        "testes": {
+          "total": 154,
+          "pulados": 0,
+          "falhos": 0
+        },
+        "motivos": [],
+        "saida_final": "  ✓  11 tests/e2e/leitura.spec.ts:119:3 › jornada de leitura (T08, T09, T99) em perfil de celular › falhas na leitura nunca travam a jornada (princípio 8) (417ms)\n  ✓  10 tests/e2e/leitura.spec.ts:96:3 › jornada de leitura (T08, T09, T99) em perfil de celular › PDF com senha: pede a senha, recusa a errada, lê com a certa; a senha não sai do aparelho (722ms)\n  ✓  13 tests/e2e/leitura.spec.ts:165:3 › jornada de leitura (T08, T09, T99) em perfil de celular › alvos de toque de 44 px ou mais nos botões (125ms)\n  ✓  12 tests/e2e/leitura.spec.ts:146:3 › jornada de leitura (T08, T09, T99) em perfil de celular › arquivo que o navegador não consegue ler: não suportado, sem vazar o erro, e pode ser pulado (219ms)\n\n  13 passed (6.9s)"
+      }
+    ]
+  },
+  "atestado_hash": "87274c9478a8ff901b9ae554953ad0757f8f407d01655a589e3307044b1b620c"
+}

@@ -24,6 +24,14 @@ PERFIL_TEXTO = '# Perfil sintético\n\n## Portão por área\n| Área | Pasta | T
 PERFIL = 'sociedade/perfil.md'
 
 
+CAMPOS_DO_HASH = ('commit', 'base', 'papel', 'etapa_id', 'fatia_id', 'status', 'verificacoes', 'hashes_artefatos', 'portao', 'erros')
+
+
+def hash_do_atestado(at):
+    """Cópia deliberada da fórmula do `sc_pre_devolucao`: o teste não usa o código que vigia."""
+    return hashlib.sha256(json.dumps({k: at.get(k) for k in CAMPOS_DO_HASH}, sort_keys=True).encode('utf-8')).hexdigest()
+
+
 def atestado(commit, **extra):
     """Atestado na forma 1.3.0 (B11): é a única que o status `portao` aceita; o perfil é o de `PERFIL_TEXTO`."""
     base = {'tipo': 'atestado_pre_devolucao', 'status': 'APROVADO', 'etapa_id': ETAPA, 'commit': commit,
@@ -32,6 +40,11 @@ def atestado(commit, **extra):
                        'perfil_sha256': hashlib.sha256(PERFIL_TEXTO.encode('utf-8')).hexdigest(),
                        'areas': [{'area': 'p', 'ok': True, 'testes': {'total': 1, 'pulados': 0, 'falhos': 0}}]}}
     base.update(extra)
+    # B15: o atestado do `entregar` traz o hash dos campos e os totais coerentes com `hashes_artefatos`
+    base.setdefault('hashes_artefatos', {'src/a.py': 'a' * 64})
+    base.setdefault('arquivos_inspecionados', sorted(base['hashes_artefatos']))
+    base['total_arquivos_inspecionados'] = len(base['hashes_artefatos']) if 'total_arquivos_inspecionados' not in extra else extra['total_arquivos_inspecionados']
+    base.setdefault('atestado_hash', hash_do_atestado(base))
     return base
 
 
@@ -271,7 +284,8 @@ class TestAceite(Repo):
         pasta = self.r / 'sociedade'
         reg = Registro.inicializar(pasta, 'projeto-teste', str(self.r))
         reg.abrir_etapa(ETAPA, 'objetivo', 'plano', 'aut', self.base[:7], ['C1'])
-        evento = {'tipo': 'decisao_registrada', 'dados': decisao(commit=self.p)['dados']}
+        hash_do_atestado = json.loads((self.r / ATESTADO).read_text(encoding='utf-8'))['atestado_hash']
+        evento = {'tipo': 'decisao_registrada', 'dados': decisao(commit=self.p, atestado_hash=hash_do_atestado)['dados']}
         reg.aplicar_mutacao(lambda dados: [evento], autor='Odival Teste')
         head = self.commit({'sociedade/_marca': 'ok\n'}, 'sociedade: registro')
         r = sc_status.verificar_aceite(self.r, RAMO, head)

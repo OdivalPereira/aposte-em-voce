@@ -111,14 +111,14 @@ def cmd_abrir(a):
 
 def cmd_decidir(a):
     return _executar(sc_ciclo.decidir, _soc(a, _id(a.etapa)), _id(a.etapa), a.acao, a.por, a.head, a.motivo, a.minutos, a.intervencoes,
-                     a.escaparam, a.log, a.sessao, a.projetos)
+                     a.escaparam, a.log, a.sessao, a.projetos, desde=a.desde)
 
 
 def cmd_sessao(a):
     import sc_sessao
     argv = [a.app] + (['--log', a.log] if a.log else []) + (['--pasta', a.pasta] if a.pasta else []) \
         + (['--conversa', a.conversa] if a.conversa else []) + (['--sessao', a.sessao] if a.sessao else []) \
-        + (['--projetos', a.projetos] if a.projetos else []) + (['--json'] if a.json else [])
+        + (['--projetos', a.projetos] if a.projetos else []) + (['--desde', a.desde] if a.desde else []) + (['--json'] if a.json else [])
     return sc_sessao.main(argv)
 
 
@@ -134,10 +134,7 @@ def cmd_estado(a):
 def cmd_revisar(a):
     """Prepara a cópia descartável para o revisor; com --parecer, registra o parecer pronto no registro."""
     etapa = _id(a.etapa)
-    if a.parecer:  # B11a: o parecer vai para o registro da sociedade/ da etapa
-        soc = _soc(a, etapa)
-    else:
-        soc = Path(a.pasta_sociedade) if a.pasta_sociedade else localizar_sociedade_canonica()
+    soc = _soc(a, etapa)  # B11a e B17b: a sociedade/ do worktree da etapa, com ou sem --parecer
     raiz = soc.parent
     if a.parecer:
         return _executar(sc_ciclo.registrar_parecer, soc, etapa, a.parecer, a.head, a.implementador or None)
@@ -162,6 +159,11 @@ def cmd_revisar(a):
              '-c', 'core.hooksPath=/dev/null', 'commit', '-q', '--allow-empty', '-m', msg)
     skills = AQUI.parent.parent
     (destino / 'revisao-saida').mkdir()
+    for rel in (f'ordens/{etapa}.md', *(p.relative_to(soc).as_posix() for p in sorted((soc / 'pareceres').glob(f'atestado-{etapa}*.json'))),
+                'perfil.md'):  # B17b: o que o revisor lê e ainda não está nos commits (o atestado nasce depois do código)
+        if (soc / rel).is_file() and not (destino / 'sociedade' / rel).exists():
+            (destino / 'sociedade' / rel).parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy(soc / rel, destino / 'sociedade' / rel)
     shutil.copy(skills / 'sc-revisao' / 'references' / 'protocolo-revisao.md', destino / 'PROTOCOLO-REVISAO.md')
     shutil.copy(skills / 'sc-revisao' / 'assets' / 'parecer-modelo.md', destino / 'revisao-saida' / 'parecer-modelo.md')
     (destino / 'ORDEM-REVISAO.md').write_text(f'''# Ordem de revisão independente — etapa {etapa}
@@ -170,7 +172,7 @@ Você é o revisor independente, de fornecedor diferente de todos os implementad
 
 - Cópia: esta pasta. Base: commit "base ({base[:7]})". Candidato: "candidato ({head[:7]})", que é o HEAD.
 - Alterações: git diff HEAD~1 HEAD
-- Critérios: o plano e a ordem da etapa {etapa}, dentro desta cópia.
+- Critérios: o plano e a ordem da etapa {etapa}, dentro desta cópia (sociedade/ordens/{etapa}.md; o atestado e o perfil também estão em sociedade/).
 - Método: PROTOCOLO-REVISAO.md desta pasta (passo 0, oito lentes, matriz de cobertura).
 
 Regras: não altere nada fora de revisao-saida/; sondas só em revisao-saida/ ou no diretório temporário;
@@ -180,7 +182,7 @@ Parecer: revisao-saida/parecer.md, pelo modelo revisao-saida/parecer-modelo.md. 
 (sha256sum revisao-saida/parecer.md).
 ''', encoding='utf-8')
     with open(destino / '.git' / 'info' / 'exclude', 'a', encoding='utf-8') as f:
-        f.write('ORDEM-REVISAO.md\nPROTOCOLO-REVISAO.md\nrevisao-saida/\n')
+        f.write('ORDEM-REVISAO.md\nPROTOCOLO-REVISAO.md\nrevisao-saida/\nsociedade/\n')
     print(f'''Cópia para revisão pronta: {destino}
 Commits: base {base[:7]}, candidato {head[:7]}
 
@@ -233,6 +235,7 @@ def main(argv=None):
     p.add_argument('--conversa')
     p.add_argument('--sessao', help='identificador da sessão (ou do subagente) do Claude Code')
     p.add_argument('--projetos', help='pasta de projetos do Claude Code')
+    p.add_argument('--desde', help='mede só o trecho a partir deste instante (ISO 8601; sem fuso, UTC)')
     p.add_argument('--json', action='store_true')
     p.set_defaults(func=cmd_sessao)
 
@@ -258,6 +261,7 @@ def main(argv=None):
     p.add_argument('--log', action='append', default=[], help='log de sessão para as métricas (repetível)')
     p.add_argument('--sessao', action='append', default=[], help='sessão do Claude Code para as métricas (repetível)')
     p.add_argument('--projetos', help='pasta de projetos do Claude Code')
+    p.add_argument('--desde', help='consumo só do trecho a partir deste instante (ISO 8601; sem fuso, UTC)')
     p.add_argument('--pasta-sociedade')
     p.set_defaults(func=cmd_decidir)
 

@@ -9,8 +9,8 @@ Este documento define o padrão para o arquivo `sociedade/avaliacao.md`, preench
 O método da Sociedade do Código estabelece uma fronteira clara e intransigente entre duas categorias de métricas:
 
 ### ❌ Proibição Absoluta da Regra Antitoken (Consumo de IA)
-Regra inviolável: nenhum agente deve medir, calcular, estimar ou relatar métricas de IA. É terminantemente proibido:
-- Proibido qualquer estimativa ou contagem de tokens (entrada, saída ou raciocínio);
+Regra inviolável: nenhum agente deve estimar, calcular ou relatar de memória métricas de IA. Única exceção: medir pelo log do aplicativo é permitido (`sc.py sessao claude`, Q141). É terminantemente proibido:
+- Proibido qualquer estimativa de tokens (entrada, saída ou raciocínio); só vale a contagem que o log registra;
 - Proibido calcular ou relatar custos financeiros decorrentes de inferência de inteligência artificial;
 - Proibido registrar consumo ou aferir limites percentuais de cotas de APIs de modelos;
 - Sem medição de tempo de resposta ou latência de inferência de LLMs.

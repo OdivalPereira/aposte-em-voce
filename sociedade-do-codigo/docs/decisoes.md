@@ -53,7 +53,7 @@ O script recusa fechar fatia sem `--prova` e recusa começar a fatia N com a N-1
 
 ## D8. Economia por desenho, não por contabilidade
 
-Medir consumo foi expurgado: nenhum agente estima, calcula ou relata gasto, e o validador do pacote recusa texto que mande medir. A economia vem de cinco coisas verificáveis: ativação explícita, leitura por ponteiro, nível certo, máquina antes da nuvem e fatias. O usuário registra à mão, se quiser, uma linha por rodada.
+Estimar consumo foi expurgado: nenhum agente estima, calcula ou relata gasto, e o validador do pacote recusa texto que mande estimar. Medir pelo log do aplicativo passou a ser permitido (`sc.py sessao claude`). A economia vem de cinco coisas verificáveis: ativação explícita, leitura por ponteiro, nível certo, máquina antes da nuvem e fatias. O usuário registra à mão, se quiser, uma linha por rodada.
 
 Isso resolve a contradição entre "expurgar qualquer medição" e "ter o desempenho registrado e analisado": desempenho passou a significar retrabalho e achados, que se observam sem contar tokens.
 

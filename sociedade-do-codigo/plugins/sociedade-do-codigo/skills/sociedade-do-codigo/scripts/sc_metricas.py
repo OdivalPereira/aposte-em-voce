@@ -20,11 +20,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from sc_registro import ErroRegistro, Registro, localizar_sociedade_canonica  # noqa: E402
-from sc_sessao import ErroSessao, ler_jsonl_estrito, localizar_claude, subagentes_claude  # noqa: E402
+from sc_sessao import ErroSessao, _desde, consumo_tolerante, ler_jsonl_estrito, localizar_claude, subagentes_claude  # noqa: E402
 
 COLUNAS = ('Etapa', 'Versão do método', 'Revisões até o aceite', 'Bloqueadores achados', 'Escaparam ao aceite',
            'Trocas de papel', 'Eventos de cota', 'Comandos', 'Erros', 'Edições manuais', 'Intervenções',
-           'Minutos de Odival', 'Dentro da meta?')
+           'Minutos de Odival', 'Consumo (cache lido)', 'Dentro da meta?')
 METAS = {'Comandos': 12, 'Edições manuais': 0, 'Intervenções': 5, 'Minutos de Odival': 30}  # regras.md §6.2
 ND = 'n/d'
 
@@ -141,9 +141,11 @@ def versao_do_metodo():
 
 
 def medir_etapa(dados_registro, etapa_id, logs=(), intervencoes=None, minutos_odival=None,
-                escaparam_ao_aceite=None, versao_metodo=None, incluir_subagentes=True):
+                escaparam_ao_aceite=None, versao_metodo=None, incluir_subagentes=True, desde=None):
     """Métricas da etapa. `logs`: sessões do Claude Code (caminhos .jsonl); sem logs, comandos, erros e
-    edições manuais ficam n/d. Intervenções, minutos e escaparam são parâmetros de Odival (None = n/d)."""
+    edições manuais ficam n/d. Intervenções, minutos e escaparam são parâmetros de Odival (None = n/d).
+    `desde` (ISO 8601) limita o consumo ao trecho; o consumo vem do log e, sem log legível, fica n/d."""
+    _desde(desde)  # desde inválido é erro claro, com ou sem log
     reg = medir_registro(dados_registro, etapa_id)
     if logs:
         sessao = medir_logs(logs, incluir_subagentes)
@@ -151,13 +153,15 @@ def medir_etapa(dados_registro, etapa_id, logs=(), intervencoes=None, minutos_od
     else:
         sessao = {'comandos': [], 'erros': [], 'edicoes_manuais': []}
         comandos = erros = edicoes = None
+    consumo = consumo_tolerante(logs, desde)
     valores = {'Etapa': etapa_id, 'Versão do método': versao_metodo or versao_do_metodo(),
                'Revisões até o aceite': reg['revisoes'], 'Bloqueadores achados': reg['bloqueadores'],
                'Escaparam ao aceite': escaparam_ao_aceite, 'Trocas de papel': reg['trocas_de_papel'],
                'Eventos de cota': reg['eventos_de_cota'], 'Comandos': comandos, 'Erros': erros,
-               'Edições manuais': edicoes, 'Intervenções': intervencoes, 'Minutos de Odival': minutos_odival}
+               'Edições manuais': edicoes, 'Intervenções': intervencoes, 'Minutos de Odival': minutos_odival,
+               'Consumo (cache lido)': consumo['total']['cache_lido'] if consumo else None}
     valores['Dentro da meta?'] = dentro_da_meta(valores)
-    return {'valores': valores, 'detalhe': sessao}
+    return {'valores': valores, 'detalhe': sessao, 'consumo': consumo}
 
 
 def linha_evolucao(metricas):
@@ -165,14 +169,48 @@ def linha_evolucao(metricas):
     return '| ' + ' | '.join(ND if metricas['valores'][c] is None else str(metricas['valores'][c]) for c in COLUNAS) + ' |'
 
 
+def _celulas(linha):
+    return linha.strip().strip('|').split('|')
+
+
+def _migrar_tabela(linhas):
+    """Cabeçalho antigo (sem a coluna de consumo): insere a coluna antes de 'Dentro da meta?' (cabeçalho,
+    separador e 'n/d' nas linhas antigas). Devolve True se mudou."""
+    novo = 'Consumo (cache lido)'
+    for i, l in enumerate(linhas):
+        c = [x.strip() for x in _celulas(l)] if l.startswith('|') else []
+        if c[:1] != ['Etapa'] or novo in c:
+            continue
+        pos = c.index('Dentro da meta?') if 'Dentro da meta?' in c else len(c)
+        j = i
+        while j < len(linhas) and linhas[j].startswith('|'):
+            cel = _celulas(linhas[j])
+            if len(cel) == len(c):
+                cel.insert(pos, '---' if j == i + 1 else f' {novo if j == i else ND} ')
+                linhas[j] = '|' + '|'.join(cel) + '|'
+            j += 1
+        return True
+    return False
+
+
 def acrescentar_linha(evolucao, linha):
-    """Acrescenta a linha ao fim da tabela de evolucao.md; a etapa não pode ter duas linhas."""
+    """Acrescenta a linha ao fim da tabela de evolucao.md (não ao fim do arquivo); a etapa não pode ter duas
+    linhas. Tabela com cabeçalho antigo é migrada antes (coluna de consumo, 'n/d' nas linhas antigas)."""
     caminho = Path(evolucao)
     texto = caminho.read_text(encoding='utf-8')
     etapa = linha.split('|')[1].strip()
     if re.search(rf'^\|\s*{re.escape(etapa)}\s*\|', texto, re.M):
         raise ValueError(f'evolucao.md já tem linha da etapa "{etapa}".')
-    caminho.write_text(texto.rstrip('\n') + '\n' + linha + '\n', encoding='utf-8')
+    linhas = texto.rstrip('\n').split('\n')
+    _migrar_tabela(linhas)
+    cab = next((i for i, l in enumerate(linhas) if l.startswith('|') and _celulas(l)[0].strip() == 'Etapa'), None)
+    fim = len(linhas)
+    if cab is not None:
+        fim = cab
+        while fim < len(linhas) and linhas[fim].startswith('|'):
+            fim += 1
+    linhas.insert(fim, linha)
+    caminho.write_text('\n'.join(linhas) + '\n', encoding='utf-8')
 
 
 def main(argv=None):
@@ -186,6 +224,7 @@ def main(argv=None):
     ap.add_argument('--minutos', type=int)
     ap.add_argument('--escaparam', type=int)
     ap.add_argument('--versao-metodo')
+    ap.add_argument('--desde', help='consumo só do trecho a partir deste instante (ISO 8601; sem fuso, UTC)')
     ap.add_argument('--gravar', action='store_true', help='acrescenta a linha a evolucao.md da pasta da sociedade')
     a = ap.parse_args(argv)
     try:
@@ -196,7 +235,8 @@ def main(argv=None):
             if tipo != 'sessao':
                 raise ErroSessao(f'{s} é um subagente; informe a sessão.')
             logs.append(str(caminho))
-        m = medir_etapa(Registro(pasta).dados, a.etapa, logs, a.intervencoes, a.minutos, a.escaparam, a.versao_metodo)
+        m = medir_etapa(Registro(pasta).dados, a.etapa, logs, a.intervencoes, a.minutos, a.escaparam, a.versao_metodo,
+                        desde=a.desde)
         linha = linha_evolucao(m)
         if a.gravar:
             acrescentar_linha(pasta / 'evolucao.md', linha)

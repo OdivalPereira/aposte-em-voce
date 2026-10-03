@@ -10,7 +10,7 @@ O núcleo diz **como** a equipe trabalha. O projeto diz **o quê**, **para quem*
 - Os papéis e seus limites (`sc-papeis`); os executores locais são módulo opcional.
 - Como executar: fatias por subagente, Jules em tarefas mecânicas (`sc-execucao`).
 - Como revisar: independência por fornecedor, protocolo, severidades, parecer (`sc-revisao`).
-- Medição objetiva por script; nenhum agente estima consumo (Q141).
+- Medição pelo log, por script; nenhum agente estima consumo (Q141). Economia de contexto: conversa curta, saída curta, leitura por trecho e retorno de até 2 KB no chat.
 
 ## Do projeto (só isto mora no repositório dele)
 

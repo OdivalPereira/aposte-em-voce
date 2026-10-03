@@ -17,6 +17,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 from util import NUCLEO, carregar, rodar
+from adversarial._cenario import parecer_texto
 
 MOD_REG = carregar(NUCLEO / 'scripts' / 'sc_registro.py', 'sc_registro')
 Registro = MOD_REG.Registro
@@ -26,6 +27,10 @@ fatias_de = MOD_ROD.fatias_de
 partir = MOD_ROD.partir
 
 SCRIPT_RODADA = NUCLEO / 'scripts' / 'sc_rodada.py'
+PERFIL = ('# Perfil sintético\n\n## Papel × ferramenta\n'
+          '| Papel | Nome | Plataforma | Fornecedor | Modelo | Esforço | Estado (ativo/reserva/espera) | Desde | Motivo |\n'
+          '|---|---|---|---|---|---|---|---|---|\n'
+          '| Coordenador | Gandalf | Antigravity | Google | Modelo G | high | ativo | 2026-10-03 | teste |\n')
 
 
 class TesteScRodadaEvolucoes(unittest.TestCase):
@@ -99,7 +104,9 @@ class TesteScRodadaEvolucoes(unittest.TestCase):
         self.assertEqual(est['etapa_atual']['versao_atual'], novo_hash)
 
     def test_parecer_e_encerrar_com_sincronizar_git(self):
-        # 1. Abre rodada com <preencher>
+        # 1. Abre rodada com <preencher> (B15: o fornecedor do implementador vem do perfil)
+        self.pasta_sociedade.mkdir(exist_ok=True)
+        (self.pasta_sociedade / 'perfil.md').write_text(PERFIL, encoding='utf-8')
         rodar(
             SCRIPT_RODADA, 'abrir',
             '--pasta', str(self.pasta_sociedade),
@@ -125,29 +132,30 @@ class TesteScRodadaEvolucoes(unittest.TestCase):
             SCRIPT_RODADA, 'evidencia',
             '--pasta', str(self.pasta_sociedade),
             '--criterio', 'C01',
-            '--comando', 'pytest',
-            '--saida', '1 passed',
+            '--comando', f'{sys.executable} -c "print(\'1 passed\')"',  # B15: o comando roda; o código de saída é o medido
             '--verificador', 'Gandalf',
             '--aplicar',
             cwd=self.p
         )
 
-        # 2. Parecer com --sincronizar-git
+        # 2. Parecer (B15: de um arquivo com lint) com --sincronizar-git
+        arq_parecer = self.p / 'parecer-sintetico.md'
+        arq_parecer.write_text(parecer_texto(self.commit_inicial, self.commit_inicial, nivel='Nível A (fornecedor diferente)',
+                                             etapa='SC-E1', revisor='Claude (revisor externo)', fornecedor='Anthropic'),
+                               encoding='utf-8')
         res_par = rodar(
             SCRIPT_RODADA, 'parecer',
             '--pasta', str(self.pasta_sociedade),
-            '--revisor', 'Claude',
-            '--fornecedor', 'Anthropic',
-            '--implementador', 'Legolas:OpenAI',
-            '--veredito', 'aceitar',
-            '--criterio-ok', 'C01',
+            '--arquivo', str(arq_parecer),
             '--sincronizar-git',
             '--aplicar',
             cwd=self.p
         )
         self.assertEqual(res_par.returncode, 0, res_par.stderr)
 
-        # 3. Encerrar com --sincronizar-git
+        # 3. Encerrar com --sincronizar-git (B15: só depois do evento da decisão de uma pessoa)
+        Registro(self.pasta_sociedade).registrar_decisao('SC-E1', 'DEC-SC-E1-1', 'Odival Sintético', 'teste', 'aceitar',
+                                                         autor='Odival Sintético')
         res_enc = rodar(
             SCRIPT_RODADA, 'encerrar',
             '--pasta', str(self.pasta_sociedade),
@@ -270,6 +278,7 @@ class TesteScRodadaEvolucoes(unittest.TestCase):
             criterios_verificados={'C01': True, 'fatia_1': True}
         )
 
+        reg.registrar_decisao('SC-E1', 'DEC-SC-E1-1', 'Odival Sintético', 'teste', 'aceitar', autor='Odival Sintético')  # B15
         res_enc = rodar(
             SCRIPT_RODADA, 'encerrar',
             '--pasta', str(self.pasta_sociedade),

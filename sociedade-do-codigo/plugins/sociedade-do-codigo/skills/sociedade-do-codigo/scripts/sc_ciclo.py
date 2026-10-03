@@ -14,6 +14,7 @@ import json
 import re
 import subprocess
 import sys
+import unicodedata
 from pathlib import Path
 
 AQUI = Path(__file__).resolve().parent
@@ -138,6 +139,21 @@ def _ler_parecer(texto):
     return campos, commit
 
 
+def _campos_do_parecer(texto, campos):
+    """(veredito do registro, revisor, fornecedor, nível A/B/C, critérios {critério: verificado}, lacunas) de um parecer
+    que passou no lint. Tudo vem do arquivo: nada é declarado por argumento (B15)."""
+    veredito = VEREDITO_REGISTRO[lint_parecer.norm(campos['veredito'])]
+    revisor = campos['revisor'].split('·')[0].strip()
+    m = re.search(r'fornecedor:\s*([^·]+)', campos['revisor'], re.I)
+    fornecedor = m.group(1).strip() if m else ''
+    n = re.search(r'nivel\s+([abc])\b', lint_parecer.norm(campos.get('independencia', '')))
+    secoes = lint_parecer.dividir(lint_parecer.ultimo_parecer(texto))[1]
+    criterios = {c[0]: lint_parecer.norm(c[2]) in ('executada', 'lida')
+                 for c in lint_parecer.linhas_tabela(secoes.get('criterios e evidencias', ''))}
+    lacunas = [l.strip()[1:].strip() for l in secoes.get('o que nao verifiquei', '').splitlines() if l.strip().startswith('-')][:10]
+    return veredito, revisor, fornecedor, (n.group(1).upper() if n else 'A'), criterios, lacunas
+
+
 def registrar_parecer(soc, etapa, arquivo, head='HEAD', implementadores=None):
     soc, arquivo = Path(soc), Path(arquivo)
     if not arquivo.is_file():
@@ -161,26 +177,18 @@ def registrar_parecer(soc, etapa, arquivo, head='HEAD', implementadores=None):
     base_etapa = str(e.get('base_efetiva') or '').lower()
     if base_etapa and not (base_etapa.startswith(base_parecer) or base_parecer.startswith(base_etapa)):
         raise ErroCiclo(f'a base do parecer ({base_parecer[:12]}) não é a base da etapa {etapa} ({base_etapa[:12]}).')
-    veredito = VEREDITO_REGISTRO[lint_parecer.norm(campos['veredito'])]
-    revisor = campos['revisor'].split('·')[0].strip()
-    m = re.search(r'fornecedor:\s*([^·]+)', campos['revisor'], re.I)
-    fornecedor = m.group(1).strip() if m else ''
-    nivel = re.search(r'nivel\s+([abc])\b', lint_parecer.norm(campos.get('independencia', '')))
+    veredito, revisor, fornecedor, nivel, criterios, lacunas = _campos_do_parecer(texto, campos)
     perfil = reg.perfil
     impls = []
     for item in implementadores or [e['responsavel']]:
         nome, _, forn = item.partition(':')
         forn = forn.strip() or (perfil.obter_fornecedor(nome.strip()) if perfil is not None else None) or ''
         impls.append({'agente': nome.strip(), 'fornecedor': forn})
-    linhas = lint_parecer.linhas_tabela(lint_parecer.dividir(lint_parecer.ultimo_parecer(texto))[1].get('criterios e evidencias', ''))
-    criterios = {c[0]: lint_parecer.norm(c[2]) in ('executada', 'lida') for c in linhas}
-    lacunas = [l.strip()[1:].strip() for l in lint_parecer.dividir(lint_parecer.ultimo_parecer(texto))[1]
-               .get('o que nao verifiquei', '').splitlines() if l.strip().startswith('-')][:10]
     if e['versao_atual'] != sha:  # a versão atual passa a ser a revisada; o parecer do mesmo SHA zera o impacto
         reg.registrar_versao(etapa, sha, impacto='desconhecido', autor=revisor)
     try:
         reg.registrar_parecer(etapa, f'PAR-{etapa}-{sha[:7]}', revisor, fornecedor, impls, sha, veredito, criterios,
-                              lacunas=lacunas, autor=revisor, nivel_independencia=nivel.group(1).upper() if nivel else 'A',
+                              lacunas=lacunas, autor=revisor, nivel_independencia=nivel,
                               justificativa_independencia=campos.get('independencia', ''), commit=sha)
     except ErroRegistro as err:
         raise ErroCiclo(f'registro recusou o parecer: {err}')
@@ -215,6 +223,9 @@ def _atestado(soc, raiz, etapa):
     ok, motivo = sc_status.forma_do_atestado(at, hashlib.sha256(perfil.read_bytes()).hexdigest() if perfil.is_file() else None)
     if not ok:
         raise ErroCiclo(f'atestado recusado ({caminho}): {motivo}.')
+    ok, motivo = sc_status.hash_do_atestado_confere(at)  # B15: só vale o que o `entregar` gerou
+    if not ok:
+        raise ErroCiclo(f'atestado recusado ({caminho}): {motivo}.')
     return at, commit
 
 
@@ -245,9 +256,23 @@ def _usuario(por, raiz, perfil=None):
     nome = (por or '').strip() or _git(raiz, 'config', 'user.name')[1].strip()
     if not nome:
         raise ErroCiclo('informe quem decide: --por NOME (ou configure git config user.name). Não há nome padrão.')
-    if nome_de_agente(nome, perfil):
-        raise ErroCiclo(f'"{nome}" é nome de agente, não de pessoa. Informe quem decide com --por <nome da pessoa>.')
+    if nome_de_agente(nome, perfil) or _nome_do_perfil(nome, perfil):
+        raise ErroCiclo(f'"{nome}" é nome de agente, de papel ou de modelo, não de pessoa. Informe quem decide com --por <nome da pessoa>.')
     return nome
+
+
+def _nome_do_perfil(nome, perfil):
+    """B15 (d): o nome é o rótulo de um papel, o nome de um agente ou o modelo de alguma linha do perfil (sem caixa nem acento)."""
+    chave = re.sub(r'[^a-z0-9]+', ' ', unicodedata.normalize('NFKD', nome).encode('ascii', 'ignore').decode().lower()).strip()
+    if not chave or perfil is None:
+        return False
+    for linha in getattr(perfil, 'papeis', None) or []:
+        candidatos = [linha.get('papel'), linha.get('modelo')] + re.split(r',|\se\s', str(linha.get('nome') or ''))
+        for c in candidatos:
+            valor = re.sub(r'[^a-z0-9]+', ' ', unicodedata.normalize('NFKD', str(c or '')).encode('ascii', 'ignore').decode().lower()).strip()
+            if valor and valor == chave:
+                return True
+    return False
 
 
 def _logs(logs, sessoes, projetos):
@@ -266,7 +291,7 @@ def _cabecalho_evolucao():
 
 
 def decidir(soc, etapa, acao, por=None, head=None, motivo=None, minutos=None, intervencoes=None, escaparam=None,
-            logs=(), sessoes=(), projetos=None):
+            logs=(), sessoes=(), projetos=None, desde=None):
     if acao not in ACOES:
         raise ErroCiclo(f'decisão inválida: "{acao}" (use {", ".join(ACOES)}).')
     soc = Path(soc)
@@ -296,7 +321,9 @@ def decidir(soc, etapa, acao, por=None, head=None, motivo=None, minutos=None, in
         if evolucao.is_file() and re.search(rf'^\|\s*{re.escape(etapa)}\s*\|', evolucao.read_text(encoding='utf-8'), re.M):
             raise ErroCiclo(f'evolucao.md já tem linha da etapa {etapa}.')
         try:
-            medidas = sc_metricas.medir_etapa(reg.dados, etapa, _logs(logs, sessoes, projetos), intervencoes, minutos, escaparam)
+            todos = _logs(logs, sessoes, projetos)
+            medidas = sc_metricas.medir_etapa(reg.dados, etapa, todos, intervencoes, minutos, escaparam,
+                                           desde=desde)
         except (ErroSessao, ValueError) as err:
             raise ErroCiclo(f'não consegui medir a etapa: {err}')
         if CRITERIO in e['criterios']:  # etapa aberta por `abrir`; as abertas por outro caminho têm critérios próprios
@@ -310,9 +337,12 @@ def decidir(soc, etapa, acao, por=None, head=None, motivo=None, minutos=None, in
     ref = motivo or (f'aceite do commit {commit[:12]}' if acao == 'aceitar' else f'{acao} sem motivo informado')
     # independência 'não' só no aceite em emulação; fora dela vale o nível do parecer (A = sim)
     extra = {'aceite_em_emulacao': True, 'independencia': 'não'} if (acao == 'aceitar' and emul) else {}
+    if acao == 'aceitar' and medidas['consumo']:
+        c = medidas['consumo']
+        extra['consumo'] = {**c, 'logs': len(todos)}
     try:
         reg.registrar_decisao(etapa, f'DEC-{etapa}-{acao}-{len(reg.eventos) + 1}', quem, ref, acao, autor=quem,
-                              commit=commit, **extra)
+                              commit=commit, atestado_hash=at.get('atestado_hash') if (acao == 'aceitar' and at) else None, **extra)
         if acao == 'aceitar':
             reg.encerrar_etapa(etapa, f'aceite de {quem}: parecer do commit {commit[:12]}', autor=quem)
         elif acao in ENCERRAM_SEM_ACEITE:

@@ -24,11 +24,22 @@ SEMVER = re.compile(r'^\d+\.\d+\.\d+$')
 # termos que nunca podem aparecer no núcleo (são de projetos, marcas ou stacks específicas)
 PROIBIDOS = ['nosso timão', 'nosso timao', 'nosso_timao', 'palandir', 'corinthians', 'pedro raul',
              'supabase', 'vercel', 'bitrix', 'alterdata', 'domínio sistemas', 'dominio sistemas']
-# A 2.0 proíbe medição de consumo: nenhum texto do pacote pode mandar contar, estimar ou relatar gasto.
+# Nenhum texto do pacote pode mandar estimar, contar ou relatar gasto. Medir pelo log do aplicativo é permitido.
 # Só pega o verbo junto do objeto, para não acusar as próprias regras que proíbem a prática.
 MEDICAO = re.compile(r'(?:estim\w+|calcul\w+|medi\w+|conte|contar|relat\w+|registr\w+)'
                      r'[^.\n]{0,40}(?:tokens|consumo|custo|gasto)', re.I)
+MEDICAO_LOG = re.compile(r'\b(?:logs?|transcri[çc][ãa]o|transcri[çc][õo]es)\b', re.I)
 MEDICAO_OK = re.compile(r'\b(?:n[ãa]o|nunca|jamais|nenhum\w*|nada|sem|proib\w+|aus[êe]ncia|dispens\w+)\b', re.I)
+
+
+def instrucao_de_medir(linha):
+    """True se a linha manda estimar, contar ou relatar consumo. Proibição na mesma linha vale; 'medir' vale
+    quando a linha diz que a medida vem do log (estimar, calcular, relatar e registrar seguem recusados)."""
+    if MEDICAO_OK.search(linha):
+        return False
+    return any(not (m.group(0).lower().startswith('medi') and MEDICAO_LOG.search(linha)) for m in MEDICAO.finditer(linha))
+
+
 SEGREDOS = re.compile(r'(?:AIza[0-9A-Za-z_\-]{30,}|gh[pousr]_[0-9A-Za-z]{30,}|sk-[0-9A-Za-z_\-]{30,}|'
                       r'-----BEGIN [A-Z ]*PRIVATE KEY-----|xox[abprs]-[0-9A-Za-z-]{20,})')
 # Q102: checagens estruturais que substituem os testes de redação
@@ -223,7 +234,7 @@ def validar(raiz=RAIZ):
             if arq.suffix in ('.md', '.modelo'):
                 for linha in bruto.splitlines():
                     # a frase vale se for uma proibição ("nunca estime o consumo"); senão, é instrução de medir
-                    if MEDICAO.search(linha) and not MEDICAO_OK.search(linha):
+                    if instrucao_de_medir(linha):
                         erros.append(f'instrução de medir consumo em {arq.relative_to(raiz)}: '
                                      f'"{linha.strip()[:70]}"')
     for arq in arquivos_texto(raiz):

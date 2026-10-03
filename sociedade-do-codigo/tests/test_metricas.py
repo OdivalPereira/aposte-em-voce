@@ -121,7 +121,7 @@ class TestRegistro(unittest.TestCase):
             m = sc_metricas.medir_etapa(self.reg.dados, ETAPA, [log], intervencoes=2, minutos_odival=15,
                                         escaparam_ao_aceite=0, versao_metodo='3.0.0')
         linha = sc_metricas.linha_evolucao(m)
-        self.assertEqual(linha, f'| {ETAPA} | 3.0.0 | 0 | 1 | 0 | 0 | 0 | 2 | 1 | 0 | 2 | 15 | sim |')
+        self.assertEqual(linha, f'| {ETAPA} | 3.0.0 | 0 | 1 | 0 | 0 | 0 | 2 | 1 | 0 | 2 | 15 | n/d | sim |')
         self.assertEqual(len(linha.strip('|').split('|')), len(sc_metricas.COLUNAS))
 
     def test_sem_parametros_de_odival_vira_nd_e_nao_estima(self):
@@ -130,7 +130,7 @@ class TestRegistro(unittest.TestCase):
         for c in ('Escaparam ao aceite', 'Comandos', 'Erros', 'Edições manuais', 'Intervenções', 'Minutos de Odival'):
             self.assertIsNone(v[c], c)
         self.assertEqual(v['Dentro da meta?'], 'n/d')
-        self.assertTrue(sc_metricas.linha_evolucao(m).endswith('| 0 | 0 | n/d | n/d | n/d | n/d | n/d | n/d |'))
+        self.assertTrue(sc_metricas.linha_evolucao(m).endswith('| 0 | 0 | n/d | n/d | n/d | n/d | n/d | n/d | n/d |'))
 
     def test_meta_estourada(self):
         base = dict(versao_metodo='3.0.0', escaparam_ao_aceite=0)
@@ -165,7 +165,7 @@ class TestEvolucaoMd(unittest.TestCase):
     def test_acrescenta_uma_vez_por_etapa(self):
         with tempfile.TemporaryDirectory() as t:
             md = Path(t) / 'evolucao.md'
-            md.write_text(f'# Evolução\n\n{CABECALHO}\n|---|---|---|---|---|---|---|---|---|---|---|---|---|\n', encoding='utf-8')
+            md.write_text(f'# Evolução\n\n{CABECALHO}\n|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n', encoding='utf-8')
             linha = '| etapa-x | 3.0.0 | 1 | 0 | 0 | 0 | 0 | 5 | 0 | 0 | 1 | 10 | sim |'
             sc_metricas.acrescentar_linha(md, linha)
             texto = md.read_text(encoding='utf-8')
@@ -179,7 +179,9 @@ class TestEvolucaoMd(unittest.TestCase):
         real = Path(__file__).resolve().parents[2] / 'sociedade' / 'evolucao.md'
         if not real.is_file():
             self.skipTest('sem sociedade/evolucao.md do projeto')
-        self.assertIn(CABECALHO, real.read_text(encoding='utf-8'))
+        texto = real.read_text(encoding='utf-8')
+        antigo = CABECALHO.replace(' Consumo (cache lido) |', '')  # tabela ainda sem a coluna: o próximo `decidir` a migra
+        self.assertTrue(CABECALHO in texto or antigo in texto)
 
 
 class TestCLI(unittest.TestCase):
@@ -188,7 +190,7 @@ class TestCLI(unittest.TestCase):
             pasta = Path(t) / 'sociedade'
             reg = Registro.inicializar(pasta, 'projeto-teste', t)
             reg.abrir_etapa(ETAPA, 'objetivo', 'plano', 'aut', 'abc1234', ['C1'])
-            (pasta / 'evolucao.md').write_text(f'{CABECALHO}\n|---|---|---|---|---|---|---|---|---|---|---|---|---|\n', encoding='utf-8')
+            (pasta / 'evolucao.md').write_text(f'{CABECALHO}\n|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n', encoding='utf-8')
             r = rodar(NUCLEO / 'scripts' / 'sc_metricas.py', '--etapa', ETAPA, '--pasta-sociedade', pasta,
                       '--intervencoes', '1', '--minutos', '5', '--escaparam', '0', '--versao-metodo', '3.0.0', '--gravar')
             self.assertEqual(r.returncode, 0, r.stderr)
