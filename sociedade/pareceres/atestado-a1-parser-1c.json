@@ -1,0 +1,115 @@
+{
+  "tipo": "atestado_pre_devolucao",
+  "versao": "1.3.0",
+  "timestamp": "2026-10-03T19:03:01.081384Z",
+  "papel": "Coordenador",
+  "etapa_id": "a1-parser",
+  "fatia_id": "1c",
+  "status": "APROVADO",
+  "verificacoes": {
+    "higiene_pastas": {
+      "ok": true,
+      "erros": []
+    },
+    "build": {
+      "ok": true,
+      "comando": "npm run build",
+      "detalhes": "dist/assets/pdf.worker-DUCzcP-s.js  1,245.50 kB\ndist/assets/index-B1ZwZmOK.css          2.16 kB │ gzip: 0.92 kB\ndist/assets/index-B8_StNCo.js          24.47 kB │ gzip: 9.82 kB\n\n✓ built in 1.60s",
+      "codigo": 0
+    },
+    "tipos_estaticos": {
+      "ok": true,
+      "comando": "npm run lint",
+      "detalhes": "> aposte-em-voce@0.1.0 lint\n> tsc --noEmit && eslint .",
+      "codigo": 0
+    },
+    "compilacao": {
+      "ok": true,
+      "erros": []
+    },
+    "seguranca_antitoken": {
+      "ok": true,
+      "erros": []
+    },
+    "disjuncao": {
+      "ok": true,
+      "erros": []
+    },
+    "testes": {
+      "ok": true,
+      "detalhes": "pacote: 679 testes, 1 pulados, 127.2 s",
+      "comando": "pacote: python3 -B -m unittest discover -s tests",
+      "totais": {
+        "total": 679,
+        "pulados": 1,
+        "falhos": 0
+      }
+    },
+    "arvore_limpa": {
+      "ok": true,
+      "suja": []
+    }
+  },
+  "commit": "6f2c4fdc488ffb3b8aeae50f44c68785e602dd90",
+  "base": "5959e28e8ab54a5382a96a284ab128e2597d9c5b",
+  "origem_arquivos": "git",
+  "total_arquivos_inspecionados": 10,
+  "arquivos_removidos": [],
+  "python": "3.11.15",
+  "hashes_artefatos": {
+    "sociedade-do-codigo/CHANGELOG.md": "331307ec9885d6a8e7786f1cfd203eef3807ab781f55b96e892734ec6ba4f164",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_ciclo.py": "7d4f3f148c14f21c21bf56216ef6099745ad98997063f61d9b3d4436c1c3ac9a",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_conferir.py": "97f86c2552a943ad07ac9b5d62bb1d4d9e6040ac06c12dcf4d483503660b55d9",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_pre_devolucao.py": "a5e8ac48a9141c8d2001e3ffa093b2c3838bda54fedbb716be548c80af50b378",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_status.py": "d3163cbbd0010330ead9544475b95a85a5ae682f1feeedc50e5846da61d8d48a",
+    "sociedade-do-codigo/tests/adversarial/_cenario.py": "d2787303791a2e4a7a75d8859f23c5abfe7ba122ecb72aaacd9bae021eefde8c",
+    "sociedade-do-codigo/tests/adversarial/test_dg02_aceite_forjavel.py": "a5a2c579c880d6797c76c1f4bf412d85652ab44320adb89c61730e1d586bdf85",
+    "sociedade-do-codigo/tests/adversarial/test_dg09_atestado_amarrado.py": "ea1ffef5c957a2f77ed1899e830d48c64fe91984a6eb85997ffa77a31af2265c",
+    "sociedade-do-codigo/tests/test_portao_amarrado.py": "79483b525caaec1cffc0777f585fda9dca16173999a89ef5b344603d035e6a90",
+    "sociedade-do-codigo/tests/test_status.py": "935ab57cefa6bedbe9dc90bc13f9733923986d6d1a6bec0b0329f7c466238c40"
+  },
+  "arquivos_inspecionados": [
+    "sociedade-do-codigo/CHANGELOG.md",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_ciclo.py",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_conferir.py",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_pre_devolucao.py",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_status.py",
+    "sociedade-do-codigo/tests/adversarial/_cenario.py",
+    "sociedade-do-codigo/tests/adversarial/test_dg02_aceite_forjavel.py",
+    "sociedade-do-codigo/tests/adversarial/test_dg09_atestado_amarrado.py",
+    "sociedade-do-codigo/tests/test_portao_amarrado.py",
+    "sociedade-do-codigo/tests/test_status.py"
+  ],
+  "erros": [],
+  "portao": {
+    "modo": "por_area",
+    "perfil": "sociedade/perfil.md",
+    "perfil_sha256": "daec2bd7d0ce6dd23cd1bdcaa2ddfaa3d2a5191b6fec81540dc3d18d01963143",
+    "commit": "6f2c4fdc488ffb3b8aeae50f44c68785e602dd90",
+    "area_pedida": null,
+    "areas_tocadas": [
+      "pacote"
+    ],
+    "cobertura_completa": true,
+    "areas": [
+      {
+        "area": "pacote",
+        "pasta": "sociedade-do-codigo",
+        "comando": "python3 -B -m unittest discover -s tests",
+        "timeout_s": 600,
+        "ok": true,
+        "codigo": 0,
+        "duracao_s": 127.2,
+        "timeout_estourado": false,
+        "testes": {
+          "total": 679,
+          "pulados": 1,
+          "falhos": 0
+        },
+        "motivos": [],
+        "saida_final": "histórico: /tmp/tmp_3h0wzq1/sociedade/historico.md\n.................s........................................................................................................................\n----------------------------------------------------------------------\nRan 679 tests in 126.529s\n\nOK (skipped=1, expected failures=13)"
+      }
+    ]
+  },
+  "atestado_hash": "25090251e3c4e15707b2727d128824cdab6341362755b83d5107a2220e6d6dc1"
+}

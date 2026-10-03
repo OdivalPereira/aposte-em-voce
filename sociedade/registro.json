@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-10-03T17:38:34.804858+00:00",
+  "atualizado_em": "2026-10-03T19:27:20.053219+00:00",
   "caminho_canonico": "/home/odival/Documentos/Projetos/aposte-em-voce",
   "criado_em": "2026-10-03T13:50:17.697161+00:00",
   "eventos": [
@@ -311,10 +311,257 @@
       "simulacao": false,
       "timestamp": "2026-10-03T17:38:34.804841+00:00",
       "tipo": "etapa_encerrada"
+    },
+    {
+      "autor": "Coordenador",
+      "dados": {
+        "autorizacao_ref": "ordem_sha256:2e095ba9259c47af",
+        "base_efetiva": "d86e90cb84adac9dfd84699d10a216602a7b19c4",
+        "criterios": [
+          "portao"
+        ],
+        "etapa_id": "a1-parser",
+        "exigir_revisao": true,
+        "limites": "—",
+        "nivel": "2",
+        "objetivo": "Ordem a1-parser — o celular lê extratos em PDF sem nada sair do aparelho, e o portão fica amarrado ao perfil",
+        "origem": "real",
+        "plano_ref": "ordem:sociedade/ordens/a1-parser.md",
+        "responsavel": "Coordenador"
+      },
+      "id": "EVT-000013",
+      "seq": 13,
+      "simulacao": false,
+      "timestamp": "2026-10-03T18:21:26.843741+00:00",
+      "tipo": "etapa_aberta"
+    },
+    {
+      "autor": "conferência automática",
+      "dados": {
+        "commit": "6f2c4fdc488ffb3b8aeae50f44c68785e602dd90",
+        "etapa": "a1-parser",
+        "feitos": 8,
+        "itens": [
+          {
+            "detalhe": "6f2c4fdc488f",
+            "estado": "feito",
+            "id": "E1",
+            "tipo": "commit_existe"
+          },
+          {
+            "detalhe": "60 arquivos, todos nos prefixos",
+            "estado": "feito",
+            "id": "E2",
+            "tipo": "arquivos_em"
+          },
+          {
+            "detalhe": "APROVADO, 60 arquivos, commit 6f2c4fdc488f",
+            "estado": "feito",
+            "id": "E3",
+            "tipo": "atestado_aprovado"
+          },
+          {
+            "detalhe": "sociedade-do-codigo/tests/test_portao_amarrado.py",
+            "estado": "feito",
+            "id": "E4",
+            "tipo": "arquivo_existe"
+          },
+          {
+            "detalhe": "scripts/gerar-pdfs-sinteticos.ts não existe",
+            "estado": "não feito",
+            "id": "E5",
+            "tipo": "arquivo_existe"
+          },
+          {
+            "detalhe": "src/leitura",
+            "estado": "feito",
+            "id": "E6",
+            "tipo": "arquivo_existe"
+          },
+          {
+            "detalhe": "8 delegações",
+            "estado": "feito",
+            "id": "E7",
+            "tipo": "delegacoes"
+          },
+          {
+            "detalhe": "1 ordem na conversa",
+            "estado": "feito",
+            "id": "E8",
+            "tipo": "conversa_nova"
+          },
+          {
+            "detalhe": "6f2c4fdc488f",
+            "estado": "feito",
+            "id": "E9",
+            "tipo": "push_feito"
+          },
+          {
+            "detalhe": "sociedade/pareceres/parecer-a1-parser.md não existe",
+            "estado": "não feito",
+            "id": "E10",
+            "tipo": "parecer_valido"
+          }
+        ],
+        "ordem": "sociedade/ordens/a1-parser.md",
+        "total": 10
+      },
+      "id": "EVT-000014",
+      "seq": 14,
+      "simulacao": false,
+      "timestamp": "2026-10-03T19:16:50.512913+00:00",
+      "tipo": "conferencia_registrada"
+    },
+    {
+      "autor": "Barbárvore, revisão reduzida (Q150), subagente barbarvore-reduzida no Claude Code (nuvem)",
+      "dados": {
+        "etapa_id": "a1-parser",
+        "impacto": "desconhecido",
+        "versao": "6f2c4fdc488ffb3b8aeae50f44c68785e602dd90"
+      },
+      "id": "EVT-000015",
+      "seq": 15,
+      "simulacao": false,
+      "timestamp": "2026-10-03T19:27:12.562489+00:00",
+      "tipo": "versao_atualizada"
+    },
+    {
+      "autor": "Barbárvore, revisão reduzida (Q150), subagente barbarvore-reduzida no Claude Code (nuvem)",
+      "dados": {
+        "achados_referenciados": [],
+        "commit": "6f2c4fdc488ffb3b8aeae50f44c68785e602dd90",
+        "criterios_verificados": {
+          "Escopo: candidato não altera `sociedade/`, `docs/` nem `.claude/`; E2 nos prefixos": true,
+          "F1 B11: `entregar` recusa `--comando-teste`; comando e timeout só do perfil": true,
+          "F1 B11: atestado com comando, timeout, contagem, SHA-256 do perfil e commit; `-z`, `core.quotepath=off`, NFC": true,
+          "F1 B11: árvore suja, 0 testes, todos pulados e timeout reprovam": true,
+          "F1 B11a: `sociedade/` do worktree da etapa; `conferir --pasta-sociedade`": true,
+          "F1 B11b: nenhuma skill cita `sc_rodada parecer`": true,
+          "F1 B11c: portão por área, prefixo mais longo, `.github/` nas duas": true,
+          "F1 B11d: linha no modelo de PR": true,
+          "F1: `node_modules/` presente e ignorado, portão aprovando": true,
+          "F1: sondas DG-03 (árvore suja, sem `expectedFailure`), DG-09 (3 casos), DG-11 verdes": true,
+          "F1: suíte do pacote e `validar_pacote.py` verdes": true,
+          "F2: `vercel.json` com CSP e cabeçalhos; `ci.yml` com lint, build e testes do app": true,
+          "F2: caso colunas-trocadas": true,
+          "F2: pipeline 5.1 a 5.5, genérico, em centavos, sem tolerância; função pública para a F3": true,
+          "F2: ponta a ponta em perfil de celular; rede só GET do mesmo domínio": true,
+          "F2: stack da §3; `npm test`, `npm run lint`, `npm run build` passam; licenças": true,
+          "F2: telas T08, T09, T99; T99 sem valores, nomes nem descrições; nada guardado": true,
+          "F2: unidade com texto posicionado (datas, valores, direção, saldo, consolidação, duplicidade)": true,
+          "F3 (E5): gerador de PDFs sintéticos e meta de leitura da §14 (6 layouts e 8 casos difíceis em PDF)": false,
+          "Teto de cerca de 1.500 linhas de produto": true
+        },
+        "etapa_id": "a1-parser",
+        "fornecedor_revisor": "Anthropic (papel emulado, Q147; o registro declara Anthropic, C12)",
+        "implementadores": [
+          {
+            "agente": "Coordenador",
+            "fornecedor": "Anthropic"
+          }
+        ],
+        "justificativa_independencia": "Nível C (mesmo fornecedor), sessão distinta; **aceite em emulação** · **revisor não calibrado**",
+        "lacunas": [
+          "O atestado da etapa (`atestado-a1-parser.json`) e o SHA-256 do perfil com a seção \"Portão por área\": ficam na `sociedade/` do worktree, fora do commit e da cópia. O perfil desta cópia não tem a seção. Rodei as suítes no lugar dele (Q70).",
+          "O CI e o status `portao` no GitHub para o hash 6f2c4fd: sem rede.",
+          "E1, E7, E8, E9 e E10 (commit no ramo, delegações, conversa nova, push, parecer registrado): dependem do repositório real e dos logs da sessão, fora da cópia.",
+          "A F3 (gerador, fixtures, `tests/leitura/`), não entregue por decisão do coordenador; e a pré-visualização na Vercel com os cabeçalhos reais, além do teste de Odival com extratos reais (C45).",
+          "Quem fez a correção do esperado do caso colunas-trocadas (o ajuste 4 reserva isso ao Gandalf): a cópia tem um commit só e não mostra a autoria por fatia. A revisão interna da Galadriel também não foi conferida.",
+          "Lentes fora do modo reduzido: L6 (concorrência) só lida no cliente do worker; L3 e L7 do B11a só pela suíte da entrega, sem sondas próprias.",
+          "Desempenho e acessibilidade além dos alvos de toque de 44 px que o ponta a ponta confere (são da a4)."
+        ],
+        "nivel_independencia": "C",
+        "parecer_id": "PAR-a1-parser-6f2c4fd",
+        "revisor": "Barbárvore, revisão reduzida (Q150), subagente barbarvore-reduzida no Claude Code (nuvem)",
+        "veredito": "aceitar_com_ressalvas",
+        "versao_examinada": "6f2c4fdc488ffb3b8aeae50f44c68785e602dd90"
+      },
+      "id": "EVT-000016",
+      "seq": 16,
+      "simulacao": false,
+      "timestamp": "2026-10-03T19:27:12.568201+00:00",
+      "tipo": "parecer_registrado"
+    },
+    {
+      "autor": "conferência automática",
+      "dados": {
+        "commit": "6f2c4fdc488ffb3b8aeae50f44c68785e602dd90",
+        "etapa": "a1-parser",
+        "feitos": 9,
+        "itens": [
+          {
+            "detalhe": "6f2c4fdc488f",
+            "estado": "feito",
+            "id": "E1",
+            "tipo": "commit_existe"
+          },
+          {
+            "detalhe": "60 arquivos, todos nos prefixos",
+            "estado": "feito",
+            "id": "E2",
+            "tipo": "arquivos_em"
+          },
+          {
+            "detalhe": "APROVADO, 60 arquivos, commit 6f2c4fdc488f",
+            "estado": "feito",
+            "id": "E3",
+            "tipo": "atestado_aprovado"
+          },
+          {
+            "detalhe": "sociedade-do-codigo/tests/test_portao_amarrado.py",
+            "estado": "feito",
+            "id": "E4",
+            "tipo": "arquivo_existe"
+          },
+          {
+            "detalhe": "scripts/gerar-pdfs-sinteticos.ts não existe",
+            "estado": "não feito",
+            "id": "E5",
+            "tipo": "arquivo_existe"
+          },
+          {
+            "detalhe": "src/leitura",
+            "estado": "feito",
+            "id": "E6",
+            "tipo": "arquivo_existe"
+          },
+          {
+            "detalhe": "9 delegações",
+            "estado": "feito",
+            "id": "E7",
+            "tipo": "delegacoes"
+          },
+          {
+            "detalhe": "1 ordem na conversa",
+            "estado": "feito",
+            "id": "E8",
+            "tipo": "conversa_nova"
+          },
+          {
+            "detalhe": "6f2c4fdc488f",
+            "estado": "feito",
+            "id": "E9",
+            "tipo": "push_feito"
+          },
+          {
+            "detalhe": "veredito: aceitar com ressalvas",
+            "estado": "feito",
+            "id": "E10",
+            "tipo": "parecer_valido"
+          }
+        ],
+        "ordem": "sociedade/ordens/a1-parser.md",
+        "total": 10
+      },
+      "id": "EVT-000017",
+      "seq": 17,
+      "simulacao": false,
+      "timestamp": "2026-10-03T19:27:20.053198+00:00",
+      "tipo": "conferencia_registrada"
     }
   ],
   "projeto_id": "aposte-em-voc",
   "resumos_externos": {},
-  "revisao": 13,
+  "revisao": 18,
   "versao_formato": "2.1.0"
 }

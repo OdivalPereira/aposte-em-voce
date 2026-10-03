@@ -1,0 +1,113 @@
+{
+  "tipo": "atestado_pre_devolucao",
+  "versao": "1.3.0",
+  "timestamp": "2026-10-03T18:52:46.929887Z",
+  "papel": "Coordenador",
+  "etapa_id": "a1-parser",
+  "fatia_id": "2c",
+  "status": "APROVADO",
+  "verificacoes": {
+    "higiene_pastas": {
+      "ok": true,
+      "erros": []
+    },
+    "build": {
+      "ok": true,
+      "comando": "npm run build",
+      "detalhes": "dist/assets/pdf.worker-DUCzcP-s.js  1,245.50 kB\ndist/assets/index-B1ZwZmOK.css          2.16 kB │ gzip: 0.92 kB\ndist/assets/index-B8_StNCo.js          24.47 kB │ gzip: 9.82 kB\n\n✓ built in 1.48s",
+      "codigo": 0
+    },
+    "tipos_estaticos": {
+      "ok": true,
+      "comando": "npm run lint",
+      "detalhes": "> aposte-em-voce@0.1.0 lint\n> tsc --noEmit && eslint .",
+      "codigo": 0
+    },
+    "compilacao": {
+      "ok": true,
+      "erros": []
+    },
+    "seguranca_antitoken": {
+      "ok": true,
+      "erros": []
+    },
+    "disjuncao": {
+      "ok": true,
+      "erros": []
+    },
+    "testes": {
+      "ok": true,
+      "detalhes": "app: 119 testes, 0 pulados, 11.2 s",
+      "comando": "app: npm test",
+      "totais": {
+        "total": 119,
+        "pulados": 0,
+        "falhos": 0
+      }
+    },
+    "arvore_limpa": {
+      "ok": true,
+      "suja": []
+    }
+  },
+  "commit": "5959e28e8ab54a5382a96a284ab128e2597d9c5b",
+  "base": "fce98d913f9b824d4c13aa4fc90b22b93b68ea09",
+  "origem_arquivos": "git",
+  "total_arquivos_inspecionados": 11,
+  "arquivos_removidos": [],
+  "python": "3.11.15",
+  "hashes_artefatos": {
+    "src/app.tsx": "4162f974ccfcceae2ae89baf735438f4940b7350ab7b7a1f1e6b709abd882ca9",
+    "src/leitura/cliente.ts": "90decec22c672b7fee74fd2167c658662215dc14c744a0e2a1fdf1d9774b2920",
+    "src/leitura/consolidar.ts": "8b17e7e4c1be2f7cafadc00d6f478688c70ecc625f70c1b35212775bcdbbb3c1",
+    "src/leitura/index.ts": "69023e9420ba806ebea46896347259e9455ca3d815a8d23450711c263afcccea",
+    "src/leitura/reconstruir.ts": "988bc94e304a7339710f9faa04750f2655f8caf4fa6da2b1494f994822137299",
+    "src/leitura/worker.ts": "c25e288b0358f11c1b9f40bfaad963277c1fed6692745cf8e0ae86e8d1ecc26b",
+    "src/telas/Extratos.tsx": "29cee504c2071c6ec835b4244022ab343f771edb60d732c34cdec960006972b6",
+    "tests/e2e/leitura.spec.ts": "d8853bfd83e15b7c1480ab554f7f0153c86a2123f6297715ba15201c74850af8",
+    "tests/unit/consolidar.test.ts": "ff82da451bbb0a00a98250f664667f0c3efe33e08687f2d4a2a361b66b2ea528",
+    "tests/unit/falhas.test.ts": "472b3d1452e7b6c5b0d861bce3f9f36025b642bab269a6cb6eee24e3568439d1",
+    "tests/unit/pipeline.test.ts": "71b0a3524da78c776ac1b3d88a56b3ce32c07c4cf6e93104f96a2b5f47b5701a"
+  },
+  "arquivos_inspecionados": [
+    "src/app.tsx",
+    "src/leitura/cliente.ts",
+    "src/leitura/consolidar.ts",
+    "src/leitura/index.ts",
+    "src/leitura/reconstruir.ts",
+    "src/leitura/worker.ts",
+    "src/telas/Extratos.tsx",
+    "tests/e2e/leitura.spec.ts",
+    "tests/unit/consolidar.test.ts",
+    "tests/unit/falhas.test.ts",
+    "tests/unit/pipeline.test.ts"
+  ],
+  "erros": [],
+  "portao": {
+    "modo": "por_area",
+    "perfil": "sociedade/perfil.md",
+    "perfil_sha256": "daec2bd7d0ce6dd23cd1bdcaa2ddfaa3d2a5191b6fec81540dc3d18d01963143",
+    "commit": "5959e28e8ab54a5382a96a284ab128e2597d9c5b",
+    "area_pedida": "app",
+    "areas": [
+      {
+        "area": "app",
+        "pasta": ".",
+        "comando": "npm test",
+        "timeout_s": 900,
+        "ok": true,
+        "codigo": 0,
+        "duracao_s": 11.2,
+        "timeout_estourado": false,
+        "testes": {
+          "total": 119,
+          "pulados": 0,
+          "falhos": 0
+        },
+        "motivos": [],
+        "saida_final": "  ✓  7 tests/e2e/leitura.spec.ts:119:3 › jornada de leitura (T08, T09, T99) em perfil de celular › falhas na leitura nunca travam a jornada (princípio 8) (485ms)\n  ✓  6 tests/e2e/leitura.spec.ts:96:3 › jornada de leitura (T08, T09, T99) em perfil de celular › PDF com senha: pede a senha, recusa a errada, lê com a certa; a senha não sai do aparelho (753ms)\n  ✓  9 tests/e2e/leitura.spec.ts:165:3 › jornada de leitura (T08, T09, T99) em perfil de celular › alvos de toque de 44 px ou mais nos botões (185ms)\n  ✓  8 tests/e2e/leitura.spec.ts:146:3 › jornada de leitura (T08, T09, T99) em perfil de celular › arquivo que o navegador não consegue ler: não suportado, sem vazar o erro, e pode ser pulado (302ms)\n\n  9 passed (7.9s)"
+      }
+    ]
+  },
+  "atestado_hash": "eed8bdfbd9c7062c3c328e9106dd6b5e336fcf12ae5f3839784d566ba6d25dd1"
+}
