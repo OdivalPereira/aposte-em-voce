@@ -1,12 +1,12 @@
 # Estado — fechamento-nuvem
 
-Gerado por `sc.py estado` em 03/10/2026 21:08 UTC. Ramo `etapa/fechamento-nuvem` em `12ba867`. Não edite à mão.
+Gerado por `sc.py estado` em 03/10/2026 22:46 UTC. Ramo `etapa/fechamento-nuvem` em `77fe823`. Não edite à mão.
 
 ## Precisa de atenção
-- Etapa fechamento-nuvem aberta (responsável: Coordenador); critérios 0/1.
 - Modo emulação ligado: R1–R3 valem como aviso; nenhum aceite conta como revisão independente.
 - Etapa m0-destravar: aceite em emulação (independência: não).
 - Etapa a1-parser: aceite em emulação (independência: não).
+- Etapa fechamento-nuvem: aceite em emulação (independência: não).
 - Ordem a1-parser: 1 entrega(s) não feita(s) na última conferência.
 
 ## Papéis
@@ -27,7 +27,7 @@ Gerado por `sc.py estado` em 03/10/2026 21:08 UTC. Ramo `etapa/fechamento-nuvem`
 |---|---|---|---|---|
 | m0-destravar | encerrada | 3/3 | 0/0/0 | aceitar_com_ressalvas (aceite em emulação; independência: não) |
 | a1-parser | encerrada | 1/1 | 0/0/0 | aceitar_com_ressalvas (aceite em emulação; independência: não) |
-| fechamento-nuvem | aberta | 0/1 | 0/0/0 | aceitar_com_ressalvas |
+| fechamento-nuvem | encerrada | 1/1 | 0/0/0 | aceitar_com_ressalvas (aceite em emulação; independência: não) |
 
 ## Conferências (verificado por script)
 - m0-destravar: 9 de 9 entregas feitas (2026-10-03T17:17)
@@ -47,9 +47,9 @@ Gerado por `sc.py estado` em 03/10/2026 21:08 UTC. Ramo `etapa/fechamento-nuvem`
 - `jules/a1-parser-pdfs` em `/tmp/jules-a1-parser`
 
 ## Commits recentes
+- `77fe823` 03/10 21:08 sociedade(fechamento-nuvem): governança da etapa no ramo (ordem aprova
 - `12ba867` 03/10 20:57 fix(fechamento-nuvem): F3c, correções da revisão no CHANGELOG e nos te
 - `d7a01a0` 03/10 20:57 fix(fechamento-nuvem): F2c, contaDoTexto recusa data e CPF (puro e mas
 - `758952a` 03/10 20:43 feat(fechamento-nuvem): F3, aceite não forjável (decidir e conferir só
 - `e4dbadd` 03/10 20:20 feat(fechamento-nuvem): F2, histórico por conta, assinatura do layout,
 - `793012a` 03/10 20:16 feat(fechamento-nuvem): F1, consumo medido pelo log (sessao e decidir 
-- `dc35a59` 03/10 19:45 sociedade(a1-parser): decisão aceitar de Odival com ressalva de design

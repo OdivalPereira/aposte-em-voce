@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-10-03T21:08:31.447426+00:00",
+  "atualizado_em": "2026-10-03T22:45:19.240203+00:00",
   "caminho_canonico": "/home/odival/Documentos/Projetos/aposte-em-voce",
   "criado_em": "2026-10-03T13:50:17.697161+00:00",
   "eventos": [
@@ -836,10 +836,123 @@
       "simulacao": false,
       "timestamp": "2026-10-03T21:08:31.447412+00:00",
       "tipo": "conferencia_registrada"
+    },
+    {
+      "autor": "Odival",
+      "dados": {
+        "ambiente": "local",
+        "comando": "sc.py entregar --etapa fechamento-nuvem",
+        "criterio_id": "portao",
+        "etapa_id": "fechamento-nuvem",
+        "evidencia_id": "EVD-portao-20261003224519231877_0026",
+        "exit_code": 0,
+        "motivo_invalida": null,
+        "saida_hash": "8454baa9826b7fc9a40c237b1e8c292ecddd3efa13a0d0af9e41c53c555f7a66",
+        "saida_resumo": "atestado APROVADO do commit 12ba86770865, hash f5b60ec87cc4eede, 52 arquivos inspecionados",
+        "valida": true,
+        "verificador": "Odival",
+        "versao_entrega": "12ba867708650aaef893c540d5a5c3bbbfc5692f"
+      },
+      "id": "EVT-000026",
+      "seq": 26,
+      "simulacao": false,
+      "timestamp": "2026-10-03T22:45:19.232071+00:00",
+      "tipo": "evidencia_registrada"
+    },
+    {
+      "autor": "Odival",
+      "dados": {
+        "acao": "aceitar",
+        "aceite_em_emulacao": true,
+        "alcance": "etapa",
+        "atestado_hash": "f5b60ec87cc4eedeccc5e49629bfae06cba980b3ad9077ddd9269901b3f58dce",
+        "commit": "12ba867708650aaef893c540d5a5c3bbbfc5692f",
+        "consumo": {
+          "desde": "2026-10-03T19:55:00+00:00",
+          "logs": 1,
+          "por_agente_e_modelo": [
+            {
+              "agente": "principal",
+              "cache_escrito": 442219,
+              "cache_lido": 14867506,
+              "entrada": 117,
+              "mensagens": 47,
+              "modelo": "claude-opus-5-5",
+              "saida": 33676
+            },
+            {
+              "agente": "barbarvore-reduzida",
+              "cache_escrito": 99210,
+              "cache_lido": 2713629,
+              "entrada": 90,
+              "mensagens": 45,
+              "modelo": "claude-opus-5-5",
+              "saida": 6957
+            },
+            {
+              "agente": "galadriel",
+              "cache_escrito": 271677,
+              "cache_lido": 7569238,
+              "entrada": 178,
+              "mensagens": 89,
+              "modelo": "claude-sonnet-5-5",
+              "saida": 1486
+            },
+            {
+              "agente": "elrond",
+              "cache_escrito": 774495,
+              "cache_lido": 14997080,
+              "entrada": 242,
+              "mensagens": 117,
+              "modelo": "claude-sonnet-5-5",
+              "saida": 1362
+            },
+            {
+              "agente": "gandalf",
+              "cache_escrito": 189137,
+              "cache_lido": 2220033,
+              "entrada": 124,
+              "mensagens": 62,
+              "modelo": "claude-sonnet-5-5",
+              "saida": 584
+            }
+          ],
+          "total": {
+            "cache_escrito": 1776738,
+            "cache_lido": 42367486,
+            "entrada": 751,
+            "mensagens": 360,
+            "saida": 44065
+          }
+        },
+        "decisao_id": "DEC-fechamento-nuvem-aceitar-27",
+        "etapa_id": "fechamento-nuvem",
+        "independencia": "não",
+        "quem": "Odival",
+        "referencia": "Aceite; ressalvas da revisão (B15r) para o backlog"
+      },
+      "id": "EVT-000027",
+      "seq": 27,
+      "simulacao": false,
+      "timestamp": "2026-10-03T22:45:19.236582+00:00",
+      "tipo": "decisao_registrada"
+    },
+    {
+      "autor": "Odival",
+      "dados": {
+        "elegivel_publicacao": false,
+        "etapa_id": "fechamento-nuvem",
+        "resumo": "aceite de Odival: parecer do commit 12ba86770865"
+      },
+      "id": "EVT-000028",
+      "seq": 28,
+      "simulacao": false,
+      "timestamp": "2026-10-03T22:45:19.240191+00:00",
+      "tipo": "etapa_encerrada"
     }
   ],
   "projeto_id": "aposte-em-voc",
   "resumos_externos": {},
-  "revisao": 26,
+  "revisao": 29,
   "versao_formato": "2.1.0"
 }

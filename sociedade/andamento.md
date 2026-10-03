@@ -1,40 +1,65 @@
-# Andamento — Aposte em Você (sessões em nuvem da Sociedade)
+# Andamento — Aposte em Você: passagem da nuvem para a máquina local
 
-Atualizado em 03/10/2026 pelo Círdan, no fim da sessão 2. Limite: 5 KB (Q99).
+Atualizado em 03/10/2026 pelo Círdan, no fim da sessão 3, a **última em nuvem**. Limite: 5 KB (Q99, Q170).
 
-## Onde estamos
+## O que cada sessão fez
 
-**Sessão 2 (`a1-parser`) aceita por Odival** em 03/10/2026, com `sc.py decidir` ("aceite em emulação", revisor não calibrado, revisão reduzida), **com ressalva de design**: o visual das telas foi reprovado e escapou ao aceite (`evolucao.md`).
-- PR: OdivalPereira/aposte-em-voce#2, ramo `etapa/a1-parser`. Candidato `6f2c4fd` (base `d86e90c`); depois dele, só a cauda de `sociedade/`.
-- Entregue: portão amarrado ao perfil por área (B11, B11a–B11d); projeto Vite/Preact, leitura no worker, T08, T09 e T99, e2e de rede, CSP. B12: acerto. B13: o portão do Jules reprovou 3 vezes com motivo; a F3 não entrou (vira B17a).
-- Decisões novas: Q165 a Q169 (P1 a P5).
-- Ramo `jules/a1-parser-pdfs` (`228d049`) enviado só como consulta para a a2, sem PR.
+| Sessão | Etapa | PR | Resultado |
+|---|---|---|---|
+| 1 | m0-destravar (B01–B10) | #1, integrado | Ciclo `abrir`, `entregar`, `revisar --parecer`, `decidir`; status `portao` e `aceite` no Actions; modo emulação |
+| 2 | a1-parser (B11–B13, B11a–B11d) | #2, integrado | Portão amarrado ao perfil por área; app Vite/Preact com leitura no worker, T08, T09, T99 e CSP. Visual reprovado (Q169). F3 do Jules não entrou (B17a) |
+| 3 | fechamento-nuvem | #3, **aguarda o merge** | Consumo medido pelo log e regras de economia (Q170–Q173); histórico mensal por conta, encadeamento de saldos, assinatura do layout na T99, layout agrupado por dia (estilo Nubank); B15 (adulteração detectada) e B17b |
 
-**Próxima ação:** Odival faz o merge do PR #2, testa os próprios extratos na pré-visualização pela T99 e relata por banco (leu, parcial ou falhou, C45). Esse relato abre a **sessão 3, `a2-conferencia-entrevista`**.
+Todas aceitas por Odival com `sc.py decidir`, "aceite em emulação" e "revisor não calibrado".
+
+## Consumo medido (log, Q170)
+
+| Sessão | Cache lido | Cache escrito | Saída |
+|---|---|---|---|
+| 1 | n/d (outro contêiner) | n/d | n/d |
+| 2 | 65,8 milhões | 2,3 milhões | 79 mil |
+| 3 | 43,1 milhões | 1,8 milhão | 45 mil |
+
+Quase tudo é releitura. As maiores parcelas vêm de agentes retomados por mensagem (Elrond: 15 milhões na sessão 3). O Gandalf aberto do zero a cada rodada, lendo só o arquivo de estado, ficou em 2,2 milhões.
+
+## Pendente, em ordem de prioridade
+
+A fila completa está em `sociedade/nuvem/backlog.md`, seção "Fila fora da nuvem":
+0. Troca do perfil para a formação real.
+1. **d1-design.**
+2. **a2a**: conferência e catálogo, com B17a e B17c.
+3. **a2b**: entrevista, com B14 e B15r.
+4. a3, a4 e a sessão final.
+
+Antes da d1, Odival testa os extratos mensais na pré-visualização do PR #3 e cola a assinatura do layout (T99) quando um banco falhar.
+
+## Como retomar com a formação real
+
+1. **Integre o PR #3** (Odival). Instale o pacote nas ferramentas (C53) e devolva a cópia ao repositório `sociedade-do-codigo` (C40).
+2. **Primeira etapa local: comece pela troca do perfil.** Ela não foi feita no PR #3, porque o `aceite` confere o fornecedor do parecer com o perfil e ficaria vermelho.
+   - Use `sc_rodada.py papel trocar`, com motivo e autor (R4).
+   - Desligue `- **Emulação:** sim`.
+   - A formação real:
+
+   | Papel | Ferramenta | Modelo | Esforço |
+   |---|---|---|---|
+   | Círdan | Claude Code | Opus 5.5 | high |
+   | Gandalf e especialistas | Antigravity | Gemini 3.8 Flash | high |
+   | Barbárvore | Codex | GPT-6 Sol | xhigh, "revisor não calibrado" (Q160) |
+
+3. **d1-design.** Pedido: "Quero que o app tenha uma cara moderna, sóbria e acolhedora, com uma referência visual que eu aprovo e que vale para todas as telas, começando por extratos, resultado e diagnóstico." A referência visual é aprovada por Odival **antes** da ordem. As fatias de tela são do Legolas, e o PR traz capturas em 360 px (Q169, Q173).
+4. **Ciclo:**
+   - `sc.py ordem` e, antes da aprovação, o `grep` dos usos reais (Q172);
+   - `sc_worktree.py criar` e depois `sc.py abrir`; durante a etapa, a `sociedade/` do worktree é a canônica (Q166);
+   - `sc.py entregar` sem `--comando-teste`, por área;
+   - `sc.py conferir --registrar`;
+   - `sc.py revisar --head <candidato>`, depois o Barbárvore no Codex, depois `sc.py revisar --parecer`;
+   - `sc.py decidir --por Odival`.
+5. **Delegação.** No Antigravity, o Gandalf delega direto. O revezamento (Q161) era limite do Claude Code. Correção vai a um agente novo (Q171), com devolução de até 2 KB e estado em arquivo (Q170).
+6. **Medição.** O `sc.py sessao` soma tokens só para o Claude (F1). Para o Antigravity e o Codex, isso fica para o pacote.
 
 ## Para a próxima abertura
 
-- **Não leia a proteção da `main`** (ativa; `ci`, `portao` e `aceite`). Abra por `sc.py abrir`, **depois** de criar o worktree; durante a etapa a `sociedade/` canônica é a do worktree (Q166).
-- **Delegação em revezamento (Q161)**; especialistas em paralelo não comitam (Q165).
-- **Portão:** `sc.py entregar` sem `--comando-teste` (recusado); áreas `app` e `pacote` no perfil. Só o atestado final 1.3.0 com cobertura completa vale no `decidir`.
-- **`sc.py revisar`:** passe `--head <candidato>`; copie a ordem para a cópia do revisor (B17b).
-- **PR** pelo conector do GitHub. **Testes dirigidos do pacote:** `discover -s tests -p 'test_x.py'`.
-- **Telas (Q169):** a a2 tem T03–T07 e T10; precisa de referência visual aprovada por Odival **antes** da ordem, fatias de tela do Legolas e capturas em 360 px no PR.
-- **Itens da a2 vindos da a1:** B17a (PDFs sintéticos, Q167), B17b (resto do E3), B17c (menores) e as correções do teste de Odival.
-- **Vercel:** pré-visualização por PR protegida por login; não mexa em ramos nem em implantação.
-
-## Sequência
-
-| Sessão | Etapa | Estado |
-|---|---|---|
-| 1 | m0-destravar (B01–B10) | aceita; integrada |
-| 2 | a1-parser (B11–B13, B11a–B11d) | aceita; aguarda merge e o teste de Odival |
-| 3 | a2-conferencia-entrevista (B14–B17) | a fazer |
-| 4 | a3-documentos-privacidade (B18–B20) | a fazer |
-| 5 | a4-publicacao (B21–B23) | a fazer |
-| 6 | final (F1–F5), com reserva de US$ 10; inclui `.claude/agents/` | a fazer |
-
-## Pendências fora da nuvem
-
-- Devolução da cópia do pacote ao repositório `sociedade-do-codigo` (C40).
-- Instalação da 4.0.0 nas ferramentas (C53).
+- Não leia a proteção da `main`; ela exige `ci`, `portao` e `aceite`. O PR sai pelo `gh`, se a ferramenta permitir; na nuvem saía pelo conector.
+- A pré-visualização da Vercel é protegida por login. Produção sai só do ramo `producao`, com o "vai" de Odival.
+- Dados só sintéticos. Extrato real fica só no celular de Odival.
