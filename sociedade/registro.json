@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-10-03T17:16:03.445493+00:00",
+  "atualizado_em": "2026-10-03T17:17:55.412497+00:00",
   "caminho_canonico": "/home/odival/Documentos/Projetos/aposte-em-voce",
   "criado_em": "2026-10-03T13:50:17.697161+00:00",
   "eventos": [
@@ -208,10 +208,81 @@
       "simulacao": false,
       "timestamp": "2026-10-03T17:16:03.445477+00:00",
       "tipo": "parecer_registrado"
+    },
+    {
+      "autor": "conferência automática",
+      "dados": {
+        "commit": "4da1f3745155a7d1217defdbeb92a1face53c97c",
+        "etapa": "m0-destravar",
+        "feitos": 9,
+        "itens": [
+          {
+            "detalhe": "fb3ae4265da0",
+            "estado": "feito",
+            "id": "E1",
+            "tipo": "commit_existe"
+          },
+          {
+            "detalhe": "46 arquivos, todos nos prefixos",
+            "estado": "feito",
+            "id": "E2",
+            "tipo": "arquivos_em"
+          },
+          {
+            "detalhe": "APROVADO, 46 arquivos, commit fb3ae4265da0",
+            "estado": "feito",
+            "id": "E3",
+            "tipo": "atestado_aprovado"
+          },
+          {
+            "detalhe": "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_ciclo.py",
+            "estado": "feito",
+            "id": "E4",
+            "tipo": "arquivo_existe"
+          },
+          {
+            "detalhe": "sociedade-do-codigo/tests/adversarial",
+            "estado": "feito",
+            "id": "E5",
+            "tipo": "arquivo_existe"
+          },
+          {
+            "detalhe": "8 delegações",
+            "estado": "feito",
+            "id": "E6",
+            "tipo": "delegacoes"
+          },
+          {
+            "detalhe": "1 ordem na conversa",
+            "estado": "feito",
+            "id": "E7",
+            "tipo": "conversa_nova"
+          },
+          {
+            "detalhe": "4da1f3745155",
+            "estado": "feito",
+            "id": "E8",
+            "tipo": "push_feito"
+          },
+          {
+            "detalhe": "veredito: aceitar com ressalvas",
+            "estado": "feito",
+            "id": "E9",
+            "tipo": "parecer_valido"
+          }
+        ],
+        "ordem": "sociedade/ordens/m0-destravar.md",
+        "total": 9
+      },
+      "id": "EVT-000010",
+      "seq": 10,
+      "simulacao": false,
+      "timestamp": "2026-10-03T17:17:55.412481+00:00",
+      "tipo": "conferencia_registrada"
     }
   ],
   "projeto_id": "aposte-em-voc",
   "resumos_externos": {},
-  "revisao": 10,
+  "revisao": 11,
   "versao_formato": "2.1.0"
 }
