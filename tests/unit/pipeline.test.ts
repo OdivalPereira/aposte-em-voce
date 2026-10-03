@@ -42,7 +42,8 @@ describe('colunas-trocadas (caso da ordem)', () => {
   // CONTRADIÇÃO DA ORDEM COM A SEÇÃO 5.2: 1.150,00 − 30,10 = 1.119,90, e não 1.119,91. A ordem manda esperar
   // "saldo fecha" e "leitura suficiente", mas a conta em centavos, sem tolerância, não fecha por 1 centavo
   // (a equação também: 1.000,00 + 200,00 − 80,10 = 1.119,90 ≠ 1.119,91). Não se altera lançamento nem saldo
-  // para fechar. O teste abaixo registra o que a especificação manda de fato; a correção do esperado é do Gandalf.
+  // para fechar. Correção do esperado pelo Gandalf (ajuste 4, Q164), pela 5.2 e pela 5.5: o saldo não fecha e o status
+  // é Parcial. O teste abaixo afirma exatamente isso; a variante seguinte, com 1.119,90, fecha e é Leitura suficiente.
   it('como na ordem (saldo final 1.119,91): pela 5.2 o saldo NÃO fecha, por 1 centavo, e o status é Parcial', () => {
     const r = montar('1.119,91');
     expect(r.conferencia.situacao).toBe('nao-fecha');
