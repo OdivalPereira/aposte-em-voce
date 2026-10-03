@@ -102,6 +102,15 @@ describe('T99: assinatura do layout', () => {
     expect(contaDoTexto('Conta corrente 0001234-5')).toBe('final 2345');
     expect(contaDoTexto('Conta ***4821')).toBe('final 4821');
     expect(contaDoTexto('Conta: 4821')).toBeNull();
+    expect(contaDoTexto('Conta: 12345')).toBeNull(); // sem máscara, menos de 6 dígitos
+    expect(contaDoTexto('Conta: 123456')).toBe('final 3456');
+    expect(contaDoTexto('Conta 2026-09-30')).toBeNull(); // data
+    expect(contaDoTexto('Conta 30/09/2026')).toBeNull(); // data
+    expect(contaDoTexto('Conta: 123.456.789-00')).toBeNull(); // CPF
+    expect(contaDoTexto('Conta: 12345678900')).toBeNull(); // CPF sem pontuação
+    expect(contaDoTexto('Conta: ***.456.789-**')).toBeNull(); // CPF mascarado
+    expect(contaDoTexto('Conta: xxx.456.789-xx')).toBeNull(); // CPF mascarado
+    expect(contaDoTexto('Conta: ***4821')).toBe('final 4821'); // conta mascarada sem forma de CPF segue valendo
     expect(contaDoTexto('Titular: MARIA FICTICIA DA SILVA')).toBeNull();
     expect(contaDoTexto('Prestação de contas 2026')).toBeNull();
   });

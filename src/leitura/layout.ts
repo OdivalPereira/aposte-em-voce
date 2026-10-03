@@ -59,7 +59,7 @@ export function tituloDeGrupo(descricao: string): { direcao: Direcao; rotulo: st
 
 /**
  * Identificador estrutural da conta: no máximo os 4 últimos dígitos de um número de conta que o próprio
- * documento traz. Nome da pessoa nunca é lido; número sem máscara de até 4 dígitos não vale (pode ser o inteiro).
+ * documento traz. Nome da pessoa nunca é lido; sem máscara exige 6 ou mais dígitos e data ou CPF são recusados.
  */
 export function contaDoTexto(textoFora: string): string | null {
   const t = semAcento(textoFora).toLowerCase();
@@ -68,7 +68,14 @@ export function contaDoTexto(textoFora: string): string | null {
   const captura = m[1] as string;
   const digitos = captura.replace(/\D/g, '');
   const mascarado = /[x*•]/.test(captura);
-  if (digitos.length < 3 || (digitos.length <= 4 && !mascarado)) return null;
+  if (digitos.length < 3) return null;
+  // CPF (inclusive mascarado, como ***.456.789-** ou xxx.456.789-xx) identifica a pessoa, não a conta.
+  if (/^[0-9x*•]{3}\.?[0-9x*•]{3}\.?[0-9x*•]{3}[-.]?[0-9x*•]{2}$/.test(captura)) return null;
+  if (!mascarado) {
+    // Sem máscara: data não é conta; e número curto poderia ser o inteiro (exige 6 ou mais dígitos).
+    if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(captura) || /^\d{1,2}[./-]\d{1,2}[./-]\d{2,4}$/.test(captura)) return null;
+    if (digitos.length < 6) return null;
+  }
   return `final ${digitos.slice(-4)}`;
 }
 
