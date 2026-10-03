@@ -10,13 +10,17 @@ nunca converte nada em tokens, custo ou cota.
 Uso:
   sc_sessao.py antigravity [--conversa <id> | --log <transcript.jsonl>] [--json]
   sc_sessao.py codex --pasta <pasta permitida> [--log <rollout.jsonl>] [--json]
-  sc_sessao.py claude [--pasta <pasta do projeto>] [--log <sessao.jsonl>] [--json]
+  sc_sessao.py claude [--pasta <pasta do projeto>] [--log <sessao.jsonl> | --sessao <id>] [--projetos <pasta>] [--json]
 
 Sem --log, usa a sessão mais recente do aplicativo (no Codex, a mais recente que menciona a pasta).
+No Claude Code, lê também os subagentes da sessão (<sessão>/subagents/agent-*.jsonl). A pasta de
+projetos vem de --projetos, da variável SC_CLAUDE_PROJETOS ou de ~/.claude/projects. Log ausente
+ou ilegível é erro (falha fechada), nunca zero.
 """
 import argparse
 import collections
 import json
+import os
 import re
 import sys
 from datetime import datetime
@@ -195,25 +199,112 @@ def medir_codex(log, pasta):
 
 # ------------------------------------------------------------------ Claude Code
 
-def log_claude(pasta=None):
+def projetos_claude(projetos=None):
+    """Pasta dos projetos do Claude Code: parâmetro, variável SC_CLAUDE_PROJETOS ou o padrão."""
+    return Path(projetos or os.environ.get('SC_CLAUDE_PROJETOS') or CLAUDE_PROJETOS)
+
+
+def ler_jsonl_estrito(caminho):
+    """Lê o log do Claude Code; ausente, ilegível ou sem nenhuma linha JSON válida é ErroSessao."""
+    try:
+        texto = Path(caminho).read_text(encoding='utf-8')
+    except (OSError, UnicodeDecodeError) as e:
+        raise ErroSessao(f'Log ausente ou ilegível: {caminho} ({type(e).__name__})') from e
+    linhas = []
+    for linha in texto.splitlines():
+        if linha.strip():
+            try:
+                obj = json.loads(linha)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(obj, dict):
+                linhas.append(obj)
+    if not linhas:
+        raise ErroSessao(f'Log sem nenhuma linha JSON válida: {caminho}')
+    return linhas
+
+
+def log_claude(pasta=None, projetos=None):
+    base_projetos = projetos_claude(projetos)
     if pasta:
         slug = re.sub(r'[^A-Za-z0-9]', '-', str(Path(pasta).resolve()))
-        base = CLAUDE_PROJETOS / slug
+        base = base_projetos / slug
         candidatos = sorted(base.glob('*.jsonl'), key=lambda p: p.stat().st_mtime, reverse=True) if base.is_dir() else []
     else:
-        candidatos = sorted(CLAUDE_PROJETOS.glob('*/*.jsonl'), key=lambda p: p.stat().st_mtime, reverse=True)
+        candidatos = sorted(base_projetos.glob('*/*.jsonl'), key=lambda p: p.stat().st_mtime, reverse=True)
     if not candidatos:
         raise ErroSessao('Nenhuma sessão do Claude Code encontrada.')
     return candidatos[0]
+
+
+_IDENT = re.compile(r'^[A-Za-z0-9][A-Za-z0-9_.-]*$')
+
+
+def localizar_claude(ident, projetos=None):
+    """Acha a sessão (<id>.jsonl) ou o subagente (agent-<id>.jsonl) pelo identificador. Devolve (tipo, caminho)."""
+    if not ident or not _IDENT.match(str(ident)):
+        raise ErroSessao(f'Identificador inválido: {ident!r}')
+    base = projetos_claude(projetos)
+    sessoes = sorted(base.glob(f'*/{ident}.jsonl')) if base.is_dir() else []
+    if sessoes:
+        return 'sessao', sessoes[0]
+    agente = str(ident) if str(ident).startswith('agent-') else f'agent-{ident}'
+    agentes = sorted(base.glob(f'*/*/subagents/{agente}.jsonl')) if base.is_dir() else []
+    if agentes:
+        return 'agente', agentes[0]
+    raise ErroSessao(f'Sessão ou subagente do Claude Code não encontrado: {ident}')
+
+
+def subagentes_claude(log):
+    """Logs dos subagentes da sessão: <sessão>/subagents/agent-*.jsonl."""
+    pasta = Path(log).with_suffix('') / 'subagents'
+    return sorted(pasta.glob('agent-*.jsonl')) if pasta.is_dir() else []
+
+
+def _e_ordem(o):
+    """Mensagem de usuário que não é resultado de ferramenta nem nota do sistema (isMeta)."""
+    if o.get('type') != 'user' or o.get('isMeta'):
+        return False
+    conteudo = (o.get('message') or {}).get('content')
+    if isinstance(conteudo, str):
+        return bool(conteudo.strip())
+    return isinstance(conteudo, list) and any(isinstance(b, dict) and b.get('type') == 'text' for b in conteudo) \
+        and not any(isinstance(b, dict) and b.get('type') == 'tool_result' for b in conteudo)
+
+
+def _delegacoes_do(linhas):
+    return [b.get('id') or f'sem-id-{i}' for i, o in enumerate(linhas) if o.get('type') == 'assistant'
+            for b in ((o.get('message') or {}).get('content') or [])
+            if isinstance(b, dict) and b.get('type') == 'tool_use' and b.get('name') in ('Agent', 'Task')]
+
+
+def medir_subagente(log):
+    linhas = ler_jsonl_estrito(log)
+    ordens = sum(1 for o in linhas if _e_ordem(o))
+    meta = {}
+    try:
+        meta = json.loads(Path(log).with_suffix('.meta.json').read_text(encoding='utf-8'))
+    except (OSError, ValueError):
+        pass
+    return {
+        'agente': Path(log).stem.removeprefix('agent-'),
+        'tipo': meta.get('agentType') if isinstance(meta, dict) else None,
+        'log': str(log),
+        'passos': sum(1 for o in linhas if o.get('type') == 'assistant'),
+        'ordens_na_conversa': ordens,
+        'conversa_nova': ordens == 1,
+        'delegacoes': len(_delegacoes_do(linhas)),
+    }
 
 
 def medir_claude(log, pasta=None):
     pasta_n = normalizar(Path(pasta).resolve()) if pasta else None
     ferramentas, ferramentas_sub, lidos = collections.Counter(), collections.Counter(), collections.Counter()
     modelos, esforcos, fora = collections.Counter(), collections.Counter(), collections.Counter()
-    mensagens = passos = delegacoes = testes = 0
+    mensagens = passos = delegacoes = testes = ordens = 0
     inicio = fim = None
-    for o in ler_jsonl(log):
+    linhas = ler_jsonl_estrito(log)
+    for o in linhas:
         ts = o.get('timestamp')
         if ts:
             inicio = inicio or ts
@@ -223,6 +314,8 @@ def medir_claude(log, pasta=None):
         lateral = bool(o.get('isSidechain'))
         if tipo == 'user' and not lateral and o.get('turnOrigin') == 'human':
             mensagens += 1
+        if not lateral and _e_ordem(o):
+            ordens += 1
         if tipo != 'assistant':
             continue
         passos += 1
@@ -252,11 +345,20 @@ def medir_claude(log, pasta=None):
                     c = normalizar(c)
                     if not (c.startswith(pasta_n) or c.startswith('/tmp') or '/.claude/' in c or '/.sociedade/' in c):
                         fora[c[:120]] += 1
+    subagentes = [medir_subagente(a) for a in subagentes_claude(log)]
+    chamadas = len(_delegacoes_do(linhas)) + sum(a['delegacoes'] for a in subagentes)
+    com_execucao = sum(1 for a in subagentes if a['passos'] > 0)
     return {
         'aplicativo': 'claude',
         'log': str(log),
+        'sessao': Path(log).stem,
         'inicio': inicio, 'fim': fim, 'duracao_min': duracao_min(inicio, fim),
         'mensagens_do_usuario': mensagens,
+        'ordens_na_conversa': ordens,
+        'conversa_nova': ordens == 1,
+        'delegacoes_chamadas': chamadas,
+        'delegacoes_total': min(chamadas, com_execucao),
+        'subagentes': subagentes,
         'passos_do_agente': passos,
         'modelos': dict(modelos.most_common()),
         'esforcos': dict(esforcos.most_common()),
@@ -271,7 +373,7 @@ def medir_claude(log, pasta=None):
 
 # ------------------------------------------------------------------------ saída
 
-def medir(app, log=None, pasta=None, conversa=None):
+def medir(app, log=None, pasta=None, conversa=None, projetos=None, sessao=None):
     if app == 'antigravity':
         return medir_antigravity(Path(log) if log else log_antigravity(conversa))
     if app == 'codex':
@@ -279,7 +381,12 @@ def medir(app, log=None, pasta=None, conversa=None):
             raise ErroSessao('codex exige --pasta (a pasta permitida da sessão).')
         return medir_codex(Path(log) if log else log_codex(normalizar(pasta)), pasta)
     if app == 'claude':
-        return medir_claude(Path(log) if log else log_claude(pasta), pasta)
+        if not log and sessao:
+            tipo, achado = localizar_claude(sessao, projetos)
+            if tipo != 'sessao':
+                return medir_subagente(achado)
+            log = achado
+        return medir_claude(Path(log) if log else log_claude(pasta, projetos), pasta)
     raise ErroSessao(f'Aplicativo desconhecido: {app}')
 
 
@@ -291,6 +398,10 @@ def imprimir(rel):
                 print(f'    {v:>5}  {k}')
             if not valor:
                 print('    (nenhum)')
+        elif isinstance(valor, list) and valor and all(isinstance(x, dict) for x in valor):
+            print(f'{chave}:')
+            for x in valor:
+                print('    ' + ', '.join(f'{k}={v}' for k, v in x.items() if k != 'log'))
         elif isinstance(valor, list):
             print(f'{chave}: {", ".join(str(x) for x in valor) or "(nenhum)"}')
         else:
@@ -303,10 +414,12 @@ def main(argv=None):
     ap.add_argument('--log', help='arquivo de log; sem ele, usa a sessão mais recente')
     ap.add_argument('--pasta', help='pasta permitida (Codex) ou pasta do projeto (Claude)')
     ap.add_argument('--conversa', help='identificador da conversa do Antigravity (pasta em brain/)')
+    ap.add_argument('--sessao', help='identificador da sessão (ou do subagente) do Claude Code')
+    ap.add_argument('--projetos', help='pasta de projetos do Claude Code (padrão: SC_CLAUDE_PROJETOS ou ~/.claude/projects)')
     ap.add_argument('--json', action='store_true')
     a = ap.parse_args(argv)
     try:
-        rel = medir(a.app, a.log, a.pasta, a.conversa)
+        rel = medir(a.app, a.log, a.pasta, a.conversa, a.projetos, a.sessao)
     except ErroSessao as e:
         print(f'erro: {e}', file=sys.stderr)
         return 1
