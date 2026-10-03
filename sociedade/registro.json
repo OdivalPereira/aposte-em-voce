@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-10-03T17:17:55.412497+00:00",
+  "atualizado_em": "2026-10-03T17:38:34.804858+00:00",
   "caminho_canonico": "/home/odival/Documentos/Projetos/aposte-em-voce",
   "criado_em": "2026-10-03T13:50:17.697161+00:00",
   "eventos": [
@@ -279,10 +279,42 @@
       "simulacao": false,
       "timestamp": "2026-10-03T17:17:55.412481+00:00",
       "tipo": "conferencia_registrada"
+    },
+    {
+      "autor": "Odival",
+      "dados": {
+        "acao": "aceitar",
+        "aceite_em_emulacao": true,
+        "alcance": "etapa",
+        "commit": "fb3ae4265da0fc5fdd1e327d8320b579c640d3b5",
+        "decisao_id": "DEC-m0-destravar-aceitar-11",
+        "etapa_id": "m0-destravar",
+        "independencia": "não",
+        "quem": "Odival",
+        "referencia": "aceite do commit fb3ae4265da0"
+      },
+      "id": "EVT-000011",
+      "seq": 11,
+      "simulacao": false,
+      "timestamp": "2026-10-03T17:38:34.801798+00:00",
+      "tipo": "decisao_registrada"
+    },
+    {
+      "autor": "Odival",
+      "dados": {
+        "elegivel_publicacao": false,
+        "etapa_id": "m0-destravar",
+        "resumo": "aceite de Odival: parecer do commit fb3ae4265da0"
+      },
+      "id": "EVT-000012",
+      "seq": 12,
+      "simulacao": false,
+      "timestamp": "2026-10-03T17:38:34.804841+00:00",
+      "tipo": "etapa_encerrada"
     }
   ],
   "projeto_id": "aposte-em-voc",
   "resumos_externos": {},
-  "revisao": 11,
+  "revisao": 13,
   "versao_formato": "2.1.0"
 }

@@ -58,8 +58,8 @@ Sem nível numérico; o rigor fica na ordem (Q17). Antes do despacho, Odival con
 ## 3. Execução
 
 1. Uma ordem, uma conversa nova. O "leia só" começa com até 5 caminhos; mais que isso, com justificativa (Q21).
-2. Etapa em worktree `~/.sociedade/trabalho/<projeto>/<etapa>`, no ramo `etapa/<ID>`. O candidato nunca altera `sociedade/` (Q60).
-3. Delegar é executar em sessão separada e identificável. Nunca simule; a conferência lê o log (Q28; adaptador Claude, Q156).
+2. Etapa em worktree `~/.sociedade/trabalho/<projeto>/<etapa>`, no ramo `etapa/<ID>`. O candidato nunca altera `sociedade/` (Q60); durante a etapa, a `sociedade/` canônica é a do worktree (Q163, *mecanismo na A1*).
+3. Delegar é executar em sessão separada e identificável. Nunca simule; a conferência lê o log (Q28; adaptador Claude, Q156). No Claude Code, a delegação é em revezamento: o Gandalf escreve a subordem e o Círdan a despacha sem edição (Q161). O ajuste de integração do coordenador vai até 30 linhas de produto por etapa, sem lógica nova; acima disso, vira fatia (Q164).
 4. A Galadriel revisa só as fatias de alto impacto que a ordem marca (Q10, Q92).
 5. Jules: só tarefas mecânicas, no máximo 3 abertas, janela de 45 min, com o portão do Jules (Q48, Q129).
 6. Até 3 tentativas por bloqueio, cada uma com hipótese diferente; depois, parar e devolver (Q12).

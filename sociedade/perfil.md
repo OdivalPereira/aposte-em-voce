@@ -28,7 +28,7 @@ Site gratuito, aberto por link no celular, que ajuda adultos afetados por aposta
 ## Modo emulação (Q147)
 - **Emulação:** sim. Nesta sessão em nuvem, um só fornecedor (Anthropic) ocupa todos os papéis (R6, C12).
 - O registro declara Anthropic em tudo. R1–R3 valem como aviso. O parecer do Barbárvore vale como aceite marcado "aceite em emulação", que nunca conta como revisão independente (D-RT-001).
-- *O mecanismo (chave lida pelos scripts) é criado na etapa m0-destravar (backlog B02). Até lá, esta seção é a declaração.*
+- A chave é lida pelos scripts (`sc_perfil.emulacao_ligada`, etapa m0-destravar, B02): vale só a linha `- **Emulação:** sim` desta seção.
 - Adaptador: um agente por papel em `.claude/agents/` (Q156).
 
 ## Equipe ativa
