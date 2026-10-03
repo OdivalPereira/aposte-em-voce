@@ -1,0 +1,139 @@
+{
+  "tipo": "atestado_pre_devolucao",
+  "versao": "1.3.0",
+  "timestamp": "2026-10-03T20:20:34.947379Z",
+  "papel": "Coordenador",
+  "etapa_id": "fechamento-nuvem",
+  "fatia_id": "1",
+  "status": "APROVADO",
+  "verificacoes": {
+    "higiene_pastas": {
+      "ok": true,
+      "erros": []
+    },
+    "build": {
+      "ok": true,
+      "comando": "npm run build",
+      "detalhes": "dist/assets/pdf.worker-DUCzcP-s.js  1,245.50 kB\ndist/assets/index-B1ZwZmOK.css          2.16 kB │ gzip: 0.92 kB\ndist/assets/index-B8_StNCo.js          24.47 kB │ gzip: 9.82 kB\n\n✓ built in 854ms",
+      "codigo": 0
+    },
+    "tipos_estaticos": {
+      "ok": true,
+      "comando": "npm run lint",
+      "detalhes": "> aposte-em-voce@0.1.0 lint\n> tsc --noEmit && eslint .",
+      "codigo": 0
+    },
+    "compilacao": {
+      "ok": true,
+      "erros": []
+    },
+    "seguranca_antitoken": {
+      "ok": true,
+      "erros": []
+    },
+    "disjuncao": {
+      "ok": true,
+      "erros": []
+    },
+    "testes": {
+      "ok": true,
+      "detalhes": "pacote: 710 testes, 1 pulados, 97.2 s",
+      "comando": "pacote: python3 -B -m unittest discover -s tests",
+      "totais": {
+        "total": 710,
+        "pulados": 1,
+        "falhos": 0
+      }
+    },
+    "arvore_limpa": {
+      "ok": true,
+      "suja": []
+    }
+  },
+  "commit": "793012aed9f4af40ecb2a5f02264263ac238e9e4",
+  "base": "dc35a59d6621b759207a49d700eaf64dbdcd7781",
+  "origem_arquivos": "git",
+  "total_arquivos_inspecionados": 22,
+  "arquivos_removidos": [],
+  "python": "3.11.15",
+  "hashes_artefatos": {
+    "sociedade-do-codigo/CHANGELOG.md": "ad83d82385cce4615fd4301164716adcbfe7c5e48c258818ca6e476f55335514",
+    "sociedade-do-codigo/README.md": "474b85ac19e3c9bdd4f60935e53f3bd99b8bdb4effae4ca6c4f670d09e0fa86d",
+    "sociedade-do-codigo/adapters/claude/CLAUDE.md.modelo": "bc5f3e959c8ae8f1fdb806936cc18db4207601ef3cd02d1ed5e76384ab0ea5d7",
+    "sociedade-do-codigo/docs/decisoes.md": "c7d5f693d40ba40c8f6c13397ecf98206e1f2fdd00725e8b5531b9dbcbc40e2b",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sc-execucao/SKILL.md": "21f59b30cdd6448f9267cedcb1edb1a348b7a1fb7acca3e075dd8623de6bc6a0",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sc-papeis/SKILL.md": "c42df9a987bdeef5474472722c8d71c1692f83063ef88229184cf28e82b7d774",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sc-papeis/references/papel-gandalf.md": "8e5b7248ad5cf24f4e2d7082d369c3ffc6bf7e1c66cecbe24d34d2d7002b800f",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sc-revisao/SKILL.md": "b90b3487ef9cdbd9b2d8942184f2a7fd167aa487a69ba235293960c549f2bd8d",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/SKILL.md": "be9e752b3d11baaa1cf807e99ae77d1241f0c576a79aebace05f87598bd0ace3",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/assets/avaliacao-modelo.md": "cb44c7f99e354121f5eec1e4a393ed3aed436e2fb40d0228ec9522a31bb94b72",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/assets/ordem-modelo.md": "79b353c135921a88aef7f93c29ebccb9d02adb62faf8035e4b2e406b6481a7d2",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/assets/rodada-modelo.md": "5369829b517c73edc04b4ccb1d1881ea13d5f591ceff521fe80b8a2c67baa806",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/references/comandos.md": "786698e5f2312abde2878ae7dd534d15a786d67d92cad7ad31a456d809c106cb",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/references/contrato-nucleo-projeto.md": "6ceead9949f665abc55010b32d543820495f383f3fe3286d527907ca62e285b7",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc.py": "200d2163cdd13087cac12d652e2e815b8050a9f076fb064bdec8e9be55b1363b",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_ciclo.py": "2b8075c8909c5cc2f5d482ee8c7a8863cb1e579d408d65563b2f8f011c05fcc1",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_metricas.py": "6ccaf91aa2a5022cf02d93765ce6f8d53c7f558bf800af9660b7c969981c2d5c",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_registro.py": "c2cc5c72dfdf63572c6bf6cc793b8ac4c659ab83ae523e20c5ac1120ff669a12",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_sessao.py": "b6648e282701c779d9f3b382c6af116d1693ac75e76275a13e0d33dd22767a85",
+    "sociedade-do-codigo/scripts/validar_pacote.py": "03589f3dd100d497833c94bd30cfbb4f1e1ad87179f53cccd2dfb7cf518d277d",
+    "sociedade-do-codigo/tests/test_metricas.py": "f21393ce23e12478b45ae5a5b3c8166a10710513bd5180bd1a40a2929283869f",
+    "sociedade-do-codigo/tests/test_sessao_consumo.py": "5a397d126895c0c91b880155588570ab0a6939d675f0e36c5a8dd7fa5a0568e1"
+  },
+  "arquivos_inspecionados": [
+    "sociedade-do-codigo/CHANGELOG.md",
+    "sociedade-do-codigo/README.md",
+    "sociedade-do-codigo/adapters/claude/CLAUDE.md.modelo",
+    "sociedade-do-codigo/docs/decisoes.md",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sc-execucao/SKILL.md",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sc-papeis/SKILL.md",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sc-papeis/references/papel-gandalf.md",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sc-revisao/SKILL.md",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/SKILL.md",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/assets/avaliacao-modelo.md",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/assets/ordem-modelo.md",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/assets/rodada-modelo.md",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/references/comandos.md",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/references/contrato-nucleo-projeto.md",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc.py",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_ciclo.py",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_metricas.py",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_registro.py",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_sessao.py",
+    "sociedade-do-codigo/scripts/validar_pacote.py",
+    "sociedade-do-codigo/tests/test_metricas.py",
+    "sociedade-do-codigo/tests/test_sessao_consumo.py"
+  ],
+  "erros": [],
+  "portao": {
+    "modo": "por_area",
+    "perfil": "sociedade/perfil.md",
+    "perfil_sha256": "daec2bd7d0ce6dd23cd1bdcaa2ddfaa3d2a5191b6fec81540dc3d18d01963143",
+    "commit": "793012aed9f4af40ecb2a5f02264263ac238e9e4",
+    "area_pedida": null,
+    "areas_tocadas": [
+      "pacote"
+    ],
+    "cobertura_completa": true,
+    "areas": [
+      {
+        "area": "pacote",
+        "pasta": "sociedade-do-codigo",
+        "comando": "python3 -B -m unittest discover -s tests",
+        "timeout_s": 600,
+        "ok": true,
+        "codigo": 0,
+        "duracao_s": 97.2,
+        "timeout_estourado": false,
+        "testes": {
+          "total": 710,
+          "pulados": 1,
+          "falhos": 0
+        },
+        "motivos": [],
+        "saida_final": "histórico: /tmp/tmpu8kn02qt/sociedade/historico.md\n.................s.......................................................................................................................................................\n----------------------------------------------------------------------\nRan 710 tests in 96.647s\n\nOK (skipped=1, expected failures=13)"
+      }
+    ]
+  },
+  "atestado_hash": "3a6c27fa8a5e4270d101c85314f2716f55517ac67ac60967a9b20909e2c8426a"
+}

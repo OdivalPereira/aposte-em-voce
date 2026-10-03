@@ -1,0 +1,123 @@
+{
+  "tipo": "atestado_pre_devolucao",
+  "versao": "1.3.0",
+  "timestamp": "2026-10-03T20:45:27.241373Z",
+  "papel": "Coordenador",
+  "etapa_id": "fechamento-nuvem",
+  "fatia_id": "3",
+  "status": "APROVADO",
+  "verificacoes": {
+    "higiene_pastas": {
+      "ok": true,
+      "erros": []
+    },
+    "build": {
+      "ok": true,
+      "comando": "npm run build",
+      "detalhes": "dist/assets/pdf.worker-DUCzcP-s.js  1,245.50 kB\ndist/assets/index-B1ZwZmOK.css          2.16 kB │ gzip:  0.92 kB\ndist/assets/index-DJtdCjSe.js          29.59 kB │ gzip: 11.53 kB\n\n✓ built in 1.07s",
+      "codigo": 0
+    },
+    "tipos_estaticos": {
+      "ok": true,
+      "comando": "npm run lint",
+      "detalhes": "> aposte-em-voce@0.1.0 lint\n> tsc --noEmit && eslint .",
+      "codigo": 0
+    },
+    "compilacao": {
+      "ok": true,
+      "erros": []
+    },
+    "seguranca_antitoken": {
+      "ok": true,
+      "erros": []
+    },
+    "disjuncao": {
+      "ok": true,
+      "erros": []
+    },
+    "testes": {
+      "ok": true,
+      "detalhes": "pacote: 733 testes, 1 pulados, 111.2 s",
+      "comando": "pacote: python3 -B -m unittest discover -s tests",
+      "totais": {
+        "total": 733,
+        "pulados": 1,
+        "falhos": 0
+      }
+    },
+    "arvore_limpa": {
+      "ok": true,
+      "suja": []
+    }
+  },
+  "commit": "758952a05b2b97373c365454a4ab15582bf488ea",
+  "base": "e4dbaddff265133718380c895f66895c173d2439",
+  "origem_arquivos": "git",
+  "total_arquivos_inspecionados": 14,
+  "arquivos_removidos": [],
+  "python": "3.11.15",
+  "hashes_artefatos": {
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc.py": "64bc4ad578bd47953f80731a3a81696649f469b356e3fb0fbbc530108d7c6148",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_ciclo.py": "04f6dcd0b29cc1783cb58fd2db2f8d6f23259eceb36dd517027c3258942b0791",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_conferir.py": "e6c3f40efa101b787efa30c42a03acefc913bc4c772b5e8bcee1050a3d6d8262",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_registro.py": "6cb6203bb79b098cb4f81879069c4d8bc53d9f4ab0313c2c57a39af7b0f43e15",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_rodada.py": "045959f7a129d8e7fe71590e391565e1946f223424c21835781bff5e4f9c40ba",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_status.py": "6709fc08ef932952ed92b6aa31135d94e3682b477fa5bc85a836d00035d93a82",
+    "sociedade-do-codigo/tests/adversarial/test_dg02_aceite_forjavel.py": "f0b9b43a65c5241d189f7b1cf56ab51d380f32ea7de33dc5dd2bdaa70563f40a",
+    "sociedade-do-codigo/tests/test_aceite_nao_forjavel.py": "37f87a1ea78688e113a43dc0af42acb18cc1a5fd854d5e1d23f1b0bb2413652a",
+    "sociedade-do-codigo/tests/test_contrato_modelos.py": "7a8aa80793ce05f02d4f1b98924691096fc3edfc98af0fd6e7b7b588b8bc8c7b",
+    "sociedade-do-codigo/tests/test_pacote2_desacoplamento_eficiencia.py": "41f917eb5f60f2bf62ace5608587b49181b83de32da83813ead23be27949345a",
+    "sociedade-do-codigo/tests/test_pipeline_v3.py": "4f95dd27ac3b9dac82f29cb1f4e37d8c4a5ad03a2a0cd614e11f07faf752667e",
+    "sociedade-do-codigo/tests/test_rodada.py": "3fb0f139b22bfcef5b6e7a66d1dfa64935787be28f793af92e3440f036ee4290",
+    "sociedade-do-codigo/tests/test_sc_rodada.py": "b0103b3f19132c15acc10be1f4954199f9c0bd7a4b64b0d219318470d1469441",
+    "sociedade-do-codigo/tests/test_status.py": "ae7119c2d28204b165086bd4c74e0d61a781ab971c6310336e904d130716e7a1"
+  },
+  "arquivos_inspecionados": [
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc.py",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_ciclo.py",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_conferir.py",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_registro.py",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_rodada.py",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_status.py",
+    "sociedade-do-codigo/tests/adversarial/test_dg02_aceite_forjavel.py",
+    "sociedade-do-codigo/tests/test_aceite_nao_forjavel.py",
+    "sociedade-do-codigo/tests/test_contrato_modelos.py",
+    "sociedade-do-codigo/tests/test_pacote2_desacoplamento_eficiencia.py",
+    "sociedade-do-codigo/tests/test_pipeline_v3.py",
+    "sociedade-do-codigo/tests/test_rodada.py",
+    "sociedade-do-codigo/tests/test_sc_rodada.py",
+    "sociedade-do-codigo/tests/test_status.py"
+  ],
+  "erros": [],
+  "portao": {
+    "modo": "por_area",
+    "perfil": "sociedade/perfil.md",
+    "perfil_sha256": "daec2bd7d0ce6dd23cd1bdcaa2ddfaa3d2a5191b6fec81540dc3d18d01963143",
+    "commit": "758952a05b2b97373c365454a4ab15582bf488ea",
+    "area_pedida": null,
+    "areas_tocadas": [
+      "pacote"
+    ],
+    "cobertura_completa": true,
+    "areas": [
+      {
+        "area": "pacote",
+        "pasta": "sociedade-do-codigo",
+        "comando": "python3 -B -m unittest discover -s tests",
+        "timeout_s": 600,
+        "ok": true,
+        "codigo": 0,
+        "duracao_s": 111.2,
+        "timeout_estourado": false,
+        "testes": {
+          "total": 733,
+          "pulados": 1,
+          "falhos": 0
+        },
+        "motivos": [],
+        "saida_final": "histórico: /tmp/tmp2778b14j/sociedade/historico.md\n.................s.......................................................................................................................................................\n----------------------------------------------------------------------\nRan 733 tests in 110.609s\n\nOK (skipped=1, expected failures=5)"
+      }
+    ]
+  },
+  "atestado_hash": "2a27883692e1e34943c49ee2eec4d237d10db841a1502f38a9c2273e7e0a1e3e"
+}
