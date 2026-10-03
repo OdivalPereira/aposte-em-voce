@@ -25,7 +25,7 @@ SC = NUCLEO / 'scripts' / 'sc.py'
 SC_RODADA = NUCLEO / 'scripts' / 'sc_rodada.py'
 LINT = SKILLS / 'sc-revisao' / 'scripts' / 'lint_parecer.py'
 MODELO_PARECER = SKILLS / 'sc-revisao' / 'assets' / 'parecer-modelo.md'
-TESTE_PROJETO = 'python3 -B -m unittest discover -s tests'
+TESTE_PROJETO = 'python3 -B -m unittest discover -s tests'  # o comando que o perfil sintético declara no Portão por área
 # Sem configuração global de git: a falta de `user.name` precisa ser real nas sondas.
 AMBIENTE = {**os.environ, 'GIT_CONFIG_GLOBAL': os.devnull, 'GIT_CONFIG_NOSYSTEM': '1'}
 
@@ -40,6 +40,11 @@ Projeto sintético das sondas.
 | Arquiteto | Círdan | Claude Code (nuvem) | Anthropic | Modelo A | high | ativo | 2026-10-03 | sessão principal |
 | Revisor Independente | Barbárvore | Claude Code (nuvem) | Anthropic | Modelo A | high | ativo | 2026-10-03 | subagente |
 | Coordenador | Gandalf | Claude Code (nuvem) | Anthropic | Modelo B | high | ativo | 2026-10-03 | subagente |
+
+## Portão por área
+| Área | Pasta | Testes | Timeout (s) | Prefixos |
+|---|---|---|---|---|
+| projeto | `.` | `{TESTES}` | 120 | `*` |
 {MODO}"""
 
 MODO_EMULACAO = """
@@ -59,11 +64,12 @@ def commit(raiz, msg):
     return git(raiz, 'rev-parse', 'HEAD')
 
 
-def texto_perfil(emulacao='sim', modo=None, extra_missao=''):
-    """`emulacao`: 'sim', 'não' ou None (sem a seção). `modo` troca a seção inteira (casos de falsificação)."""
+def texto_perfil(emulacao='sim', modo=None, extra_missao='', testes=None):
+    """`emulacao`: 'sim', 'não' ou None (sem a seção). `modo` troca a seção inteira (casos de falsificação).
+    `testes`: o comando da coluna Testes do "Portão por área" (padrão: `TESTE_PROJETO`)."""
     if modo is None:
         modo = MODO_EMULACAO.replace('{VALOR}', emulacao) if emulacao is not None else ''
-    return PERFIL.replace('{EXTRA_MISSAO}', extra_missao).replace('{MODO}', modo)
+    return PERFIL.replace('{EXTRA_MISSAO}', extra_missao).replace('{MODO}', modo).replace('{TESTES}', testes or TESTE_PROJETO)
 
 
 def parecer_texto(head, base, veredito='aceitar', nivel='Nível C (mesmo fornecedor)', etapa='soma',
@@ -134,9 +140,9 @@ class Projeto:
     def abrir(self, etapa='soma', base=None):
         return self.sc('abrir', f'--etapa={etapa}', '--ordem', self.soc / 'ordens' / 'soma.md', '--base', base or self.base)
 
-    def entregar(self, etapa='soma'):
-        return self.sc('entregar', '--etapa', etapa, '--base', self.base, '--pasta-projeto', self.raiz,
-                       '--comando-teste', TESTE_PROJETO)
+    def entregar(self, etapa='soma', *extra):
+        """Portão por área: o comando e o timeout vêm do perfil sintético (`--comando-teste` é recusado, B11)."""
+        return self.sc('entregar', '--etapa', etapa, '--base', self.base, '--pasta-projeto', self.raiz, *extra)
 
     def revisar(self, arquivo, head=None, *extra):
         return self.sc('revisar', '--etapa', 'soma', '--parecer', arquivo, '--head', head or self.head, *extra)

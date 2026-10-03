@@ -37,6 +37,11 @@ Projeto sintético do ciclo.
 | Revisor Independente | Barbárvore | Claude Code (nuvem) | Anthropic | Modelo A | high | ativo | 2026-10-03 | subagente |
 | Coordenador | Gandalf | Claude Code (nuvem) | Anthropic | Modelo B | high | ativo | 2026-10-03 | subagente |
 
+## Portão por área
+| Área | Pasta | Testes | Timeout (s) | Prefixos |
+|---|---|---|---|---|
+| projeto | `.` | `python3 -B -m unittest discover -s tests` | 120 | `*` |
+
 ## Modo emulação (Q147)
 - **Emulação:** {EMUL}.
 """
@@ -107,9 +112,9 @@ class Projeto:
     def abrir(self, etapa='soma', base=None):
         return self.sc('abrir', f'--etapa={etapa}', '--ordem', self.soc / 'ordens' / 'soma.md', '--base', base or self.base)
 
-    def entregar(self, etapa='soma'):
-        return self.sc('entregar', '--etapa', etapa, '--base', self.base, '--pasta-projeto', self.raiz,
-                       '--comando-teste', TESTE_PROJETO)
+    def entregar(self, etapa='soma', *extra):
+        # B11: o comando de testes vem do perfil sintético (Portão por área); `--comando-teste` é recusado
+        return self.sc('entregar', '--etapa', etapa, '--base', self.base, '--pasta-projeto', self.raiz, *extra)
 
     def revisar(self, arquivo, head=None):
         return self.sc('revisar', '--etapa', 'soma', '--parecer', arquivo, '--head', head or self.head)

@@ -112,6 +112,35 @@ def localizar_sociedade_canonica(pasta_base=None):
     return (base / 'sociedade').resolve()
 
 
+def localizar_sociedade_da_etapa(etapa=None, pasta_base=None):
+    """B11a: a `sociedade/` em que os comandos do ciclo leem e gravam durante a etapa.
+
+    Ordem: o worktree da etapa (`<raiz de trabalho>/<projeto>/<etapa>/sociedade`, a mesma raiz que o `sc_worktree`
+    usa) se existir; sem `etapa`, o worktree em que a pasta atual está, se for um worktree de etapa; senão a
+    canônica de `localizar_sociedade_canonica`. O `--pasta-sociedade` explícito vale antes de tudo e é resolvido
+    por quem chama."""
+    canonica = localizar_sociedade_canonica(pasta_base)
+    try:
+        import subprocess
+        import sc_worktree
+        if etapa:
+            projeto = re.sub(r'[^A-Za-z0-9._-]+', '_', canonica.parent.name).strip('._-') or 'projeto'
+            wt = sc_worktree.obter_caminho_worktree(etapa, projeto=projeto)
+            if (wt / 'sociedade').is_dir() and wt != canonica.parent.resolve():
+                return wt / 'sociedade'
+        else:
+            base = Path(pasta_base).resolve() if pasta_base else Path.cwd().resolve()
+            res = subprocess.run(['git', '-C', str(base), 'rev-parse', '--show-toplevel'],
+                                 capture_output=True, text=True, check=True)
+            topo = Path(res.stdout.strip()).resolve()
+            if topo.parent.parent == sc_worktree.obter_pasta_raiz_trabalho() and (topo / 'sociedade').is_dir() \
+                    and topo != canonica.parent.resolve():
+                return topo / 'sociedade'
+    except Exception:  # sem Git, nome de etapa inválido ou raiz ilegível: vale a canônica
+        pass
+    return canonica
+
+
 def caminhos_registro(pasta=None):
     if pasta is None:
         p = localizar_sociedade_canonica()

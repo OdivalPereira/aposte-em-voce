@@ -27,14 +27,16 @@ Código de saída 0 só se todas as entregas estiverem feitas.
 import argparse
 import hashlib
 import json
+import os
 import re
 import subprocess
 import sys
+import unicodedata
 from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from sc_registro import localizar_sociedade_canonica  # noqa: E402
+from sc_registro import localizar_sociedade_da_etapa  # noqa: E402
 
 FEITO, NAO_FEITO, NAO_VERIFICADO, NAO_PREENCHIDO = 'feito', 'não feito', 'não verificado', 'não preenchido'
 BLOCO = re.compile(r'```entregas\s*\n(.*?)```', re.S)
@@ -44,6 +46,16 @@ MARCADOR = re.compile(r'<[^<>\n]+>')
 def git(raiz, *args):
     r = subprocess.run(['git', '-C', str(raiz), *args], capture_output=True, text=True)
     return r.stdout.strip() if r.returncode == 0 else None
+
+
+def arquivos_do_intervalo(raiz, base, head):
+    """Caminhos alterados em base..head, lidos com `-z` e sem aspas (`core.quotepath=off`) e normalizados em NFC.
+    None se o intervalo for inválido."""
+    r = subprocess.run(['git', '-C', str(raiz), '-c', 'core.quotepath=off', 'diff', '--name-only', '-z', '-M', base, head],
+                       capture_output=True)
+    if r.returncode != 0:
+        return None
+    return [unicodedata.normalize('NFC', os.fsdecode(c)) for c in r.stdout.split(b'\0') if c]
 
 
 def ler_entregas(texto):
@@ -80,11 +92,11 @@ def conferir_item(item, raiz):
         if '..' not in args[0] or len(args) < 2:
             return NAO_PREENCHIDO, 'use "<base>..<head> | <prefixo>"'
         base, head = args[0].split('..', 1)
-        saida = git(raiz, 'diff', '--name-only', '-M', base, head)
-        if saida is None:
+        arquivos = arquivos_do_intervalo(raiz, base, head)
+        if arquivos is None:
             return NAO_FEITO, f'intervalo inválido: {args[0]}'
-        arquivos = [a for a in saida.splitlines() if a]
-        fora = [a for a in arquivos if not any(a.startswith(p) for p in args[1:])]
+        prefixos = [unicodedata.normalize('NFC', p) for p in args[1:]]
+        fora = [a for a in arquivos if not any(a.startswith(p) for p in prefixos)]
         if not arquivos:
             return NAO_FEITO, 'nenhum arquivo alterado no intervalo'
         return (FEITO, f'{len(arquivos)} arquivos, todos nos prefixos') if not fora else \
@@ -185,7 +197,7 @@ def conferir(ordem, raiz=None):
 
 def registrar(rel, pasta_sociedade=None, autor='conferência automática'):
     from sc_registro import Registro
-    reg = Registro(pasta_sociedade or localizar_sociedade_canonica())
+    reg = Registro(pasta_sociedade or localizar_sociedade_da_etapa(rel['etapa']))  # B11a
 
     def gerador(_dados):
         return [{'tipo': 'conferencia_registrada', 'dados': {
@@ -201,7 +213,8 @@ def main(argv=None):
     ap.add_argument('--ordem', required=True, help='arquivo da ordem com o bloco ```entregas')
     ap.add_argument('--raiz', help='raiz do repositório (padrão: a da ordem)')
     ap.add_argument('--registrar', action='store_true', help='grava o resultado no registro.json')
-    ap.add_argument('--pasta-sociedade', help='pasta do registro (padrão: sociedade/ canônica)')
+    ap.add_argument('--pasta-sociedade', help='pasta do registro (padrão: sociedade/ do worktree da etapa, se existir; '
+                    'senão a canônica)')
     ap.add_argument('--json', action='store_true')
     a = ap.parse_args(argv)
     try:

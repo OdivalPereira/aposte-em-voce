@@ -14,6 +14,21 @@ Etapa `m0-destravar`: uma etapa fecha só com comandos documentados.
 - **Ligações**: `sc.py sessao` repassa `--sessao` e `--projetos`; o `conferir` aceita `delegacoes | claude` e `conversa_nova | claude` ponta a ponta; o registro grava `commit` no parecer e na decisão, e `desfecho` no encerramento sem aceite; o parecer do `sc_passagem exportar-revisao` traz `- commit:` e passa no `lint_parecer`; teste de fumaça com uma etapa trivial.
 - **Correção da revisão interna (F6)**: a chave `Emulação` falha fechada (só o valor único `sim` liga; comentário HTML, código indentado e títulos que só citam o modo são ignorados); o `decidir` recusa como decisor nome de agente do perfil e "Claude" (`--por` ou `git config user.name`), recusa `--head` anterior à ponta de `etapa/<ID>` e manda commitar `sociedade/` no ramo da etapa; o `revisar --parecer` recusa parecer de outra etapa ou de outra base.
 
+Etapa `a1-parser`, fatia 1 (pacote "portão amarrado"): B11, B11a, B11b, B11c, B11d.
+
+**Entrou**
+
+- **B11 · portão amarrado ao perfil** (`sc_pre_devolucao.py`, `sc_perfil.py`, `sc.py`): `sc.py entregar` recusa `--comando-teste`; o comando e o timeout vêm só da seção "Portão por área" do perfil canônico. Reprovam árvore suja (qualquer mudança fora de `sociedade/`, rastreada ou não; ignorados pelo `.gitignore` não contam), a árvore mudar durante o portão, timeout, 0 testes e todos pulados. A contagem de testes é lida do `unittest`, do Vitest e do Playwright. O atestado (1.3.0) grava, por área, comando, timeout e contagem, e o SHA-256 do perfil e o commit. Caminhos com `git -c core.quotepath=off ... -z`, em NFC (também no `arquivos_em` do `conferir`).
+- **B11c · portão por área**: sem `--area`, roda as áreas que base..HEAD toca; com `--area <nome>`, só aquela. Área do caminho = prefixo mais longo da tabela; `.github/` conta para todas.
+- **B11a · `sociedade/` do worktree da etapa** (`sc_registro.localizar_sociedade_da_etapa`): `abrir`, `entregar`, `conferir --registrar`, `revisar --parecer`, `decidir` e `estado` leem e gravam a `sociedade/` do worktree da etapa, se existir, sem cópia manual; `--pasta-sociedade` vale antes. `sc.py conferir` aceita `--pasta-sociedade` e `sc.py estado`, `--etapa`.
+- **B11b**: o `sc-revisao` manda registrar o parecer por `sc.py revisar --parecer`; nenhuma skill cita `sc_rodada parecer`.
+- **B11d**: o modelo de PR ganha a linha "Conferi o diff de `.github/` e `sociedade/pareceres/`".
+- **Sondas**: DG-03 (árvore suja) e DG-09 (3 casos) e DG-11 (NFD com espaço) verdes; as demais do DG-03 seguem `expectedFailure` até a B14.
+
+**Mudou**
+
+- `sc.py entregar` não aceita mais `--comando-teste` (quebra: ajuste a seção "Portão por área" do perfil). O `sc_pre_devolucao.py` avulso mantém o comportamento antigo, salvo com `--portao-por-area`.
+
 ## 3.0.0 (25/09/2026)
 
 Arrumação a partir do diagnóstico de 25/09/2026 (Q130–Q143): o método passa a ser curto, sem contradições com as decisões e conferido por script. Quebra compatibilidade (Q72).

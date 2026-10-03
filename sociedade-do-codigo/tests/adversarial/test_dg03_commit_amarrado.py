@@ -1,7 +1,8 @@
-"""Sondas DG-03 (B09): commit não amarrado e árvore suja. Fecham na B11 (portão amarrado) e na B14 (commit amarrado
-e ordem com hash). Até lá, todas as sondas que descrevem o comportamento desejado são `@expectedFailure`.
+"""Sondas DG-03 (B09): commit não amarrado e árvore suja. A árvore suja fechou na B11 (portão amarrado): as duas
+primeiras sondas são verdes. O commit amarrado e a ordem com hash fecham na B14: até lá, as sondas que descrevem o
+comportamento desejado seguem `@expectedFailure`.
 
-Quando a B11 ou a B14 chegar, o teste correspondente passa a "unexpected success": tire o decorador.
+Quando a B14 chegar, o teste correspondente passa a "unexpected success": tire o decorador.
 """
 import json
 import sys
@@ -19,11 +20,10 @@ class SondaDG03(Base):
 
     # ---------- B11: árvore suja ----------
 
-    @unittest.expectedFailure
     def test_DG03_arvore_suja_nao_reprova_o_portao(self):
-        """Achado (B11): o portão testa a árvore de trabalho, não o commit, e a árvore suja não o reprova.
-        Hoje: arquivo de produto modificado e arquivo novo sem commit, e o atestado sai APROVADO com `commit` = HEAD
-        (o código testado não é o commit atestado). B11 muda: árvore suja reprova. Esperado: atestado REPROVADO."""
+        """Achado (B11, fechado): o portão testava a árvore de trabalho, não o commit, e a árvore suja não o reprovava.
+        Reproduz: arquivo de produto modificado e arquivo novo sem commit; o atestado saía APROVADO com `commit` = HEAD
+        (o código testado não era o commit atestado). B11: árvore suja reprova. Esperado: atestado REPROVADO."""
         p = self.p
         self.ok(p.abrir())
         (p.raiz / 'soma.py').write_text('def soma(a, b):\n    return a + b + 0\n', encoding='utf-8')  # modificado, sem commit
@@ -32,10 +32,9 @@ class SondaDG03(Base):
         atestado = json.loads(p.atestado().read_text(encoding='utf-8'))
         self.assertEqual(atestado['status'], 'REPROVADO', 'atestado APROVADO com a árvore suja')
 
-    @unittest.expectedFailure
     def test_DG03_arvore_suja_nao_chega_a_um_aceite_valido(self):
-        """Achado (B11): a árvore suja atravessa o ciclo inteiro. Hoje: atestado, parecer e `decidir aceitar` passam
-        com código não commitado em disco. B11 muda: o portão reprova. Esperado: o aceite é recusado."""
+        """Achado (B11, fechado): a árvore suja atravessava o ciclo inteiro: atestado, parecer e `decidir aceitar`
+        passavam com código não commitado em disco. B11: o portão reprova. Esperado: o aceite é recusado."""
         p = self.p
         self.ok(p.abrir())
         (p.raiz / 'soma.py').write_text('def soma(a, b):\n    return a + b + 0\n', encoding='utf-8')
@@ -43,6 +42,7 @@ class SondaDG03(Base):
         p.revisar(p.escrever_parecer())
         r = p.decidir('aceitar', *POR)
         self.assertNotEqual(r.returncode, 0, 'aceite concedido com a árvore suja')
+        self.assertIn('REPROVADO', r.stderr)
 
     # ---------- B14: revisar clona o commit do atestado ----------
 

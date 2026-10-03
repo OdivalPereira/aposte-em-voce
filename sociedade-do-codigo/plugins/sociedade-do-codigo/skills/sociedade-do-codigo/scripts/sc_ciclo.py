@@ -122,7 +122,7 @@ def abrir(soc, etapa, ordem, base, bastao='Coordenador'):
                     autorizacao_ref=f'ordem_sha256:{hashlib.sha256(texto.encode("utf-8")).hexdigest()[:16]}',
                     base_efetiva=sha, criterios=[CRITERIO], responsavel=bastao, autor=bastao)
     return [f'etapa {etapa} aberta na base {sha[:12]} (ordem {ref}).',
-            f'Próximo: sc.py entregar --etapa {etapa} --base {sha[:12]} --pasta-projeto <pasta> [--comando-teste "<comando>"]']
+            f'Próximo: sc.py entregar --etapa {etapa} --base {sha[:12]} --pasta-projeto <pasta> [--area <nome>]']
 
 
 # ---------- revisar --parecer ----------

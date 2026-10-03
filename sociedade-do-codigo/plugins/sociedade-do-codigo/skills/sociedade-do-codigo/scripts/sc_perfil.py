@@ -610,6 +610,139 @@ def atualizar_papel(caminho_ou_pasta, papel, plataforma=None, fornecedor=None,
     return caminho
 
 
+# ---------- Portão por área (B11, B11c) ----------
+
+class ErroPortao(ErroPerfil):
+    """Seção "Portão por área" ausente, malformada ou com comando vazio."""
+
+
+SECAO_PORTAO = re.compile(r'^#{1,6}[ \t]*Port[ãa]o por [áa]rea[ \t]*#*[ \t]*$', re.I | re.M)
+PASTAS_SEM_AREA = ('sociedade', 'docs')
+PASTA_PARA_TODAS = '.github'
+CORINGA = '*'
+
+
+def _nfc(texto: str) -> str:
+    return unicodedata.normalize('NFC', texto)
+
+
+def _sem_crases(celula: str) -> str:
+    c = celula.strip()
+    m = re.fullmatch(r'`([^`]*)`', c)
+    return (m.group(1) if m else c).strip()
+
+
+def _prefixos_da_celula(celula: str) -> list[str]:
+    """Prefixos de uma célula: tokens entre crases ou separados por vírgula; o texto entre parênteses é comentário."""
+    sem_comentario = re.sub(r'\([^)]*\)', ' ', celula)
+    entre_crases = re.findall(r'`([^`]+)`', sem_comentario)
+    itens = entre_crases if entre_crases else [t for t in re.split(r'[,\s]+', sem_comentario) if t]
+    return [_nfc(i.strip()) for i in itens if i.strip()]
+
+
+def ler_portao_por_area(texto: str) -> list[dict]:
+    """Lê a tabela "Portão por área" do perfil: colunas Área, Pasta, Testes, Timeout (s), Prefixos.
+
+    Devolve uma lista de dicts {nome, pasta, comando, timeout, prefixos, coringa}, na ordem do perfil.
+    ErroPortao se a seção ou a tabela faltar, se o comando ou o timeout vier vazio ou inválido, ou se duas áreas
+    declararem o mesmo prefixo (ou duas pegarem o coringa `*`)."""
+    m = SECAO_PORTAO.search(texto or '')
+    if not m:
+        raise ErroPortao('o perfil não tem a seção "Portão por área" (tabela Área, Pasta, Testes, Timeout (s), Prefixos).')
+    resto = texto[m.end():]
+    prox = re.search(r'^#{1,6}[ \t]', resto, re.M)
+    corpo = resto[:prox.start()] if prox else resto
+    linhas = [l.strip() for l in corpo.splitlines() if l.strip().startswith('|')]
+    if len(linhas) < 3:
+        raise ErroPortao('a seção "Portão por área" não tem tabela com ao menos uma área.')
+
+    def celulas(linha):
+        return linha.strip().strip('|').split('|')
+
+    cab = [_slug(_sem_crases(c)) for c in celulas(linhas[0])]
+    exigidas = {'area': ('area',), 'pasta': ('pasta',), 'testes': ('testes', 'comando'),
+                'timeout': ('timeout_s', 'timeout'), 'prefixos': ('prefixos', 'prefixo')}
+    indice = {}
+    for chave, nomes in exigidas.items():
+        pos = next((i for i, c in enumerate(cab) if c in nomes), None)
+        if pos is None:
+            raise ErroPortao(f'a tabela "Portão por área" não tem a coluna "{chave}".')
+        indice[chave] = pos
+    if not re.fullmatch(r'[\s|:\-]+', linhas[1]):
+        raise ErroPortao('a tabela "Portão por área" não tem a linha separadora do cabeçalho.')
+
+    areas, vistos, coringas = [], {}, 0
+    for linha in linhas[2:]:
+        cel = celulas(linha)
+        if len(cel) != len(cab):
+            raise ErroPortao(f'linha da tabela "Portão por área" com {len(cel)} colunas, esperava {len(cab)}: "{linha}"')
+        nome = _sem_crases(cel[indice['area']])
+        if not nome:
+            raise ErroPortao('área sem nome na tabela "Portão por área".')
+        comando = _sem_crases(cel[indice['testes']])
+        if not comando or comando.lower() in ('nenhum', 'none', 'null', '—', '-', 'n/a') or (
+                comando.startswith('<') and comando.endswith('>')):
+            raise ErroPortao(f'a área "{nome}" não tem comando de testes (coluna Testes vazia ou "nenhum").')
+        bruto_timeout = _sem_crases(cel[indice['timeout']])
+        if not re.fullmatch(r'\d+', bruto_timeout) or int(bruto_timeout) <= 0:
+            raise ErroPortao(f'a área "{nome}" tem timeout inválido: "{bruto_timeout}" (use segundos inteiros maiores que 0).')
+        pasta = _sem_crases(cel[indice['pasta']]) or '.'
+        pasta_norm = Path(pasta.replace('\\', '/'))
+        if pasta_norm.is_absolute() or '..' in pasta_norm.parts:
+            raise ErroPortao(f'a área "{nome}" tem pasta fora do repositório: "{pasta}".')
+        prefixos = _prefixos_da_celula(cel[indice['prefixos']])
+        if not prefixos:
+            raise ErroPortao(f'a área "{nome}" não tem prefixos.')
+        coringa = CORINGA in prefixos
+        coringas += 1 if coringa else 0
+        explicitos = [p.rstrip('/') for p in prefixos if p != CORINGA]
+        for p in explicitos:
+            if p in vistos and vistos[p] != nome:
+                raise ErroPortao(f'o prefixo "{p}" está nas áreas "{vistos[p]}" e "{nome}".')
+            vistos[p] = nome
+        if any(a['nome'] == nome for a in areas):
+            raise ErroPortao(f'área "{nome}" repetida na tabela "Portão por área".')
+        areas.append({'nome': nome, 'pasta': pasta_norm.as_posix(), 'comando': comando,
+                      'timeout': int(bruto_timeout), 'prefixos': explicitos, 'coringa': coringa})
+    if coringas > 1:
+        raise ErroPortao('mais de uma área pega o coringa "*" na tabela "Portão por área".')
+    return areas
+
+
+def _casa_prefixo(rel: str, prefixo: str) -> bool:
+    return rel == prefixo or rel.startswith(prefixo + '/')
+
+
+def areas_do_caminho(rel: str, areas: list[dict]) -> list[str]:
+    """Nomes das áreas de um caminho (relativo à raiz do repositório): a do prefixo mais longo da tabela.
+
+    `.github/` conta para todas as áreas; `sociedade/` e `docs/` não são de área nenhuma; o coringa `*` pega o que
+    sobra fora dessas pastas. Caminho comparado em NFC."""
+    r = _nfc(rel)
+    if r.startswith('./'):
+        r = r[2:]
+    if _casa_prefixo(r, PASTA_PARA_TODAS):
+        return [a['nome'] for a in areas]
+    melhor, tam = None, -1
+    for a in areas:
+        for p in a['prefixos']:
+            if _casa_prefixo(r, p) and len(p) > tam:
+                melhor, tam = a['nome'], len(p)
+    if melhor:
+        return [melhor]
+    if any(_casa_prefixo(r, p) for p in PASTAS_SEM_AREA):
+        return []
+    return [a['nome'] for a in areas if a['coringa']]
+
+
+def areas_tocadas(caminhos, areas: list[dict]) -> list[str]:
+    """Áreas tocadas por uma lista de caminhos, na ordem da tabela do perfil."""
+    tocadas = set()
+    for rel in caminhos:
+        tocadas.update(areas_do_caminho(rel, areas))
+    return [a['nome'] for a in areas if a['nome'] in tocadas]
+
+
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument('perfil', nargs='?', help='caminho do perfil.md ou pasta do projeto')

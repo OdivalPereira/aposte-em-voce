@@ -17,12 +17,16 @@ import hashlib
 import json
 import os
 import re
+import signal
 import subprocess
 import sys
+import time
+import unicodedata
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from sc_perfil import ErroPortao, areas_tocadas, ler_portao_por_area  # noqa: E402
 from sc_registro import localizar_sociedade_canonica  # noqa: E402
 
 # Padrões oficiais de segurança e integridade
@@ -66,6 +70,48 @@ def raiz_git(pasta: Path) -> Optional[Path]:
     return Path(saida.strip()).resolve() if saida and saida.strip() else None
 
 
+def _nfc(texto: str) -> str:
+    """Normaliza o caminho em NFC para o atestado e as conferências (o nome no disco fica como está)."""
+    return unicodedata.normalize('NFC', texto)
+
+
+def _git_z(pasta: Path, *args: str) -> Optional[List[str]]:
+    """Saída do git em campos separados por NUL, sem aspas nos caminhos (`core.quotepath=off`); None se falhar."""
+    try:
+        res = subprocess.run(['git', '-C', str(pasta), '-c', 'core.quotepath=off', *args],
+                             capture_output=True, check=False)
+    except Exception:
+        return None
+    if res.returncode != 0:
+        return None
+    return [os.fsdecode(c) for c in res.stdout.split(b'\0') if c]
+
+
+def _em_governanca(rel: str) -> bool:
+    return rel == 'sociedade' or rel.startswith('sociedade/')
+
+
+def listar_arvore(top: Path) -> Optional[List[str]]:
+    """Caminhos com mudança na árvore de trabalho ou no índice, rastreados ou não (ignorados pelo `.gitignore` não
+    aparecem). `git status --porcelain=v1 -z`: em renomeação o destino vem antes da origem; os dois contam."""
+    campos = _git_z(top, 'status', '--porcelain=v1', '-z', '--untracked-files=all')
+    if campos is None:
+        return None
+    caminhos: List[str] = []
+    i = 0
+    while i < len(campos):
+        campo = campos[i]
+        i += 1
+        if len(campo) < 4:
+            continue
+        caminhos.append(campo[3:])
+        if campo[0] in 'RC' or campo[1] in 'RC':
+            if i < len(campos):
+                caminhos.append(campos[i])
+                i += 1
+    return caminhos
+
+
 def obter_arquivos_candidato(pasta_projeto: Path, base: Optional[str] = None,
                              pasta_sociedade: Optional[Path] = None) -> Dict[str, Any]:
     """Arquivos do candidato: commits de base..HEAD (se houver base) mais alterações não commitadas.
@@ -74,9 +120,11 @@ def obter_arquivos_candidato(pasta_projeto: Path, base: Optional[str] = None,
     Alterações em sociedade/ vindas de commits do candidato são sempre governança violada (Q60).
     Alterações não commitadas em sociedade/ só são ignoradas na pasta principal, onde
     sociedade/ é a canônica e recebe registros de governança em andamento.
+    Caminhos lidos com `-z` e sem aspas; `caminhos` (todos fora de sociedade/) e `suja` (os que estão na árvore sem
+    commit, fora de sociedade/) saem em NFC.
     """
     resultado: Dict[str, Any] = {'raiz': None, 'arquivos': [], 'removidos': [], 'governanca': [],
-                                 'commit': None, 'base': None, 'erros': []}
+                                 'commit': None, 'base': None, 'erros': [], 'caminhos': [], 'suja': []}
     top = raiz_git(pasta_projeto)
     if top is None:
         return resultado
@@ -94,28 +142,34 @@ def obter_arquivos_candidato(pasta_projeto: Path, base: Optional[str] = None,
             resultado['erros'].append(f'Base inválida ou inexistente: {base}')
             return resultado
         resultado['base'] = base_sha.strip()
-        diff = _git(top, 'diff', '--name-only', '-M', resultado['base'], 'HEAD') or ''
-        for rel in diff.splitlines():
-            if rel.strip():
-                caminhos[rel.strip()] = 'commit'
+        diff = _git_z(top, 'diff', '--name-only', '-z', '-M', resultado['base'], 'HEAD')
+        if diff is None:
+            resultado['erros'].append(f'git diff {resultado["base"][:12]}..HEAD falhou')
+            return resultado
+        for rel in diff:
+            caminhos[rel] = 'commit'
 
-    arvore = (_git(top, 'diff', '--name-only', 'HEAD') or '') + (_git(top, 'ls-files', '--others', '--exclude-standard') or '')
-    for rel in arvore.splitlines():
-        rel = rel.strip()
-        if rel and rel not in caminhos:
+    arvore = listar_arvore(top)
+    if arvore is None:
+        resultado['erros'].append('git status falhou: não consegui conferir a árvore de trabalho')
+        arvore = []
+    resultado['suja'] = sorted({_nfc(r) for r in arvore if not _em_governanca(r)})
+    for rel in arvore:
+        if rel not in caminhos:
             caminhos[rel] = 'arvore'
 
+    resultado['caminhos'] = sorted({_nfc(r) for r in caminhos if not _em_governanca(r)})
     for rel, origem in sorted(caminhos.items()):
-        if rel == 'sociedade' or rel.startswith('sociedade/'):
+        if _em_governanca(rel):
             if origem == 'arvore' and soc_local_e_canonica:
                 continue
-            resultado['governanca'].append(rel)
+            resultado['governanca'].append(_nfc(rel))
             continue
         alvo = top / rel
         if alvo.is_file():
             resultado['arquivos'].append(alvo.resolve())
         else:
-            resultado['removidos'].append(rel)
+            resultado['removidos'].append(_nfc(rel))
     return resultado
 
 
@@ -134,6 +188,71 @@ def resumir_testes(saida: str) -> Dict[str, Any]:
                 if v.isdigit():
                     tot[k] = int(v)
     return tot
+
+
+ANSI = re.compile(r'\x1b\[[0-9;?]*[A-Za-z]')
+
+
+def contar_testes(saida: str) -> Dict[str, int]:
+    """Conta os testes da saída completa de uma execução: `total`, `pulados` e `falhos`.
+
+    Lê o unittest (`Ran N tests` e `skipped=K` da linha OK/FAILED), o Vitest (`Tests  X passed | Y skipped (Z)`) e o
+    Playwright (`N passed`, `N skipped`, `N failed`...). Várias execuções no mesmo comando somam. Saída que nenhum dos
+    três formatos reconhece dá total 0."""
+    limpa = ANSI.sub('', saida or '')
+    total = pulados = falhos = 0
+    for m in re.finditer(r'^Ran (\d+) tests? in ', limpa, re.M):
+        total += int(m.group(1))
+    for m in re.finditer(r'^(?:OK|FAILED)(?: \((.*?)\))?\s*$', limpa, re.M):
+        for par in (m.group(1) or '').split(','):
+            chave, _, valor = par.strip().partition('=')
+            if valor.isdigit():
+                if chave == 'skipped':
+                    pulados += int(valor)
+                elif chave in ('failures', 'errors'):
+                    falhos += int(valor)
+    for m in re.finditer(r'^[ \t]*Tests[ \t]+(.+)$', limpa, re.M):
+        itens = re.findall(r'(\d+)\s+(failed|passed|skipped|todo)\b', m.group(1))
+        if not itens:
+            continue
+        parenteses = re.search(r'\((\d+)\)', m.group(1))
+        total += int(parenteses.group(1)) if parenteses else sum(int(n) for n, _ in itens)
+        pulados += sum(int(n) for n, t in itens if t in ('skipped', 'todo'))
+        falhos += sum(int(n) for n, t in itens if t == 'failed')
+    for m in re.finditer(r'^[ \t]*(\d+)[ \t]+(passed|failed|flaky|skipped|interrupted|did not run)\b', limpa, re.M):
+        n, tipo = int(m.group(1)), m.group(2)
+        total += n
+        if tipo in ('skipped', 'did not run'):
+            pulados += n
+        elif tipo in ('failed', 'interrupted'):
+            falhos += n
+    return {'total': total, 'pulados': pulados, 'falhos': falhos}
+
+
+def executar_com_timeout(comando: str, pasta: Path, timeout: int) -> Tuple[int, str, bool, float]:
+    """Roda o comando num shell, em `pasta`, com tempo limite. Devolve (código, saída completa, estourou, segundos).
+
+    No estouro, mata o grupo de processos inteiro (o shell e o que ele abriu) e devolve o que já tinha saído."""
+    inicio = time.monotonic()
+    try:
+        proc = subprocess.Popen(comando, shell=True, cwd=pasta, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                text=True, encoding='utf-8', errors='replace', start_new_session=True)
+    except Exception as e:
+        return -1, f'Erro ao executar comando: {e}', False, 0.0
+    estourou = False
+    try:
+        saida, _ = proc.communicate(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        estourou = True
+        try:
+            os.killpg(proc.pid, signal.SIGKILL)
+        except (ProcessLookupError, PermissionError):
+            proc.kill()
+        try:
+            saida, _ = proc.communicate(timeout=10)
+        except subprocess.TimeoutExpired:
+            saida = ''
+    return proc.returncode, saida or '', estourou, round(time.monotonic() - inicio, 1)
 
 
 def verificar_higiene_pastas(
@@ -245,9 +364,11 @@ def eh_comando_valido(cmd: Optional[str]) -> bool:
     return True
 
 
-def ler_comandos_perfil(pasta_projeto: Path) -> Dict[str, Optional[str]]:
-    """Lê comandos configurados em perfil.md (Build, Testes, Lint e tipos)."""
-    candidatos = [
+def ler_comandos_perfil(pasta_projeto: Path, perfil: Optional[Path] = None) -> Dict[str, Optional[str]]:
+    """Lê comandos configurados em perfil.md (Build, Testes, Lint e tipos).
+
+    `perfil` (o perfil canônico da `--pasta-sociedade`) vale antes dos candidatos da pasta do projeto."""
+    candidatos = ([Path(perfil)] if perfil else []) + [
         pasta_projeto / 'docs' / 'sociedade' / 'perfil.md',
         pasta_projeto / 'perfil.md',
         pasta_projeto / 'sociedade' / 'perfil.md',
@@ -392,6 +513,74 @@ class VerificadorPreDevolucao:
         self.pasta_projeto = Path(pasta_projeto).resolve()
         self.pasta_sociedade = Path(pasta_sociedade).resolve() if pasta_sociedade else localizar_sociedade_canonica(self.pasta_projeto)
 
+    def _rodar_areas(self, areas: List[Dict[str, Any]], area: Optional[str], caminhos: List[str],
+                     raiz: Optional[Path], todos_erros: List[str],
+                     areas_rodadas: List[Dict[str, Any]]) -> Tuple[bool, str, Optional[str], Dict[str, int]]:
+        """Roda os testes de cada área escolhida (B11c) e acrescenta o registro de cada uma em `areas_rodadas`.
+
+        Sem `area`: as áreas que `caminhos` (base..HEAD) toca; com `area`: só ela. O comando e o timeout vêm da tabela
+        do perfil. Reprovam: saída diferente de zero, timeout, 0 testes e todos pulados. Devolve
+        (ok, resumo, comandos, totais)."""
+        totais = {'total': 0, 'pulados': 0, 'falhos': 0}
+        if not areas:
+            return False, 'Portão por área indisponível: o perfil não tem áreas válidas.', None, totais
+        if raiz is None:
+            todos_erros.append('Portão por área: a pasta não está num repositório Git.')
+            return False, 'Sem repositório Git: nenhum teste rodou.', None, totais
+        if area:
+            escolhidas = [a for a in areas if a['nome'] == area]
+            if not escolhidas:
+                todos_erros.append(f'Área desconhecida: "{area}" (o perfil tem: {", ".join(a["nome"] for a in areas)}).')
+                return False, 'Área desconhecida: nenhum teste rodou.', None, totais
+        else:
+            tocadas = areas_tocadas(caminhos, areas)
+            escolhidas = [a for a in areas if a['nome'] in tocadas]
+            if not escolhidas:
+                todos_erros.append('base..HEAD não toca nenhuma área do "Portão por área" (só sociedade/ e docs/?): '
+                                   'não há teste a rodar. Use --area <nome> para rodar uma área mesmo assim.')
+                return False, 'Nenhuma área tocada: nenhum teste rodou.', None, totais
+        ok_geral, resumos, comandos = True, [], []
+        for a in escolhidas:
+            registro: Dict[str, Any] = {'area': a['nome'], 'pasta': a['pasta'], 'comando': a['comando'],
+                                        'timeout_s': a['timeout']}
+            areas_rodadas.append(registro)
+            comandos.append(f'{a["nome"]}: {a["comando"]}')
+            pasta_exec = (raiz / a['pasta']).resolve()
+            try:
+                pasta_exec.relative_to(raiz)
+            except ValueError:
+                pasta_exec = None
+            if pasta_exec is None or not pasta_exec.is_dir():
+                msg = f'Área {a["nome"]}: a pasta "{a["pasta"]}" não existe no repositório.'
+                registro.update({'ok': False, 'motivos': [msg]})
+                todos_erros.append(msg)
+                ok_geral = False
+                continue
+            codigo, saida, estourou, duracao = executar_com_timeout(a['comando'], pasta_exec, a['timeout'])
+            t = contar_testes(saida)
+            motivos = []
+            if estourou:
+                motivos.append(f'timeout de {a["timeout"]} s estourado')
+            else:
+                if codigo != 0:
+                    motivos.append(f'saiu com código {codigo}')
+                if t['total'] == 0:
+                    motivos.append('0 testes executados (ou formato de saída não reconhecido)')
+                elif t['pulados'] >= t['total']:
+                    motivos.append(f'todos os {t["total"]} testes foram pulados')
+            final = '\n'.join(ANSI.sub('', saida).strip().splitlines()[-6:])
+            registro.update({'ok': not motivos, 'codigo': codigo, 'duracao_s': duracao, 'timeout_estourado': estourou,
+                             'testes': t, 'motivos': motivos, 'saida_final': final})
+            for k in totais:
+                totais[k] += t[k]
+            resumos.append(f'{a["nome"]}: {t["total"]} testes, {t["pulados"]} pulados, {duracao} s'
+                           + (f' — {"; ".join(motivos)}' if motivos else ''))
+            if motivos:
+                ok_geral = False
+                todos_erros.append(f'Portão da área {a["nome"]} reprovou: {"; ".join(motivos)}. '
+                                   f'Comando: {a["comando"]}. Fim da saída: {final[-300:]}')
+        return ok_geral, ' | '.join(resumos), '; '.join(comandos), totais
+
     def executar(
         self,
         papel: str = 'Executor',
@@ -406,9 +595,34 @@ class VerificadorPreDevolucao:
         arquivos_proibidos: Optional[List[str]] = None,
         pastas_isoladas: Optional[List[str]] = None,
         ignorar_arquivos_externos: bool = False,
-        base: Optional[str] = None
+        base: Optional[str] = None,
+        por_area: bool = False,
+        area: Optional[str] = None
     ) -> Dict[str, Any]:
-        """Executa bateria determinística de verificações físicas."""
+        """Executa bateria determinística de verificações físicas.
+
+        Com `por_area` (B11, B11c) o portão é o do `sc.py entregar`: o comando de testes e o timeout vêm só da seção
+        "Portão por área" do perfil canônico (o da pasta de sociedade); a árvore suja, 0 testes, todos pulados e o
+        timeout reprovam; roda cada área que base..HEAD toca (ou só `area`)."""
+        todos_erros: List[str] = []
+        areas_perfil: List[Dict[str, Any]] = []
+        perfil_canonico: Optional[Path] = None
+        perfil_sha256: Optional[str] = None
+        if por_area:
+            if comando_teste or ignorar_testes or arquivos_alvo is not None or ignorar_arquivos_externos:
+                raise ValueError('o portão por área não aceita comando de teste, dispensa de testes nem lista de arquivos.')
+            perfil_canonico = self.pasta_sociedade / 'perfil.md'
+            try:
+                bruto_perfil = perfil_canonico.read_bytes()
+                perfil_sha256 = hashlib.sha256(bruto_perfil).hexdigest()
+                areas_perfil = ler_portao_por_area(bruto_perfil.decode('utf-8'))
+            except (OSError, UnicodeDecodeError) as e:
+                todos_erros.append(f'Portão por área: não consegui ler o perfil canônico {perfil_canonico}: {e}')
+            except ErroPortao as e:
+                todos_erros.append(f'Portão por área: {e}')
+            if not base:
+                todos_erros.append('Portão por área: informe --base (a área de cada caminho vem de base..HEAD).')
+
         # 1. Determina arquivos a inspecionar
         arquivos_escopo = list(arquivos_alvo) if arquivos_alvo is not None else None
         if not arquivos_escopo and ignorar_arquivos_externos and fatia_id:
@@ -416,13 +630,14 @@ class VerificadorPreDevolucao:
             if inferred:
                 arquivos_escopo = inferred
 
-        todos_erros = []
         origem_arquivos = 'lista_explicita'
         raiz_higiene = None
         arquivos_removidos: List[str] = []
         top = raiz_git(self.pasta_projeto)
         commit_atual = (_git(top, 'rev-parse', 'HEAD') or '').strip() or None if top else None
         base_resolvida = None
+        caminhos_candidato: List[str] = []
+        arvore_suja: List[str] = []
         if arquivos_escopo is not None:
             arquivos_verificar = []
             for a in arquivos_escopo:
@@ -437,7 +652,14 @@ class VerificadorPreDevolucao:
             raiz_higiene = cand['raiz']
             commit_atual, base_resolvida = cand['commit'], cand['base']
             arquivos_removidos = cand['removidos']
+            caminhos_candidato = cand['caminhos']
+            arvore_suja = cand['suja']
             todos_erros.extend(cand['erros'])
+            if por_area and arvore_suja:
+                amostra = ', '.join(arvore_suja[:8]) + (f' e mais {len(arvore_suja) - 8}' if len(arvore_suja) > 8 else '')
+                todos_erros.append(
+                    f'Árvore suja: {len(arvore_suja)} caminho(s) com mudança fora de sociedade/ e sem commit '
+                    f'(o portão atesta o commit, não a árvore): {amostra}')
             for rel in cand['governanca']:
                 todos_erros.append(f'Acesso violado: candidato não pode alterar arquivos na pasta de governança sociedade/: {rel}')
             arquivos_verificar = cand['arquivos']
@@ -454,7 +676,7 @@ class VerificadorPreDevolucao:
                 )
 
         # 2. Carrega comandos do perfil.md se disponíveis
-        comandos_perfil = ler_comandos_perfil(self.pasta_projeto)
+        comandos_perfil = ler_comandos_perfil(self.pasta_projeto, perfil_canonico)
 
         # 3. Checagens individuais
         resultados_verificacoes = {}
@@ -548,7 +770,18 @@ class VerificadorPreDevolucao:
 
         # G. Testes automatizados
         comando_testes_usado = None
-        if ignorar_testes:
+        areas_rodadas: List[Dict[str, Any]] = []
+        if por_area:
+            testes_ok, resumo_testes, comando_testes_usado, totais_testes = self._rodar_areas(
+                areas_perfil, area, caminhos_candidato, raiz_higiene, todos_erros, areas_rodadas)
+            if raiz_higiene is not None:
+                depois = sorted({_nfc(r) for r in (listar_arvore(raiz_higiene) or []) if not _em_governanca(r)})
+                if depois != arvore_suja:
+                    novos = sorted(set(depois) ^ set(arvore_suja))
+                    todos_erros.append('A árvore mudou durante o portão (os testes alteraram arquivos fora de '
+                                       f'sociedade/): {", ".join(novos[:8])}')
+                    testes_ok = False
+        elif ignorar_testes:
             if not motivo_ignorar.strip():
                 todos_erros.append('Flag --ignorar-testes exige justificativa explícita (--motivo-ignorar).')
                 testes_ok = False
@@ -574,14 +807,16 @@ class VerificadorPreDevolucao:
 
         resultados_verificacoes['testes'] = {'ok': testes_ok, 'detalhes': resumo_testes,
                                              'comando': comando_testes_usado,
-                                             'totais': resumir_testes(resumo_testes)}
+                                             'totais': totais_testes if por_area else resumir_testes(resumo_testes)}
+        if por_area:
+            resultados_verificacoes['arvore_limpa'] = {'ok': not arvore_suja, 'suja': arvore_suja}
 
         # 4. Mapeamento de hashes dos artefatos inspecionados
         hashes_artefatos = {}
         raiz_hash = raiz_higiene or self.pasta_projeto
         for arq in arquivos_verificar:
             try:
-                rel = arq.relative_to(raiz_hash).as_posix()
+                rel = _nfc(arq.relative_to(raiz_hash).as_posix())
                 hashes_artefatos[rel] = calcular_sha256(arq)
             except Exception:
                 pass
@@ -590,7 +825,7 @@ class VerificadorPreDevolucao:
 
         atestado = {
             'tipo': 'atestado_pre_devolucao',
-            'versao': '1.2.0',
+            'versao': '1.3.0' if por_area else '1.2.0',
             'timestamp': datetime.datetime.now(datetime.timezone.utc).isoformat().replace('+00:00', 'Z'),
             'papel': papel,
             'etapa_id': etapa_id or 'N/A',
@@ -604,8 +839,18 @@ class VerificadorPreDevolucao:
             'arquivos_removidos': arquivos_removidos,
             'python': sys.version.split()[0],
             'hashes_artefatos': hashes_artefatos,
+            'arquivos_inspecionados': sorted(hashes_artefatos),
             'erros': todos_erros
         }
+        if por_area:
+            atestado['portao'] = {
+                'modo': 'por_area',
+                'perfil': 'sociedade/perfil.md',
+                'perfil_sha256': perfil_sha256,
+                'commit': commit_atual,
+                'area_pedida': area,
+                'areas': areas_rodadas,
+            }
 
         # Calcula hash criptográfico SHA-256 do payload do atestado (para prova física e rastreabilidade)
         payload_hash = json.dumps({
@@ -617,6 +862,7 @@ class VerificadorPreDevolucao:
             'status': atestado['status'],
             'verificacoes': resultados_verificacoes,
             'hashes_artefatos': hashes_artefatos,
+            'portao': atestado.get('portao'),
             'erros': todos_erros
         }, sort_keys=True)
         atestado['atestado_hash'] = hashlib.sha256(payload_hash.encode('utf-8')).hexdigest()
@@ -646,8 +892,18 @@ def main(argv=None):
     p.add_argument('--pastas-isoladas', nargs='*', default=None, help='Lista de pastas ou caminhos isolados protegidos')
     p.add_argument('--base', default=None,
                    help='Commit de partida da etapa: inspeciona os arquivos de base..HEAD (candidato commitado)')
+    p.add_argument('--portao-por-area', action='store_true',
+                   help='Portão do `sc.py entregar`: comando e timeout só da seção "Portão por área" do perfil canônico; '
+                        'reprova árvore suja, 0 testes, todos pulados e timeout (exige --base)')
+    p.add_argument('--area', default=None, help='Com --portao-por-area: roda só esta área (padrão: as que base..HEAD toca)')
     p.add_argument('--saida-json', default=None, help='Caminho para salvar o atestado em arquivo JSON')
     args = p.parse_args(argv)
+    if args.area and not args.portao_por_area:
+        p.error('--area só vale com --portao-por-area.')
+    if args.portao_por_area and (args.comando_teste or args.ignorar_testes or args.arquivos is not None
+                                 or args.ignorar_arquivos_externos):
+        p.error('--portao-por-area não aceita --comando-teste, --ignorar-testes, --arquivos-alvo nem '
+                '--ignorar-arquivos-externos: o comando vem do perfil.')
 
     verificador = VerificadorPreDevolucao(
         pasta_projeto=Path(args.pasta_projeto),
@@ -667,7 +923,9 @@ def main(argv=None):
         arquivos_proibidos=args.proibidos,
         pastas_isoladas=args.pastas_isoladas,
         ignorar_arquivos_externos=args.ignorar_arquivos_externos,
-        base=args.base
+        base=args.base,
+        por_area=args.portao_por_area,
+        area=args.area
     )
 
     if args.saida_json:
@@ -685,6 +943,11 @@ def main(argv=None):
     for k, v in atestado['verificacoes'].items():
         st = 'OK' if v.get('ok') else 'FALHA'
         print(f'  - {k}: [{st}]')
+
+    for a in (atestado.get('portao') or {}).get('areas', []):
+        t = a.get('testes') or {}
+        print(f'  * área {a["area"]} [{"OK" if a.get("ok") else "FALHA"}] {a["comando"]} (pasta {a["pasta"]}, '
+              f'timeout {a["timeout_s"]} s): {t.get("total", "?")} testes, {t.get("pulados", "?")} pulados')
 
     if atestado['status'] != 'APROVADO':
         print('\nPENDÊNCIAS E ERROS DETECTADOS:')
