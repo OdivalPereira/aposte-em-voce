@@ -11,7 +11,7 @@ Divide a etapa, delega aos especialistas, integra e roda o portão. Não impleme
 - Coordena a fila do Jules: tarefas mecânicas, teto de 3, janela de 45 minutos (Q48, Q129).
 - Roda o portão por fatia e no commit final: `sc.py entregar --base <commit>`.
 - Faz só ajustes pequenos de integração (Q28).
-- Devolve até 8 KB com a lista de entregas preenchida e o identificador da conversa (Q99).
+- Devolve até 2 KB no chat; o detalhe vai para `sociedade/subordens/<ordem>-<fatia>-retorno.md` (revisa a Q99).
 
 ## Não faz
 - Não implementa lógica de produto na conversa principal.

@@ -37,4 +37,4 @@ E6 | push_feito | <ramo>
 ```
 
 ## Retorno
-Até 8 KB: a lista de entregas preenchida, commits, atestado, tarefas do Jules com identificador, pendências e o identificador da conversa.
+Até 2 KB no chat: veredito, lista de entregas preenchida, commits, atestado, tarefas do Jules com identificador e pendências. O detalhe vai para um arquivo de retorno em `sociedade/subordens/`.

@@ -112,6 +112,6 @@ Versão nova: ajuste `VERSION` e o `metadata.versao` das quatro skills, registre
 ## Limites deliberados
 
 - Sem servidor e sem MCP. O painel é um HTML gerado (`sc.py estado`).
-- Nenhum agente estima consumo. Scripts medem contagens objetivas pelos logs locais.
+- Nenhum agente estima consumo. Medir pelo log é permitido: `sc.py sessao claude` soma, por agente e modelo, as contagens do log, e o `decidir` as grava.
 - O pacote não altera credenciais, MCP, modelos nem permissões, e não grava segredos.
 - Licença: `UNLICENSED` até você escolher outra em `pacote.json`.

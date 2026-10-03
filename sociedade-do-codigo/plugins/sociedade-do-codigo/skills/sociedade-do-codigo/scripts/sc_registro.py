@@ -1291,8 +1291,10 @@ class Registro:
 
     def registrar_decisao(self, etapa_id, decisao_id, quem, referencia, acao, alcance='etapa',
                           autor='Gandalf', aplicar=True, aceite_em_emulacao=False, independencia=None,
-                          perfil=None, commit=None):
+                          perfil=None, commit=None, consumo=None):
         extra = {'commit': commit} if commit else {}
+        if consumo is not None:  # contagens do log da sessão (sc_sessao.consumo_claude), nunca estimativa
+            extra['consumo'] = consumo
         if independencia is not None:
             indep = str(independencia).strip().lower().replace('nao', 'não')
             if indep not in ('sim', 'não'):

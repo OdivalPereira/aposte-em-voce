@@ -4,17 +4,20 @@
 Lê o log do Antigravity (transcript.jsonl), do Codex (rollout .jsonl) ou do Claude Code
 (sessão .jsonl) e devolve só metadados e contagens: passos, mensagens do usuário, modelo e
 esforço, ferramentas usadas, delegações, arquivos mais relidos, execuções de teste e
-leituras fora da pasta permitida. Nunca reproduz conteúdo de arquivo nem de mensagem, e
-nunca converte nada em tokens, custo ou cota.
+leituras fora da pasta permitida. Nunca reproduz conteúdo de arquivo nem de mensagem.
+No Claude Code soma também as contagens de uso do log (entrada, cache escrito, cache lido e
+saída) por agente e por modelo, contando cada mensagem uma vez. Estimar consumo, custo ou
+cota continua proibido: só vale o que o log registra.
 
 Uso:
   sc_sessao.py antigravity [--conversa <id> | --log <transcript.jsonl>] [--json]
   sc_sessao.py codex --pasta <pasta permitida> [--log <rollout.jsonl>] [--json]
-  sc_sessao.py claude [--pasta <pasta do projeto>] [--log <sessao.jsonl> | --sessao <id>] [--projetos <pasta>] [--json]
+  sc_sessao.py claude [--pasta <pasta do projeto>] [--log <sessao.jsonl> | --sessao <id>] [--projetos <pasta>] [--desde <ISO 8601>] [--json]
 
 Sem --log, usa a sessão mais recente do aplicativo (no Codex, a mais recente que menciona a pasta).
 No Claude Code, lê também os subagentes da sessão (<sessão>/subagents/agent-*.jsonl). A pasta de
-projetos vem de --projetos, da variável SC_CLAUDE_PROJETOS ou de ~/.claude/projects. Log ausente
+projetos vem de --projetos, da variável SC_CLAUDE_PROJETOS ou de ~/.claude/projects.
+--desde mede só o trecho a partir do instante (ISO 8601; sem fuso, UTC). Log ausente
 ou ilegível é erro (falha fechada), nunca zero.
 """
 import argparse
@@ -23,7 +26,7 @@ import json
 import os
 import re
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 HOME = Path.home()
@@ -297,7 +300,105 @@ def medir_subagente(log):
     }
 
 
-def medir_claude(log, pasta=None):
+_USO = (('entrada', 'input_tokens'), ('cache_escrito', 'cache_creation_input_tokens'),
+        ('cache_lido', 'cache_read_input_tokens'), ('saida', 'output_tokens'))
+_PARA = re.compile(r'^\s*Para:\s*([^\s·,.:;()\[\]]+)')
+
+
+def instante(valor):
+    """ISO 8601 (com Z, offset ou sem fuso = UTC) em datetime com fuso; inválido: ValueError."""
+    d = datetime.fromisoformat(str(valor).strip().replace('Z', '+00:00'))
+    return d if d.tzinfo else d.replace(tzinfo=timezone.utc)
+
+
+def _desde(desde):
+    if desde in (None, ''):
+        return None
+    try:
+        return instante(desde)
+    except ValueError as e:
+        raise ErroSessao(f'--desde inválido: {desde!r} (use ISO 8601, ex.: 2026-10-03T12:00:00Z)') from e
+
+
+def _texto_da_ordem(o):
+    c = (o.get('message') or {}).get('content')
+    if isinstance(c, list):
+        c = ' '.join(b.get('text', '') for b in c if isinstance(b, dict) and b.get('type') == 'text')
+    return c if isinstance(c, str) else ''
+
+
+def nome_do_agente(log, linhas, principal=False):
+    """'principal'; senão o agentType do .meta.json; senão o papel de 'Para: <Papel>' no 1º pedido; senão agent-<id>."""
+    if principal:
+        return 'principal'
+    try:
+        meta = json.loads(Path(log).with_suffix('.meta.json').read_text(encoding='utf-8'))
+        if isinstance(meta, dict) and str(meta.get('agentType') or '').strip():
+            return str(meta['agentType']).strip().lower()
+    except (OSError, ValueError):
+        pass
+    for o in linhas:
+        if o.get('type') == 'user':
+            m = _PARA.match(_texto_da_ordem(o))
+            if m:
+                return m.group(1).lower()
+            if _texto_da_ordem(o).strip():
+                break
+    return Path(log).stem
+
+
+def _mensagens_de_uso(log, linhas, agente, desde):
+    """(id, agente, modelo, {entrada, cache_escrito, cache_lido, saida}) de cada registro assistant com uso."""
+    for i, o in enumerate(linhas):
+        msg = o.get('message') if isinstance(o.get('message'), dict) else {}
+        uso, modelo = msg.get('usage'), msg.get('model')
+        if o.get('type') != 'assistant' or not isinstance(uso, dict) or not modelo or modelo == '<synthetic>':
+            continue
+        if desde:
+            try:
+                if instante(o.get('timestamp')) < desde:
+                    continue
+            except ValueError:  # sem instante válido não dá para provar que está no trecho
+                continue
+        num = {k: (uso.get(c) if isinstance(uso.get(c), int) and uso.get(c) > 0 else 0) for k, c in _USO}
+        yield msg.get('id') or f'{log}#{i}', agente, modelo, num
+
+
+def consumo_claude(logs, desde=None, incluir_subagentes=True):
+    """Soma o uso do log por agente e modelo (principal e subagents/). Uma mensagem conta uma vez, mesmo
+    partida em blocos ou repetida entre arquivos; com valores divergentes, fica o de maior saída."""
+    inicio, vistas = _desde(desde), {}
+    for log in logs:
+        for arq in [Path(log), *(subagentes_claude(log) if incluir_subagentes else [])]:
+            linhas = ler_jsonl_estrito(arq)
+            ag = nome_do_agente(arq, linhas, principal=(arq == Path(log)))
+            for id_, agente, modelo, num in _mensagens_de_uso(arq, linhas, ag, inicio):
+                if id_ not in vistas or num['saida'] > vistas[id_][2]['saida']:
+                    vistas[id_] = (agente, modelo, num)
+    linhas_ = {}
+    for agente, modelo, num in vistas.values():
+        l = linhas_.setdefault((agente, modelo), {'agente': agente, 'modelo': modelo, 'mensagens': 0, **{k: 0 for k, _ in _USO}})
+        l['mensagens'] += 1
+        for k, _ in _USO:
+            l[k] += num[k]
+    tabela = sorted(linhas_.values(), key=lambda x: (-x['saida'], x['agente'], x['modelo']))
+    total = {'mensagens': sum(x['mensagens'] for x in tabela), **{k: sum(x[k] for x in tabela) for k, _ in _USO}}
+    return {'desde': inicio.isoformat() if inicio else None, 'por_agente_e_modelo': tabela, 'total': total}
+
+
+def consumo_tolerante(logs, desde=None):
+    """Para o `decidir`: consumo do log, ou None se não houver log, se ele não puder ser lido ou se não
+    tiver nenhum registro de uso no trecho (a coluna sai n/d)."""
+    if not logs:
+        return None
+    try:
+        c = consumo_claude(logs, desde)
+    except (ErroSessao, OSError, ValueError):
+        return None
+    return c if c['total']['mensagens'] else None
+
+
+def medir_claude(log, pasta=None, desde=None):
     pasta_n = normalizar(Path(pasta).resolve()) if pasta else None
     ferramentas, ferramentas_sub, lidos = collections.Counter(), collections.Counter(), collections.Counter()
     modelos, esforcos, fora = collections.Counter(), collections.Counter(), collections.Counter()
@@ -368,12 +469,15 @@ def medir_claude(log, pasta=None):
         'execucoes_de_teste': testes,
         'arquivos_relidos': relidos(lidos),
         'caminhos_fora_da_pasta': dict(fora.most_common(10)) if pasta_n else None,
+        'consumo': consumo_claude([log], desde),
     }
 
 
 # ------------------------------------------------------------------------ saída
 
-def medir(app, log=None, pasta=None, conversa=None, projetos=None, sessao=None):
+def medir(app, log=None, pasta=None, conversa=None, projetos=None, sessao=None, desde=None):
+    if desde and app != 'claude':
+        raise ErroSessao('--desde só vale para o Claude Code.')
     if app == 'antigravity':
         return medir_antigravity(Path(log) if log else log_antigravity(conversa))
     if app == 'codex':
@@ -384,15 +488,29 @@ def medir(app, log=None, pasta=None, conversa=None, projetos=None, sessao=None):
         if not log and sessao:
             tipo, achado = localizar_claude(sessao, projetos)
             if tipo != 'sessao':
-                return medir_subagente(achado)
+                return {**medir_subagente(achado), 'consumo': consumo_claude([achado], desde, incluir_subagentes=False)}
             log = achado
-        return medir_claude(Path(log) if log else log_claude(pasta, projetos), pasta)
+        return medir_claude(Path(log) if log else log_claude(pasta, projetos), pasta, desde)
     raise ErroSessao(f'Aplicativo desconhecido: {app}')
+
+
+def imprimir_consumo(c):
+    print('consumo' + (f' (desde {c["desde"]})' if c.get('desde') else '') + ':')
+    cab = ('agente', 'modelo', 'entrada', 'cache escrito', 'cache lido', 'saída')
+    linhas = [(x['agente'], x['modelo'], *(f'{x[k]:,}'.replace(',', '.') for k in ('entrada', 'cache_escrito', 'cache_lido', 'saida')))
+              for x in c['por_agente_e_modelo']]
+    t = c['total']
+    linhas.append(('total', '', *(f'{t[k]:,}'.replace(',', '.') for k in ('entrada', 'cache_escrito', 'cache_lido', 'saida'))))
+    larg = [max(len(str(r[i])) for r in [cab, *linhas]) for i in range(6)]
+    for r in [cab, *linhas]:
+        print('    ' + '  '.join(str(v).ljust(larg[i]) if i < 2 else str(v).rjust(larg[i]) for i, v in enumerate(r)))
 
 
 def imprimir(rel):
     for chave, valor in rel.items():
-        if isinstance(valor, dict):
+        if chave == 'consumo' and isinstance(valor, dict) and 'por_agente_e_modelo' in valor:
+            imprimir_consumo(valor)
+        elif isinstance(valor, dict):
             print(f'{chave}:')
             for k, v in (valor or {}).items():
                 print(f'    {v:>5}  {k}')
@@ -416,10 +534,11 @@ def main(argv=None):
     ap.add_argument('--conversa', help='identificador da conversa do Antigravity (pasta em brain/)')
     ap.add_argument('--sessao', help='identificador da sessão (ou do subagente) do Claude Code')
     ap.add_argument('--projetos', help='pasta de projetos do Claude Code (padrão: SC_CLAUDE_PROJETOS ou ~/.claude/projects)')
+    ap.add_argument('--desde', help='só o trecho a partir deste instante (ISO 8601; sem fuso, UTC); Claude Code')
     ap.add_argument('--json', action='store_true')
     a = ap.parse_args(argv)
     try:
-        rel = medir(a.app, a.log, a.pasta, a.conversa, a.projetos, a.sessao)
+        rel = medir(a.app, a.log, a.pasta, a.conversa, a.projetos, a.sessao, a.desde)
     except ErroSessao as e:
         print(f'erro: {e}', file=sys.stderr)
         return 1

@@ -111,14 +111,14 @@ def cmd_abrir(a):
 
 def cmd_decidir(a):
     return _executar(sc_ciclo.decidir, _soc(a, _id(a.etapa)), _id(a.etapa), a.acao, a.por, a.head, a.motivo, a.minutos, a.intervencoes,
-                     a.escaparam, a.log, a.sessao, a.projetos)
+                     a.escaparam, a.log, a.sessao, a.projetos, desde=a.desde)
 
 
 def cmd_sessao(a):
     import sc_sessao
     argv = [a.app] + (['--log', a.log] if a.log else []) + (['--pasta', a.pasta] if a.pasta else []) \
         + (['--conversa', a.conversa] if a.conversa else []) + (['--sessao', a.sessao] if a.sessao else []) \
-        + (['--projetos', a.projetos] if a.projetos else []) + (['--json'] if a.json else [])
+        + (['--projetos', a.projetos] if a.projetos else []) + (['--desde', a.desde] if a.desde else []) + (['--json'] if a.json else [])
     return sc_sessao.main(argv)
 
 
@@ -233,6 +233,7 @@ def main(argv=None):
     p.add_argument('--conversa')
     p.add_argument('--sessao', help='identificador da sessão (ou do subagente) do Claude Code')
     p.add_argument('--projetos', help='pasta de projetos do Claude Code')
+    p.add_argument('--desde', help='mede só o trecho a partir deste instante (ISO 8601; sem fuso, UTC)')
     p.add_argument('--json', action='store_true')
     p.set_defaults(func=cmd_sessao)
 
@@ -258,6 +259,7 @@ def main(argv=None):
     p.add_argument('--log', action='append', default=[], help='log de sessão para as métricas (repetível)')
     p.add_argument('--sessao', action='append', default=[], help='sessão do Claude Code para as métricas (repetível)')
     p.add_argument('--projetos', help='pasta de projetos do Claude Code')
+    p.add_argument('--desde', help='consumo só do trecho a partir deste instante (ISO 8601; sem fuso, UTC)')
     p.add_argument('--pasta-sociedade')
     p.set_defaults(func=cmd_decidir)
 

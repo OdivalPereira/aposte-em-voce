@@ -33,7 +33,8 @@ devolva: neste arquivo, na fatia <n>, e uma linha em `sociedade/historico.md`
      teto de 6 KB, conferido por sc_rodada.py lint;
      nivel é campo de máquina (rigor da rodada, padrão 2); ninguém precisa escolher (Q17);
      "leia só" começa com até 5 caminhos; mais que isso, com justificativa registrada (Q21);
+     cada agente lê só o que a ordem ou a subordem indicou, por trecho; retorno até 2 KB no chat, detalhe em arquivo;
      nenhuma fatia começa sem prova executada da anterior;
-     nenhum agente estima tokens, cota ou custo;
+     nenhum agente estima tokens, cota ou custo (medir pelo log é permitido);
      quem larga o bastão preenche "Para quem pega o bastão agora" antes de sair;
      execução e participação declaram aplicativo, fornecedor e modelo/esforço configurados (AJ-SC-E1-002 §4). -->

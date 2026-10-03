@@ -4,6 +4,15 @@ Versionamento semântico. Major: muda o comportamento a ponto de exigir ajuste n
 
 ## Não lançado
 
+Etapa `fechamento-nuvem`, fatia 1: economia de contexto; o uso sai do log da sessão.
+
+**Entrou**
+
+- **Consumo pelo log** (`sc_sessao.py`): `sc.py sessao claude` soma, por agente e por modelo, entrada, cache escrito, cache lido e saída, no log principal e em `subagents/`. Deduplica por id de mensagem (também entre arquivos; com valores divergentes, fica o de maior saída), ignora `<synthetic>` e registro sem uso. O agente vem do `.meta.json` ou de "Para: <Papel>" no primeiro pedido. `--desde <ISO 8601>` mede só o trecho (fuso `Z` ou offset; sem fuso, UTC; inválido é erro). `--json` traz tudo.
+- **`decidir` grava o consumo** (`sc_ciclo.py`, `sc_registro.py`, `sc_metricas.py`): `decidir aceitar` aceita `--desde`, grava `consumo` no evento `decisao_registrada` e acrescenta a coluna "Consumo (cache lido)" a `evolucao.md`, que ganha a coluna sozinha nas tabelas antigas (linhas antigas com `n/d`). Sem log, `n/d`. A linha nova entra na tabela, não no fim do arquivo.
+- **Regras de economia** nos textos do núcleo e das skills: conversa curta com estado em arquivo e agente novo; saída curta (resumo e falhas) e leitura por trecho; retorno de até 2 KB no chat, com o detalhe em arquivo (revisa a Q99, antes 8 KB); cada agente lê só o que a ordem ou a subordem indicou (Q21).
+- **Medir pelo log é permitido; estimar continua proibido** (ajusta a regra 8): o `validar_pacote.py` aceita "medir" com menção ao log e recusa estimar, calcular e relatar; `avaliacao-modelo.md` mantém a "Proibição Absoluta" e ganha a exceção.
+
 Etapa `m0-destravar`: uma etapa fecha só com comandos documentados.
 
 **Entrou**

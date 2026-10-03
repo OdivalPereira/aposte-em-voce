@@ -266,7 +266,7 @@ def _cabecalho_evolucao():
 
 
 def decidir(soc, etapa, acao, por=None, head=None, motivo=None, minutos=None, intervencoes=None, escaparam=None,
-            logs=(), sessoes=(), projetos=None):
+            logs=(), sessoes=(), projetos=None, desde=None):
     if acao not in ACOES:
         raise ErroCiclo(f'decisão inválida: "{acao}" (use {", ".join(ACOES)}).')
     soc = Path(soc)
@@ -296,7 +296,9 @@ def decidir(soc, etapa, acao, por=None, head=None, motivo=None, minutos=None, in
         if evolucao.is_file() and re.search(rf'^\|\s*{re.escape(etapa)}\s*\|', evolucao.read_text(encoding='utf-8'), re.M):
             raise ErroCiclo(f'evolucao.md já tem linha da etapa {etapa}.')
         try:
-            medidas = sc_metricas.medir_etapa(reg.dados, etapa, _logs(logs, sessoes, projetos), intervencoes, minutos, escaparam)
+            todos = _logs(logs, sessoes, projetos)
+            medidas = sc_metricas.medir_etapa(reg.dados, etapa, todos, intervencoes, minutos, escaparam,
+                                           desde=desde)
         except (ErroSessao, ValueError) as err:
             raise ErroCiclo(f'não consegui medir a etapa: {err}')
         if CRITERIO in e['criterios']:  # etapa aberta por `abrir`; as abertas por outro caminho têm critérios próprios
@@ -310,6 +312,9 @@ def decidir(soc, etapa, acao, por=None, head=None, motivo=None, minutos=None, in
     ref = motivo or (f'aceite do commit {commit[:12]}' if acao == 'aceitar' else f'{acao} sem motivo informado')
     # independência 'não' só no aceite em emulação; fora dela vale o nível do parecer (A = sim)
     extra = {'aceite_em_emulacao': True, 'independencia': 'não'} if (acao == 'aceitar' and emul) else {}
+    if acao == 'aceitar' and medidas['consumo']:
+        c = medidas['consumo']
+        extra['consumo'] = {**c, 'logs': len(todos)}
     try:
         reg.registrar_decisao(etapa, f'DEC-{etapa}-{acao}-{len(reg.eventos) + 1}', quem, ref, acao, autor=quem,
                               commit=commit, **extra)

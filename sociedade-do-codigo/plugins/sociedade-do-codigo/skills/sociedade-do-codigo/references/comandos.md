@@ -22,7 +22,7 @@ Durante a etapa, `abrir`, `entregar`, `conferir --registrar`, `revisar --parecer
 
 ## decidir
 
-- **aceitar** exige atestado aprovado e parecer válido do **mesmo SHA** (commit do atestado = commit do parecer, também registrado), com veredito diferente de "não aceitar" e cauda só de `sociedade/` até o head. Registra a evidência do portão, grava `aceite_em_emulacao` (se a chave do perfil estiver ligada) com independência "não", encerra a etapa e acrescenta a linha de `sociedade/evolucao.md`. Opções de medida (todas opcionais, ausente = `n/d`): `--minutos`, `--intervencoes`, `--escaparam`, `--sessao`, `--log`, `--projetos`.
+- **aceitar** exige atestado aprovado e parecer válido do **mesmo SHA** (commit do atestado = commit do parecer, também registrado), com veredito diferente de "não aceitar" e cauda só de `sociedade/` até o head. Registra a evidência do portão, grava `aceite_em_emulacao` (se a chave do perfil estiver ligada) com independência "não", encerra a etapa e acrescenta a linha de `sociedade/evolucao.md`. Opções de medida (todas opcionais, ausente = `n/d`): `--minutos`, `--intervencoes`, `--escaparam`, `--sessao`, `--log`, `--projetos`, `--desde <ISO 8601>`. Com log, grava `consumo` no evento e a coluna "Consumo (cache lido)"; sem log, `n/d`.
 - **corrigir** registra a decisão e deixa a etapa aberta: corrija, rode `entregar` e `revisar --parecer` de novo e decida outra vez.
 - **rejeitar** e **sem-aceite** registram a decisão e encerram a etapa sem aceite (`desfecho` no evento; nunca elegível à publicação). Não exigem atestado nem parecer: negar não pode depender deles.
 - O head da cauda é o ramo `etapa/<ID>`, ou o `HEAD`; `--head` troca.
