@@ -62,9 +62,9 @@ Ordem de execução: F1, F2 e F3 em paralelo (no máximo 3 subagentes ao mesmo t
 Os tipos `delegacoes claude` e `conversa_nova claude` são criados pela F2; a conferência roda com o `sc.py` do candidato (bootstrap).
 
 ```entregas
-E1 | commit_existe | etapa/m0-destravar
-E2 | arquivos_em | 3bff553..etapa/m0-destravar | sociedade-do-codigo/ | .github/
-E3 | atestado_aprovado | sociedade/pareceres/atestado-m0-destravar.json | etapa/m0-destravar
+E1 | commit_existe | fb3ae42
+E2 | arquivos_em | 3bff553..fb3ae42 | sociedade-do-codigo/ | .github/
+E3 | atestado_aprovado | sociedade/pareceres/atestado-m0-destravar.json | fb3ae42
 E4 | arquivo_existe | sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_ciclo.py
 E5 | arquivo_existe | sociedade-do-codigo/tests/adversarial
 E6 | delegacoes | claude | c87266ad-1a68-5d63-a2d1-02ee2db138d5 | 5
