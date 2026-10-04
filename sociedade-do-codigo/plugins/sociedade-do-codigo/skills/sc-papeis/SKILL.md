@@ -1,25 +1,27 @@
 ---
 name: sc-papeis
-description: Os papéis da Sociedade do Código (Círdan arquiteto, Barbárvore revisor independente, Gandalf coordenador, os especialistas Aragorn, Elrond, Galadriel e Legolas, e o Jules), o que cada um faz e não faz, as regras de ocupação R1 a R4 e como assumir um papel. Use ao assumir um papel, delegar a um deles ou montar a equipe de uma etapa.
+description: Papéis da Sociedade do Código (Círdan arquiteto, Barbárvore revisor independente, Gandalf coordenador, especialistas Aragorn, Elrond, Galadriel, Legolas e Jules), regras R1 a R4 e como assumir um papel. Use ao assumir papel, delegar ou montar a equipe.
 metadata:
   versao: "3.1.0"
 ---
 # Papéis da Sociedade do Código
 
-O papel é permanente. Quem o ocupa (plataforma, fornecedor, modelo, esforço) está na tabela "Papel × ferramenta" de `sociedade/perfil.md`. Trocar o ocupante: `sc_rodada.py papel trocar`, que confere R1 a R4.
+O papel é permanente. Quem o ocupa (plataforma, fornecedor, modelo, esforço) está na tabela "Papel × ferramenta" de `sociedade/perfil.md`.
+
+Trocar ocupante: `sc_rodada.py papel trocar` (com `--papel execucao` altera todos os especialistas ativos, Jules e locais). Emulação: `sc_rodada.py papel emulacao ligar|desligar` (ao desligar, confere R1–R3 no modo estrito). Passagem entre ferramentas: `sc.py passar` (Q175). Se a etapa mudar o perfil, crie o worktree antes da ordem.
 
 | Papel | Nome | Foco | Arquivo |
 |---|---|---|---|
 | Arquiteto | Círdan | Planeja com o usuário, escreve ordens; não revisa código | `references/papel-cirdan.md` |
-| Revisor independente | Barbárvore | Revisa o candidato consolidado; outro fornecedor; não corrige | `references/papel-barbarvore.md` |
+| Revisor independente | Barbárvore | Revisa candidato consolidado; outro fornecedor; não corrige | `references/papel-barbarvore.md` |
 | Coordenador | Gandalf | Divide, delega, integra, roda o portão | `references/papel-gandalf.md` |
 | Especialista | Aragorn | Coleta e procedência de fontes | `references/papel-aragorn.md` |
 | Especialista | Elrond | Dados, backend, acesso e promoção à produção | `references/papel-elrond.md` |
-| Especialista | Galadriel | Testes de comportamento e revisão interna de alto impacto | `references/papel-galadriel.md` |
+| Especialista | Galadriel | Testes e revisão interna de alto impacto | `references/papel-galadriel.md` |
 | Especialista | Legolas | Interface e acessibilidade | `references/papel-legolas.md` |
 | Executor em nuvem | Jules | Tarefas mecânicas delimitadas | `references/papel-jules.md` |
 
-Executores locais (Celebrimbor, Radagast, Faramir, Bilbo) são módulo opcional (`modulos/executores-locais/`), só se o perfil os ativar.
+Locais (Celebrimbor, Radagast, Faramir, Bilbo): módulo opcional `modulos/executores-locais/`.
 
 ## Regras de ocupação
 
@@ -41,3 +43,5 @@ Executores locais (Celebrimbor, Radagast, Faramir, Bilbo) são módulo opcional 
 - Um arquivo, um executor por fatia (`verificar_disjuncao.py`).
 - Ferramenta configurada que não existe nesta instalação: relate, não improvise.
 - Papel que só existe num projeto vai na seção "Papéis locais" do perfil.
+- Integrar é merge commit do PR, só com o "sim" do usuário na conversa; nega squash, rebase, auto e admin (Q174).
+- Passagem entre ferramentas (Q175): a cada passo em outra ferramenta, informe pasta e linha exatas (`sc.py passar`) e aguarde retorno.

@@ -1,5 +1,5 @@
 {
-  "_comentario": "Mescle em .claude/settings.json do projeto. As regras deny valem de imediato; extraKnownMarketplaces e enabledPlugins só depois que cada pessoa confia na pasta. Esforço: use /effort na sessão. Acrescente aqui o comando de publicação do seu projeto, se houver.",
+  "_comentario": "Mescle em .claude/settings.json do projeto. Travas da Sociedade (Q174): integrar é o merge commit do PR com o 'sim' do usuário na conversa (gh pr merge em ask; squash, rebase, auto e admin em deny). As regras deny valem de imediato; extraKnownMarketplaces e enabledPlugins só depois que cada pessoa confia na pasta. Esforço: use /effort na sessão. Acrescente aqui o comando de publicação do seu projeto, se houver.",
   "extraKnownMarketplaces": {
     "sociedade": {
       "source": {
@@ -12,10 +12,16 @@
     "sociedade-do-codigo@sociedade": true
   },
   "permissions": {
+    "ask": [
+      "Bash(gh pr merge*)"
+    ],
     "deny": [
       "Bash(git push *)",
       "Bash(git merge *)",
-      "Bash(gh pr merge *)",
+      "Bash(gh pr merge*--squash*)",
+      "Bash(gh pr merge*--rebase*)",
+      "Bash(gh pr merge*--auto*)",
+      "Bash(gh pr merge*--admin*)",
       "Bash(gh release *)",
       "Read(./.env)",
       "Read(./.env.*)"

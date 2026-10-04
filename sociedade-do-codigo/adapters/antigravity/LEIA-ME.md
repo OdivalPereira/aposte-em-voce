@@ -2,6 +2,16 @@
 
 Experimental, não homologado (Q65). As regras de cada papel estão só na skill `sc-papeis`; este arquivo trata de instalação.
 
+## Papel na formação real
+
+Na formação real da Sociedade do Código, o Antigravity é a ferramenta do **Gandalf (coordenador)** e dos **especialistas de execução** (Aragorn, Elrond, Galadriel e Legolas):
+- O coordenador é o agente principal da conversa e despacha fatias aos especialistas reais via subagentes (`invoke_subagent`).
+- Não há revisor independente neste adaptador: revisão de outro modelo Google é revisão interna (Galadriel), nunca independente (D-RT-001).
+
+## Passagem entre ferramentas (Q175)
+
+A execução no Antigravity é acionada pelo usuário a partir da linha gerada por `sc.py passar --etapa <ID> --para gandalf`, colada no Antigravity aberto na pasta do worktree da etapa (`~/.sociedade/trabalho/<projeto>/<etapa>`). O Gandalf confirma entendimento, executa as fatias por subagentes, roda o portão (`sc.py entregar`) e devolve até 2 KB no chat com o resumo para o usuário repassar ao Círdan.
+
 ## Plugin (skills do núcleo)
 
 `agy plugin install <caminho-do-pacote>/plugins/sociedade-do-codigo` (confirme a sintaxe com `agy plugin --help`). O plugin fica em `~/.gemini/config/plugins/` (as três variantes) ou, por projeto, em `.agents/plugins/`.
