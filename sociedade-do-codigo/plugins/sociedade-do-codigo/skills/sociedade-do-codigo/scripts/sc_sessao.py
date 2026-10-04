@@ -122,10 +122,17 @@ def inspecionar_base_antigravity(conversa=None):
 
 def log_antigravity(conversa=None):
     if conversa:
+        full = AG_BRAIN / conversa / '.system_generated' / 'logs' / 'transcript_full.jsonl'
+        if full.is_file():
+            return full
         arq = AG_BRAIN / conversa / '.system_generated' / 'logs' / 'transcript.jsonl'
         if not arq.is_file():
             raise ErroSessao(f'Conversa do Antigravity não encontrada: {conversa}')
         return arq
+    candidatos_full = sorted(AG_BRAIN.glob('*/.system_generated/logs/transcript_full.jsonl'),
+                             key=lambda p: p.stat().st_mtime, reverse=True)
+    if candidatos_full:
+        return candidatos_full[0]
     candidatos = sorted(AG_BRAIN.glob('*/.system_generated/logs/transcript.jsonl'),
                         key=lambda p: p.stat().st_mtime, reverse=True)
     if not candidatos:
@@ -139,14 +146,23 @@ def medir_antigravity(log):
     delegacoes_por_ordem, testes, ordens = [], 0, 0
     for o in passos:
         if o.get('type') == 'USER_INPUT':
-            ordens += 1
-            delegacoes_por_ordem.append(0)
+            txt = str(o.get('content', ''))
+            if not ordens or re.search(r'\bPara:\s*\w+', txt, re.I) or re.search(r'\bordem\b', txt, re.I):
+                ordens += 1
+                delegacoes_por_ordem.append(0)
         for tc in o.get('tool_calls') or []:
             nome = tc.get('name')
             ferramentas[nome] += 1
             args = tc.get('args', {}) or {}
             if nome == 'invoke_subagent' and delegacoes_por_ordem:
-                delegacoes_por_ordem[-1] += 1
+                subs = args.get('Subagents') or []
+                if isinstance(subs, str):
+                    try:
+                        subs = json.loads(subs, strict=False)
+                    except Exception:
+                        subs = [1] * (len(re.findall(r'"(?:Role|TypeName)"\s*:', subs)) or 1)
+                qtd = len(subs) if isinstance(subs, list) and subs else 1
+                delegacoes_por_ordem[-1] += qtd
             if nome == 'view_file':
                 lidos[str(args.get('AbsolutePath', '')).strip('"').replace(str(HOME), '~')] += 1
             if nome == 'run_command':

@@ -2,7 +2,7 @@
 name: sc-papeis
 description: Papéis da Sociedade do Código (Círdan arquiteto, Barbárvore revisor independente, Gandalf coordenador, especialistas Aragorn, Elrond, Galadriel, Legolas e Jules), regras R1 a R4 e como assumir um papel. Use ao assumir papel, delegar ou montar a equipe.
 metadata:
-  versao: "3.1.0"
+  versao: "3.2.0"
 ---
 # Papéis da Sociedade do Código
 

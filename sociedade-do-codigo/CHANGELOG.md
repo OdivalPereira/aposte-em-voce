@@ -2,6 +2,20 @@
 
 Versionamento semântico. Major: muda o comportamento a ponto de exigir ajuste nos projetos.
 
+## 3.2.0 (04/10/2026)
+
+Etapa `d1-design`: prontidão para a formação real e resolução das lacunas L1–L8.
+
+**Entrou**
+
+- **L1 (Emulação):** `sc_rodada.py papel emulacao ligar|desligar` com conferência estrita de R1–R3 e evento em cadeia de hash.
+- **L2 (Execução):** `papel trocar --papel execucao` altera todos os especialistas ativos; alcança Jules e executores em espera.
+- **L3 (Passagem):** `sc.py passar --etapa <ID> --para gandalf|barbarvore` imprime ferramenta, caminho e comando exato, gravando evento `passagem`.
+- **L4 (Sessão):** `sc.py sessao codex` mede logs do Codex; `sc.py sessao antigravity` informa estado sem quebrar.
+- **L5 e L6 (Formação real):** adaptadores e documentação alinhados a merge commit com autorização de Odival (Q174) e passagem entre ferramentas (Q175).
+- **L7 (Ordem em worktree):** `sc.py ordem` grava no worktree da etapa quando ele existir.
+- **L8 (@etapa no Antigravity):** resolução unívoca da conversa da etapa para conferência de delegações e conversa nova.
+
 ## 3.1.0 (03/10/2026)
 
 Versão de transição: o que as sessões em nuvem de 03/10/2026 mudaram no método. A 4.0.0 sai depois da revisão do diff acumulado e das regras finais (F1–F5).

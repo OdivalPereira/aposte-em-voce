@@ -111,12 +111,21 @@ def resolver_conversa_etapa(etapa, pasta_sociedade=None, brain_dir=None, summari
 
     passagem_ev = passagens[-1]
     ts_str = passagem_ev.get('timestamp') or (passagem_ev.get('dados') or {}).get('data_hora')
+    etapa_aberta_ev = next((ev for ev in eventos if ev.get('tipo') == 'etapa_aberta' and (ev.get('dados') or {}).get('etapa_id') == etapa), None)
+    ts_aberta_str = (etapa_aberta_ev.get('timestamp') if etapa_aberta_ev else None) or ts_str
     try:
         ts_passagem = datetime.fromisoformat(str(ts_str).replace('Z', '+00:00'))
         if ts_passagem.tzinfo is None:
             ts_passagem = ts_passagem.replace(tzinfo=timezone.utc)
     except Exception:
         ts_passagem = datetime.min.replace(tzinfo=timezone.utc)
+    try:
+        ts_aberta = datetime.fromisoformat(str(ts_aberta_str).replace('Z', '+00:00'))
+        if ts_aberta.tzinfo is None:
+            ts_aberta = ts_aberta.replace(tzinfo=timezone.utc)
+    except Exception:
+        ts_aberta = ts_passagem
+    ts_limite = min(ts_passagem, ts_aberta)
 
     b_dir = Path(brain_dir) if brain_dir else (Path.home() / '.gemini' / 'antigravity' / 'brain')
     s_db = Path(summaries_db) if summaries_db else (Path.home() / '.gemini' / 'antigravity' / 'conversation_summaries.db')
@@ -137,34 +146,49 @@ def resolver_conversa_etapa(etapa, pasta_sociedade=None, brain_dir=None, summari
                         if t_dt.tzinfo is None:
                             t_dt = t_dt.replace(tzinfo=timezone.utc)
                     except Exception:
-                        t_dt = ts_passagem
-                    if t_dt >= ts_passagem:
+                        t_dt = ts_limite
+                    if t_dt >= ts_limite:
                         candidatas.add(cid)
             conn.close()
         except Exception:
             pass
 
     if b_dir and b_dir.is_dir():
-        for t_file in b_dir.glob('*/.system_generated/logs/transcript.jsonl'):
+        for t_file in b_dir.glob('*/.system_generated/logs/transcript*.jsonl'):
             cid = t_file.parents[2].name
             if cid in candidatas:
                 continue
             try:
                 with t_file.open(encoding='utf-8', errors='replace') as f:
                     primeira_linha = f.readline()
-                if str(pasta_wt) in primeira_linha:
+                if str(pasta_wt) in primeira_linha or f"ordens/{etapa}.md" in primeira_linha or f"{etapa}.md" in primeira_linha:
                     o = json.loads(primeira_linha)
                     c_at = o.get('created_at')
                     if c_at:
                         t_dt = datetime.fromisoformat(str(c_at).replace('Z', '+00:00'))
                         if t_dt.tzinfo is None:
                             t_dt = t_dt.replace(tzinfo=timezone.utc)
-                        if t_dt >= ts_passagem:
+                        if t_dt >= ts_limite:
                             candidatas.add(cid)
                     else:
                         candidatas.add(cid)
             except Exception:
                 continue
+
+    if len(candidatas) > 1 and b_dir and b_dir.is_dir():
+        gandalf_cands = set()
+        for cid in candidatas:
+            t_file = b_dir / cid / '.system_generated' / 'logs' / 'transcript.jsonl'
+            if t_file.is_file():
+                try:
+                    with t_file.open(encoding='utf-8', errors='replace') as f:
+                        line1 = f.readline()
+                    if 'Para: Gandalf' in line1 or 'para: gandalf' in line1.lower():
+                        gandalf_cands.add(cid)
+                except Exception:
+                    pass
+        if gandalf_cands:
+            candidatas = gandalf_cands
 
     if not candidatas:
         return None, f'nenhuma conversa do Antigravity encontrada para a etapa "{etapa}" após a passagem'

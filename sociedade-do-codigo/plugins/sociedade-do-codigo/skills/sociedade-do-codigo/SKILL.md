@@ -2,7 +2,7 @@
 name: sociedade-do-codigo
 description: Método da Sociedade do Código: arquiteto (Círdan), coordenador e especialistas (Gandalf e equipe), revisor independente (Barbárvore) e conferência automática. Traz pipeline, regras e comandos. Use quando o usuário acionar a Sociedade ou receber uma ordem. Fora disso, não use.
 metadata:
-  versao: "3.1.0"
+  versao: "3.2.0"
 ---
 # Sociedade do Código: núcleo
 
