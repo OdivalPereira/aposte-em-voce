@@ -45,7 +45,7 @@ def _git(raiz, *args):
 
 
 def cmd_ordem(a):
-    soc = Path(a.pasta_sociedade) if a.pasta_sociedade else localizar_sociedade_canonica()
+    soc = _soc(a, _id(a.etapa))
     destino = soc / 'ordens' / f'{_id(a.etapa)}.md'
     if destino.exists():
         raise SystemExit(f'erro: a ordem já existe: {destino}')
@@ -53,6 +53,90 @@ def cmd_ordem(a):
     destino.parent.mkdir(parents=True, exist_ok=True)
     destino.write_text(modelo.replace('<ID>', a.etapa), encoding='utf-8')
     print(f'ordem criada: {destino}\nPreencha objetivo, leitura, fatias e o bloco de entregas; depois peça a aprovação do usuário.')
+    return 0
+
+
+def cmd_passar(a):
+    etapa = _id(a.etapa)
+    para = a.para.lower()
+    soc = _soc(a, etapa)
+    from sc_perfil import carregar_perfil
+    perfil = carregar_perfil(soc)
+    reg = None
+    try:
+        from sc_registro import Registro
+        reg = Registro(soc)
+    except Exception:
+        pass
+
+    if para == 'gandalf':
+        p_info = perfil.obter_papel('coordenador') or perfil.obter_papel('gandalf') or {}
+        ferramenta = p_info.get('plataforma') or 'Antigravity'
+        modelo = p_info.get('modelo') or 'Gemini 3.8 Flash'
+        esforco = p_info.get('esforco') or 'high'
+        if a.pasta_sociedade:
+            pasta_wt = Path(a.pasta_sociedade).parent.resolve()
+        else:
+            pasta_wt = localizar_sociedade_da_etapa(etapa, pasta_base=soc).parent.resolve()
+        if not pasta_wt.exists():
+            raise SystemExit(f'erro: pasta do worktree da etapa não encontrada: {pasta_wt}')
+        linha1 = f"{ferramenta}, {modelo}, esforço {esforco} (conversa nova)"
+        linha2 = str(pasta_wt)
+        linha3 = f"Para: Gandalf. Execute a ordem sociedade/ordens/{etapa}.md."
+    elif para == 'barbarvore':
+        p_info = perfil.obter_papel('revisor') or perfil.obter_papel('barbarvore') or {}
+        ferramenta = p_info.get('plataforma') or 'Codex'
+        modelo = p_info.get('modelo') or 'GPT-6 Sol'
+        esforco = p_info.get('esforco') or 'high'
+        raiz = soc.parent
+        projeto = re.sub(r'[^A-Za-z0-9._-]+', '_', raiz.name)
+        pasta_rev = (raiz.parent / f'revisao-{etapa}').resolve()
+        if not pasta_rev.exists():
+            pasta_rev = (Path.home() / '.sociedade' / 'trabalho' / projeto / f'revisao-{etapa}').resolve()
+        if not pasta_rev.exists():
+            pasta_alt = (Path.home() / '.sociedade' / 'revisar' / projeto / etapa).resolve()
+            if pasta_alt.exists():
+                pasta_rev = pasta_alt
+        if not pasta_rev.exists():
+            raise SystemExit(f'erro: cópia de revisão não encontrada: {pasta_rev}')
+        ordem_path = soc / 'ordens' / f'{etapa}.md'
+        rev_linha = ''
+        if ordem_path.is_file():
+            for l in ordem_path.read_text(encoding='utf-8').splitlines():
+                l_strip = l.strip()
+                if l_strip.lower().startswith(('revisão independente:', 'revisao independente:')):
+                    rev_linha = l_strip
+                    break
+        if not rev_linha:
+            rev_linha = f"Revisão independente da etapa {etapa}."
+        linha1 = f"{ferramenta}, {modelo}, esforço {esforco} (conversa nova)"
+        linha2 = str(pasta_rev)
+        linha3 = f"Para: Barbárvore. {rev_linha} Parecer: revisao-saida/parecer.md."
+    else:
+        raise SystemExit(f'erro: papel de destino inválido: "{para}". Use "gandalf" ou "barbarvore".')
+
+    if reg:
+        from sc_registro import agora_iso
+        def gerador(dados):
+            return [{
+                'tipo': 'passagem',
+                'dados': {
+                    'etapa': etapa,
+                    'para': para,
+                    'papel': 'coordenador' if para == 'gandalf' else 'revisor',
+                    'ferramenta': ferramenta,
+                    'modelo': modelo,
+                    'esforco': esforco,
+                    'pasta': linha2,
+                    'linha': linha3,
+                    'data_hora': agora_iso(),
+                }
+            }]
+        reg.aplicar_mutacao(gerador, autor='Círdan', aplicar=True)
+
+    print(linha1)
+    print(linha2)
+    print(linha3)
     return 0
 
 
@@ -200,6 +284,12 @@ def main(argv=None):
     p.add_argument('--etapa', required=True)
     p.add_argument('--pasta-sociedade')
     p.set_defaults(func=cmd_ordem)
+
+    p = sub.add_parser('passar', help='passagem entre ferramentas (Q175)')
+    p.add_argument('--etapa', required=True)
+    p.add_argument('--para', required=True, choices=['gandalf', 'barbarvore'], help='papel de destino')
+    p.add_argument('--pasta-sociedade')
+    p.set_defaults(func=cmd_passar)
 
     p = sub.add_parser('abrir', help='abre a etapa no registro a partir da ordem aprovada')
     p.add_argument('--etapa', required=True, help='ID novo: minúsculas, números e "-" (até 40)')

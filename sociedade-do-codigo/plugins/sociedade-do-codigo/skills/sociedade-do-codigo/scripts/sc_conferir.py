@@ -80,6 +80,100 @@ def _sha256(caminho):
     return hashlib.sha256(Path(caminho).read_bytes()).hexdigest()
 
 
+def resolver_conversa_etapa(etapa, pasta_sociedade=None, brain_dir=None, summaries_db=None):
+    """Resolve @<etapa> para o ID da conversa do Antigravity aberta no worktree após a passagem para Gandalf."""
+    from sc_registro import Registro, localizar_sociedade_da_etapa, localizar_sociedade_canonica
+    try:
+        soc = Path(pasta_sociedade) if pasta_sociedade else localizar_sociedade_da_etapa(etapa)
+    except Exception:
+        soc = None
+
+    if not soc or not soc.is_dir():
+        soc = localizar_sociedade_canonica()
+
+    pasta_wt = soc.parent.resolve() if soc else None
+    if not pasta_wt or not pasta_wt.exists():
+        return None, f'worktree da etapa "{etapa}" não encontrado'
+
+    try:
+        reg = Registro(soc)
+        eventos = reg.dados.get('eventos', [])
+    except Exception as e:
+        return None, f'erro ao ler registro da etapa "{etapa}": {e}'
+
+    passagens = [
+        ev for ev in eventos
+        if ev.get('tipo') == 'passagem' and (ev.get('dados') or {}).get('para') == 'gandalf'
+        and (not (ev.get('dados') or {}).get('etapa') or (ev.get('dados') or {}).get('etapa') == etapa)
+    ]
+    if not passagens:
+        return None, f'nenhum evento de passagem para o Gandalf registrado na etapa "{etapa}"'
+
+    passagem_ev = passagens[-1]
+    ts_str = passagem_ev.get('timestamp') or (passagem_ev.get('dados') or {}).get('data_hora')
+    try:
+        ts_passagem = datetime.fromisoformat(str(ts_str).replace('Z', '+00:00'))
+        if ts_passagem.tzinfo is None:
+            ts_passagem = ts_passagem.replace(tzinfo=timezone.utc)
+    except Exception:
+        ts_passagem = datetime.min.replace(tzinfo=timezone.utc)
+
+    b_dir = Path(brain_dir) if brain_dir else (Path.home() / '.gemini' / 'antigravity' / 'brain')
+    s_db = Path(summaries_db) if summaries_db else (Path.home() / '.gemini' / 'antigravity' / 'conversation_summaries.db')
+
+    candidatas = set()
+
+    if s_db and s_db.is_file():
+        try:
+            import sqlite3
+            conn = sqlite3.connect(s_db)
+            cur = conn.cursor()
+            cur.execute("SELECT conversation_id, last_user_input_time, last_modified_time, workspace_uris FROM conversation_summaries")
+            for cid, l_input, l_mod, uris in cur.fetchall():
+                if str(pasta_wt) in str(uris):
+                    t_str = l_input or l_mod
+                    try:
+                        t_dt = datetime.fromisoformat(str(t_str).replace('Z', '+00:00'))
+                        if t_dt.tzinfo is None:
+                            t_dt = t_dt.replace(tzinfo=timezone.utc)
+                    except Exception:
+                        t_dt = ts_passagem
+                    if t_dt >= ts_passagem:
+                        candidatas.add(cid)
+            conn.close()
+        except Exception:
+            pass
+
+    if b_dir and b_dir.is_dir():
+        for t_file in b_dir.glob('*/.system_generated/logs/transcript.jsonl'):
+            cid = t_file.parents[2].name
+            if cid in candidatas:
+                continue
+            try:
+                with t_file.open(encoding='utf-8', errors='replace') as f:
+                    primeira_linha = f.readline()
+                if str(pasta_wt) in primeira_linha:
+                    o = json.loads(primeira_linha)
+                    c_at = o.get('created_at')
+                    if c_at:
+                        t_dt = datetime.fromisoformat(str(c_at).replace('Z', '+00:00'))
+                        if t_dt.tzinfo is None:
+                            t_dt = t_dt.replace(tzinfo=timezone.utc)
+                        if t_dt >= ts_passagem:
+                            candidatas.add(cid)
+                    else:
+                        candidatas.add(cid)
+            except Exception:
+                continue
+
+    if not candidatas:
+        return None, f'nenhuma conversa do Antigravity encontrada para a etapa "{etapa}" após a passagem'
+    if len(candidatas) > 1:
+        return None, f'ambiguidade: {len(candidatas)} conversas do Antigravity encontradas para a etapa "{etapa}" após a passagem'
+
+    return list(candidatas)[0], None
+
+
 def conferir_item(item, raiz):
     tipo, args = item['tipo'], item['args']
     if any(MARCADOR.search(a) for a in args) or not args:
@@ -166,13 +260,22 @@ def conferir_item(item, raiz):
         from sc_sessao import medir, ErroSessao
         if args[0] not in ('antigravity', 'claude') or len(args) < 2:
             return NAO_PREENCHIDO, 'use "antigravity | <conversa>" ou "claude | <sessão>"'
+        ident = args[1].strip()
+        if args[0] == 'antigravity' and ident.startswith('@'):
+            etapa_alvo = ident[1:].strip()
+            if not etapa_alvo or etapa_alvo == 'etapa':
+                etapa_alvo = raiz.name
+            conv_id, motivo = resolver_conversa_etapa(etapa_alvo, pasta_sociedade=raiz / 'sociedade')
+            if not conv_id:
+                return NAO_FEITO, motivo
+            ident = conv_id
         try:
             if args[0] == 'claude':
-                m = medir('claude', sessao=args[1])
+                m = medir('claude', sessao=ident)
             else:
-                m = medir('antigravity', conversa=args[1])
+                m = medir('antigravity', conversa=ident)
         except ErroSessao as e:
-            return (NAO_FEITO if args[0] == 'claude' else NAO_VERIFICADO), str(e)
+            return NAO_FEITO, str(e)
         if tipo == 'conversa_nova':
             return (FEITO, '1 ordem na conversa') if m['conversa_nova'] else \
                    (NAO_FEITO, f'{m["ordens_na_conversa"]} ordens na mesma conversa')

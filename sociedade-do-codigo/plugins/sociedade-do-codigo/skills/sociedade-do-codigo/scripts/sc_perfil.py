@@ -34,6 +34,8 @@ PAPEIS_CANONICOS = {
     'arquiteto': {'arquiteto', 'cirdan'},
     'revisor': {'revisor', 'revisor_independente', 'barbarvore'},
     'coordenador': {'coordenador', 'coordenacao', 'coordenacao_e_execucao', 'execucao', 'gandalf'},
+    'jules': {'jules', 'executor_junior_em_nuvem', 'executor_junior'},
+    'executores_locais': {'executores_locais', 'executores', 'executor_local', 'celebrimbor', 'radagast', 'faramir', 'bilbo'},
 }
 PAPEIS_CANONICOS['execucao'] = PAPEIS_CANONICOS['coordenador']
 
@@ -420,9 +422,13 @@ class PerfilProjeto:
             p_papel = _slug(p['papel'])
             nomes = {_slug(x) for x in re.split(r',|\se\s', p['nome']) if _slug(x)}
             nomes.add(_slug(p['nome']))
-            if p_papel in rotulos or s in nomes or (cid and cid in nomes):
+            if p_papel in rotulos or s in nomes or (cid and cid in nomes) or any(r in nomes for r in rotulos):
                 encontrados.append(p)
         if len(encontrados) > 1:
+            if s == 'execucao':
+                por_coord = [p for p in encontrados if _slug(p['papel']) in PAPEIS_CANONICOS['coordenador']]
+                if por_coord:
+                    return por_coord[0]
             por_papel = [p for p in encontrados if _slug(p['papel']) in rotulos]
             if len(por_papel) == 1:
                 return por_papel[0]
@@ -538,6 +544,7 @@ def atualizar_papel_no_texto(texto_md: str, papel: str, plataforma=None, fornece
     papel_norm = _slug(papel)
     rotulos = PAPEIS_CANONICOS.get(papel_norm, {papel_norm})
     casados = 0
+    linhas_alteradas = 0
     desde_str = desde or datetime.now(timezone.utc).strftime('%Y-%m-%d')
     tabela_ativa = False
     col_map = {}
@@ -559,28 +566,67 @@ def atualizar_papel_no_texto(texto_md: str, papel: str, plataforma=None, fornece
                 # Linha de dados da tabela de papéis
                 if 'papel' in col_map and col_map['papel'] < len(celulas):
                     p_atual = _slug(celulas[col_map['papel']])
-                    if p_atual in rotulos:
+                    st_atual = _slug(celulas[col_map['estado']]) if 'estado' in col_map and col_map['estado'] < len(celulas) else 'ativo'
+                    nomes_atual = set()
+                    if 'nome' in col_map and col_map['nome'] < len(celulas):
+                        nomes_atual = {_slug(x) for x in re.split(r',|\se\s', celulas[col_map['nome']]) if _slug(x)}
+
+                    eh_alvo = False
+                    if papel_norm == 'execucao':
+                        # Altera coordenador e todos os especialistas ativos
+                        if p_atual in PAPEIS_CANONICOS['coordenador']:
+                            eh_alvo = True
+                        elif st_atual == 'ativo' and p_atual not in ('arquiteto', 'cirdan', 'revisor', 'revisor_independente', 'barbarvore', 'jules', 'executor_junior_em_nuvem', 'executores_locais', 'executores'):
+                            eh_alvo = True
+                    else:
+                        if p_atual in rotulos or any(n in rotulos for n in nomes_atual) or papel_norm in nomes_atual:
+                            eh_alvo = True
+
+                    if eh_alvo:
                         casados += 1
-                        if plataforma and 'plataforma' in col_map:
-                            celulas[col_map['plataforma']] = plataforma
-                        if fornecedor and 'fornecedor' in col_map:
-                            celulas[col_map['fornecedor']] = fornecedor
-                        if modelo and 'modelo' in col_map:
-                            celulas[col_map['modelo']] = modelo
+                        substancial = False
+                        if plataforma and 'plataforma' in col_map and _slug(celulas[col_map['plataforma']]) != _slug(plataforma):
+                            substancial = True
+                        if fornecedor and 'fornecedor' in col_map and _slug(celulas[col_map['fornecedor']]) != _slug(fornecedor):
+                            substancial = True
+                        if modelo and 'modelo' in col_map and _slug(celulas[col_map['modelo']]) != _slug(modelo):
+                            substancial = True
                         if esforco:
                             for k in ('esforco', 'esforço'):
-                                if k in col_map:
-                                    celulas[col_map[k]] = esforco
+                                if k in col_map and _slug(celulas[col_map[k]]) != _slug(esforco):
+                                    substancial = True
                         if estado:
                             for k in col_map:
-                                if 'estado' in k:
-                                    celulas[col_map[k]] = estado
-                        if 'desde' in col_map:
-                            celulas[col_map['desde']] = desde_str
+                                if 'estado' in k and _slug(celulas[col_map[k]]) != _slug(estado):
+                                    substancial = True
                         if motivo:
                             for k in ('motivo', 'observacao', 'observacoes'):
-                                if k in col_map:
-                                    celulas[col_map[k]] = motivo
+                                if k in col_map and celulas[col_map[k]].strip() != motivo.strip():
+                                    substancial = True
+
+                        if substancial:
+                            if plataforma and 'plataforma' in col_map:
+                                celulas[col_map['plataforma']] = plataforma
+                            if fornecedor and 'fornecedor' in col_map:
+                                celulas[col_map['fornecedor']] = fornecedor
+                            if modelo and 'modelo' in col_map:
+                                celulas[col_map['modelo']] = modelo
+                            if esforco:
+                                for k in ('esforco', 'esforço'):
+                                    if k in col_map:
+                                        celulas[col_map[k]] = esforco
+                            if estado:
+                                for k in col_map:
+                                    if 'estado' in k:
+                                        celulas[col_map[k]] = estado
+                            if 'desde' in col_map:
+                                celulas[col_map['desde']] = desde_str
+                            if motivo:
+                                for k in ('motivo', 'observacao', 'observacoes'):
+                                    if k in col_map:
+                                        celulas[col_map[k]] = motivo
+                            linhas_alteradas += 1
+
                         linha_recriada = '| ' + ' | '.join(celulas) + ' |'
                         nova_linhas.append(linha_recriada)
                         continue
@@ -588,9 +634,15 @@ def atualizar_papel_no_texto(texto_md: str, papel: str, plataforma=None, fornece
             tabela_ativa = False
         nova_linhas.append(linha)
 
-    if casados != 1:
+    if casados == 0:
+        raise ErroPerfil(f'Papel "{papel}" não encontrado na tabela de papéis.')
+    if papel_norm != 'execucao' and casados > 1:
         raise ErroPerfil(
             f'Troca recusada: o papel "{papel}" casa com {casados} linhas da tabela de papéis (esperado: exatamente 1).'
+        )
+    if linhas_alteradas == 0:
+        raise ErroPerfil(
+            f'Troca recusada: nenhuma linha do perfil foi alterada (valores já eram idênticos ou nenhuma modificação).'
         )
     return '\n'.join(nova_linhas) + ('\n' if texto_md.endswith('\n') else '')
 
@@ -604,6 +656,50 @@ def atualizar_papel(caminho_ou_pasta, papel, plataforma=None, fornecedor=None,
         texto, papel, plataforma=plataforma, fornecedor=fornecedor,
         modelo=modelo, esforco=esforco, estado=estado, motivo=motivo, desde=desde
     )
+    tmp = caminho.with_name(caminho.name + '.tmp')
+    tmp.write_text(novo_texto, encoding='utf-8')
+    os.replace(tmp, caminho)
+    return caminho
+
+
+def atualizar_emulacao_no_texto(texto_md: str, ligar: bool, motivo: str = '') -> str:
+    """Atualiza a linha do modo emulação na seção '## Modo emulação' do perfil.md."""
+    linhas = texto_md.splitlines()
+    novas_linhas = []
+    dentro_secao = False
+    alterou = False
+
+    val_str = 'sim' if ligar else 'não'
+    motivo_limpo = (motivo or '').strip()
+    nova_linha = f"- **Emulação:** {val_str}. {motivo_limpo}" if motivo_limpo else f"- **Emulação:** {val_str}."
+
+    for linha in linhas:
+        t = _TITULO_MD.match(linha)
+        if t:
+            titulo = re.sub(r'\s*\([^)]*\)$', '', _remover_acentos(t.group(1)).lower().strip())
+            dentro_secao = (titulo == 'modo emulacao')
+            novas_linhas.append(linha)
+            continue
+        if dentro_secao:
+            m = _LINHA_EMULACAO.match(_remover_acentos(linha).lower().strip())
+            if m:
+                novas_linhas.append(nova_linha)
+                alterou = True
+                dentro_secao = False
+                continue
+        novas_linhas.append(linha)
+
+    if not alterou:
+        raise ErroPerfil('Não foi possível encontrar a linha "- **Emulação:**" na seção "Modo emulação" do perfil.')
+
+    return '\n'.join(novas_linhas) + ('\n' if texto_md.endswith('\n') else '')
+
+
+def atualizar_emulacao(caminho_ou_pasta, ligar: bool, motivo: str = '') -> Path:
+    """Atualiza a linha de modo emulação no arquivo perfil.md em disco."""
+    caminho = localizar_perfil(caminho_ou_pasta)
+    texto = caminho.read_text(encoding='utf-8')
+    novo_texto = atualizar_emulacao_no_texto(texto, ligar=ligar, motivo=motivo)
     tmp = caminho.with_name(caminho.name + '.tmp')
     tmp.write_text(novo_texto, encoding='utf-8')
     os.replace(tmp, caminho)

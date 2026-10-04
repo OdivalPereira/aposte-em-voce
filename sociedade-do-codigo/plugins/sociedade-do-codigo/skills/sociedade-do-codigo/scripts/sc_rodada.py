@@ -1307,7 +1307,7 @@ def _norm(texto):
     return (texto or '').strip().lower()
 
 
-def resolver_destino(perfil, papel, para=None, fornecedor=None, modelo=None, esforco=None):
+def resolver_destino(perfil, papel, para=None, fornecedor=None, modelo=None, esforco=None, estado='ativo'):
     """Plataforma, fornecedor, modelo e esforço do destino, sem nenhum valor fixo no código (M5, Q61).
 
     Sem --para, mantém a plataforma atual do papel (troca só de estado ou esforço). Com --para, o
@@ -1318,8 +1318,10 @@ def resolver_destino(perfil, papel, para=None, fornecedor=None, modelo=None, esf
     if not para:
         if not atual:
             raise ErroTroca(f'Papel "{papel}" não encontrado no perfil.')
-        return (atual.get('plataforma'), fornecedor or atual.get('fornecedor'),
-                modelo or atual.get('modelo'), esforco or atual.get('esforco'))
+        return (atual.get('plataforma') or ('—' if estado == 'espera' else None),
+                fornecedor or atual.get('fornecedor') or ('—' if estado == 'espera' else None),
+                modelo or atual.get('modelo') or ('—' if estado == 'espera' else None),
+                esforco or atual.get('esforco') or ('—' if estado == 'espera' else 'padrão'))
     forn = fornecedor
     if not forn:
         fornecedores = {p['fornecedor'] for p in perfil.listar_papeis()
@@ -1327,11 +1329,17 @@ def resolver_destino(perfil, papel, para=None, fornecedor=None, modelo=None, esf
         if len(fornecedores) > 1:
             raise ErroTroca(f'A plataforma "{para}" aparece no perfil com fornecedores diferentes: {sorted(fornecedores)}. Informe --fornecedor.')
         if not fornecedores:
-            raise ErroTroca(f'A plataforma "{para}" não está no perfil. Informe --fornecedor e --modelo.')
-        forn = fornecedores.pop()
+            if estado == 'espera':
+                forn = '—'
+            else:
+                raise ErroTroca(f'A plataforma "{para}" não está no perfil. Informe --fornecedor e --modelo.')
+        else:
+            forn = fornecedores.pop()
     # Modelo ausente (None) é cobrado depois das regras invariantes, para a violação aparecer primeiro.
     mod = modelo or (atual.get('modelo') if _norm(forn) == _norm(atual.get('fornecedor')) else None)
-    return para, forn, mod, esforco or atual.get('esforco') or 'padrão'
+    if not mod and estado == 'espera':
+        mod = atual.get('modelo') or '—'
+    return para, forn, mod, esforco or atual.get('esforco') or ('—' if estado == 'espera' else 'padrão')
 
 
 def validar_regras_troca(papel, novo_estado, nova_plataforma, novo_fornecedor, perfil, reg, decisao_ref=None,
@@ -1350,8 +1358,8 @@ def validar_regras_troca(papel, novo_estado, nova_plataforma, novo_fornecedor, p
     novo_forn = _norm(novo_fornecedor)
 
     # R1: arquiteto e revisor nunca na mesma plataforma de assinatura ao mesmo tempo
-    if papel_norm in ('arquiteto', 'revisor'):
-        outro_nome = 'revisor' if papel_norm == 'arquiteto' else 'arquiteto'
+    if 'arquiteto' in papel_norm or 'revisor' in papel_norm:
+        outro_nome = 'revisor' if 'arquiteto' in papel_norm else 'arquiteto'
         outro = perfil.obter_papel(outro_nome) if perfil else None
         if outro and outro.get('estado') == 'ativo':
             mesma_plat = _norm(outro.get('plataforma')) == _norm(nova_plataforma) and nova_plataforma
@@ -1363,7 +1371,7 @@ def validar_regras_troca(papel, novo_estado, nova_plataforma, novo_fornecedor, p
                 )
 
     # R2: o revisor nunca é do fornecedor de algum implementador da etapa aberta (D03: sem lista vazia)
-    if papel_norm == 'revisor':
+    if 'revisor' in papel_norm:
         etapa_atual = (reg.estado().get('etapa_atual') or {}) if reg else {}
         if etapa_atual and etapa_atual.get('estado') == 'aberta':
             impls = reg.implementadores_da_etapa(etapa_atual.get('id'), perfil=perfil)
@@ -1382,13 +1390,19 @@ def validar_regras_troca(papel, novo_estado, nova_plataforma, novo_fornecedor, p
                     )
 
     # R3: execução só com Google, salvo decisão registrada específica (D04)
-    if papel_norm in ('execucao', 'coordenador') and novo_forn != 'google':
+    if not any(k in papel_norm for k in ('arquiteto', 'revisor', 'cirdan', 'barbarvore')) and novo_forn != 'google':
         decisao = None
         if decisao_ref and reg:
             for ev in reg.dados.get('eventos', []):
                 d = ev.get('dados', {})
                 if ev.get('tipo') == 'decisao_registrada' and decisao_ref in (d.get('decisao_id'), d.get('referencia')):
                     decisao = d
+        if not decisao and reg:
+            for ev in reg.dados.get('eventos', []):
+                d = ev.get('dados', {})
+                if ev.get('tipo') == 'decisao_registrada' and 'execu' in _norm(d.get('acao', '')):
+                    decisao = d
+                    break
         if not decisao:
             erros.append(
                 f"Violação de R3: Execução fora do Google ('{novo_fornecedor}') requer decisão registrada no registro.json. "
@@ -1404,6 +1418,73 @@ def validar_regras_troca(papel, novo_estado, nova_plataforma, novo_fornecedor, p
             avisos.extend(erros)
         return True, []
     return (len(erros) == 0, erros)
+
+
+def conferir_regras_estritas_equipe(perfil, reg, decisao_ref=None):
+    """Confere as regras invariantes R1-R3 em modo estrito para toda a equipe do perfil."""
+    erros = []
+    if not perfil:
+        return erros
+
+    # R1: arquiteto e revisor nunca na mesma plataforma ou fornecedor ao mesmo tempo
+    arq = perfil.obter_papel('arquiteto')
+    rev = perfil.obter_papel('revisor')
+    if arq and rev and arq.get('estado') == 'ativo' and rev.get('estado') == 'ativo':
+        mesma_plat = _norm(arq.get('plataforma')) == _norm(rev.get('plataforma')) and arq.get('plataforma')
+        mesmo_forn = _norm(arq.get('fornecedor')) == _norm(rev.get('fornecedor')) and arq.get('fornecedor')
+        if mesma_plat or mesmo_forn:
+            erros.append(
+                f"Violação de R1: Arquiteto ('{arq.get('plataforma')}', '{arq.get('fornecedor')}') e revisor "
+                f"('{rev.get('plataforma')}', '{rev.get('fornecedor')}') não podem compartilhar plataforma nem fornecedor."
+            )
+
+    # R2: revisor nunca é do mesmo fornecedor de implementador da etapa aberta
+    if rev and rev.get('estado') == 'ativo':
+        etapa_atual = (reg.estado().get('etapa_atual') or {}) if reg else {}
+        if etapa_atual and etapa_atual.get('estado') == 'aberta':
+            impls = reg.implementadores_da_etapa(etapa_atual.get('id'), perfil=perfil)
+            if not impls:
+                erros.append('Violação de R2: a etapa aberta não tem implementador registrado; não é possível conferir o fornecedor.')
+            rev_forn = _norm(rev.get('fornecedor'))
+            for impl in impls:
+                if not impl.get('fornecedor'):
+                    erros.append(f"Violação de R2: fornecedor desconhecido para o implementador '{impl['agente']}'.")
+                elif _norm(impl['fornecedor']) == rev_forn:
+                    erros.append(
+                        f"Violação de R2: O revisor ('{rev.get('fornecedor')}') não pode pertencer ao mesmo fornecedor "
+                        f"do implementador da etapa aberta ('{impl['agente']}': '{impl['fornecedor']}')."
+                    )
+
+    # R3: execução só com Google, salvo decisão registrada específica (D04)
+    decisao_r3 = None
+    if reg:
+        for ev in reg.dados.get('eventos', []):
+            d = ev.get('dados', {})
+            if ev.get('tipo') == 'decisao_registrada':
+                if decisao_ref and decisao_ref in (d.get('decisao_id'), d.get('referencia')):
+                    if 'execu' in _norm(d.get('acao', '')):
+                        decisao_r3 = d
+                        break
+                elif not decisao_ref and 'execu' in _norm(d.get('acao', '')):
+                    decisao_r3 = d
+                    break
+
+    for p in perfil.listar_papeis():
+        if p.get('estado') != 'ativo':
+            continue
+        p_norm = _norm(p.get('papel'))
+        nome_norm = _norm(p.get('nome'))
+        if any(k in p_norm for k in ('arquiteto', 'revisor')) or any(k in nome_norm for k in ('cirdan', 'círdan', 'barbarvore', 'barbárvore')):
+            continue
+        p_forn = _norm(p.get('fornecedor'))
+        if p_forn and p_forn != 'google':
+            if not decisao_r3:
+                erros.append(
+                    f"Violação de R3: Execução ({p.get('papel')}: {p.get('nome')}) fora do Google ('{p.get('fornecedor')}') "
+                    f"requer decisão registrada no registro.json."
+                )
+
+    return erros
 
 
 def _emulacao_do_perfil(perfil):
@@ -1436,7 +1517,7 @@ def cmd_papel_status(a):
     c_perfil = getattr(a, 'perfil', None)
 
     try:
-        from sc_perfil import carregar_perfil
+        from sc_perfil import carregar_perfil, emulacao_ligada
         perfil = carregar_perfil(c_perfil or p_soc)
     except Exception as e:
         print(f"ERRO ao carregar perfil: {e}", file=sys.stderr)
@@ -1448,7 +1529,18 @@ def cmd_papel_status(a):
     except Exception:
         pass
 
-    print("=== MATRIZ DE PAPÉIS DO PROJETO ===")
+    emul = emulacao_ligada(perfil)
+    if getattr(a, 'emulacao', False):
+        print('sim' if emul else 'não')
+        return 0
+
+    if emul:
+        print("Modo emulação: ligado (regras R1-R3 operam como aviso)")
+        print("AVISO: Modo emulação ativo — regras R1-R3 valem apenas como aviso e independência é 'não'.")
+    else:
+        print("Modo emulação: desligado")
+
+    print("\n=== MATRIZ DE PAPÉIS DO PROJETO ===")
     for p in perfil.listar_papeis():
         st = p['estado'].upper()
         print(f"- [{st:7s}] {p['papel']}: {p['nome']} | Plataforma: {p['plataforma']} | Fornecedor: {p['fornecedor']} | Modelo: {p['modelo']} (esforço: {p['esforco']})")
@@ -1473,12 +1565,66 @@ def cmd_papel_status(a):
     return 0
 
 
+def cmd_papel_emulacao(a):
+    p_soc = Path(a.pasta) if getattr(a, 'pasta', None) else localizar_sociedade_canonica()
+    c_perfil = getattr(a, 'perfil', None)
+
+    try:
+        from sc_perfil import carregar_perfil, atualizar_emulacao
+        perfil = carregar_perfil(c_perfil or p_soc)
+    except Exception as e:
+        raise SystemExit(f"erro ao carregar perfil: {e}")
+
+    reg = obter_registro_obrigatorio(p_soc)
+    acao = a.acao.lower()
+    ligar = (acao == 'ligar')
+    motivo = a.motivo.strip()
+    autor = a.autor.strip()
+    data_str = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+
+    if not ligar:
+        erros = conferir_regras_estritas_equipe(perfil, reg, decisao_ref=getattr(a, 'decisao_ref', None))
+        if erros:
+            for err in erros:
+                print(f"ERRO: {err}", file=sys.stderr)
+            raise SystemExit("erro: desligamento de emulação recusado por violação de regra invariante (R1-R3).")
+
+    if not getattr(a, 'aplicar', False):
+        print("=== SIMULAÇÃO DE ALTERAÇÃO DE EMULAÇÃO (L1) ===")
+        print(f"Ação: {acao} modo emulação.")
+        print(f"Motivo: {motivo}")
+        print(f"Autor: {autor}")
+        print("Nenhuma alteração foi gravada em disco. Use --aplicar para efetivar.\n")
+        return 0
+
+    caminho_perfil = perfil.caminho or (p_soc / 'perfil.md')
+    atualizar_emulacao(caminho_perfil, ligar=ligar, motivo=motivo)
+
+    def gerador(dados):
+        return [{
+            'tipo': 'emulacao_alterada',
+            'dados': {
+                'acao': acao,
+                'estado': 'ligado' if ligar else 'desligado',
+                'emulacao': ligar,
+                'motivo': motivo,
+                'autor': autor,
+                'desde': data_str,
+                **({'decisao_ref': a.decisao_ref} if getattr(a, 'decisao_ref', None) else {})
+            }
+        }]
+
+    reg.aplicar_mutacao(gerador, autor=autor, aplicar=True)
+    print(f"Modo emulação alterado para '{acao}' com sucesso no perfil.md e registro.json.")
+    return 0
+
+
 def cmd_papel_trocar(a):
     p_soc = Path(a.pasta) if getattr(a, 'pasta', None) else localizar_sociedade_canonica()
     c_perfil = getattr(a, 'perfil', None)
 
     try:
-        from sc_perfil import carregar_perfil, atualizar_papel
+        from sc_perfil import carregar_perfil, atualizar_papel, atualizar_papel_no_texto, ErroPerfil
         perfil = carregar_perfil(c_perfil or p_soc)
     except Exception as e:
         raise SystemExit(f"erro ao carregar perfil: {e}")
@@ -1493,12 +1639,16 @@ def cmd_papel_trocar(a):
     try:
         plat, forn, mod, esf = resolver_destino(
             perfil, papel, getattr(a, 'para', None), getattr(a, 'fornecedor', None),
-            getattr(a, 'modelo', None), getattr(a, 'esforco', None)
+            getattr(a, 'modelo', None), getattr(a, 'esforco', None), estado=novo_estado
         )
     except Exception as e:
         raise SystemExit(f"erro: {e}")
 
     emulacao = _emulacao_do_perfil(perfil)
+    eh_saida_emulacao = getattr(a, 'saida_emulacao', False) or bool(
+        re.search(r'\b(sa[íi]da\s+d[aeo]\s+emula[çc][ãa]o|fim\s+d[aeo]\s+emula[çc][ãa]o|forma[çc][ãa]o\s+real)\b', motivo, re.IGNORECASE)
+    )
+
     avisos = []
     ok, erros = validar_regras_troca(
         papel=papel,
@@ -1513,7 +1663,7 @@ def cmd_papel_trocar(a):
     )
     for av in avisos:
         print(f"AVISO (emulação): {av}", file=sys.stderr)
-    if emulacao:
+    if emulacao and not eh_saida_emulacao:
         # R4: a troca parte do estado salvo, com motivo e autor; em emulação o motivo começa por "emulação".
         from sc_perfil import marcar_motivo_emulacao
         motivo = marcar_motivo_emulacao(motivo)
@@ -1522,8 +1672,27 @@ def cmd_papel_trocar(a):
         for err in erros:
             print(f"ERRO: {err}", file=sys.stderr)
         raise SystemExit(f"erro: troca de papel recusada por violação de regra invariante.")
-    if not mod:
+    if not mod and novo_estado != 'espera':
         raise SystemExit(f'erro: Informe --modelo: o fornecedor muda para "{forn}" e o modelo atual não vale mais.')
+    if not mod:
+        mod = '—'
+
+    caminho_perfil = perfil.caminho or (p_soc / 'perfil.md')
+    try:
+        texto_perfil = caminho_perfil.read_text(encoding='utf-8')
+        novo_texto_perfil = atualizar_papel_no_texto(
+            texto_perfil,
+            papel=papel,
+            plataforma=plat,
+            fornecedor=forn,
+            modelo=mod,
+            esforco=esf,
+            estado=novo_estado,
+            motivo=motivo,
+            desde=data_str
+        )
+    except ErroPerfil as e:
+        raise SystemExit(f"erro: {e}")
 
     msg_passagem = formatar_mensagem_passagem_troca(
         papel=papel,
@@ -1546,18 +1715,9 @@ def cmd_papel_trocar(a):
         print(msg_passagem)
         return 0
 
-    caminho_perfil = perfil.caminho or (p_soc / 'perfil.md')
-    atualizar_papel(
-        caminho_perfil,
-        papel=papel,
-        plataforma=plat,
-        fornecedor=forn,
-        modelo=mod,
-        esforco=esf,
-        estado=novo_estado,
-        motivo=motivo,
-        desde=data_str
-    )
+    tmp = caminho_perfil.with_name(caminho_perfil.name + '.tmp')
+    tmp.write_text(novo_texto_perfil, encoding='utf-8')
+    os.replace(tmp, caminho_perfil)
 
     reg.registrar_troca_papel(
         papel=papel,
@@ -1763,10 +1923,19 @@ def main(argv=None):
 
     s_papel_st = sub_papel.add_parser('status', help='Exibe o status dos papéis e equipe ativa')
     s_papel_st.add_argument('--perfil', help='Caminho do perfil.md (opcional)')
+    s_papel_st.add_argument('--emulacao', action='store_true', help='Mostra se o modo emulação está ligado (sim/não)')
     s_papel_st.set_defaults(func=cmd_papel_status)
 
+    s_papel_em = sub_papel.add_parser('emulacao', help='Gerencia o modo emulação (L1)')
+    s_papel_em.add_argument('acao', choices=['ligar', 'desligar'], help='Ligar ou desligar modo emulação')
+    s_papel_em.add_argument('--motivo', required=True, help='Motivo da alteração de emulação')
+    s_papel_em.add_argument('--autor', required=True, help='Quem autoriza a alteração')
+    s_papel_em.add_argument('--decisao-ref', dest='decisao_ref', default=None, help='Referência da decisão se aplicável')
+    s_papel_em.add_argument('--perfil', default=None, help='Caminho do perfil.md (opcional)')
+    s_papel_em.set_defaults(func=cmd_papel_emulacao)
+
     s_papel_tr = sub_papel.add_parser('trocar', help='Efetua ou simula a troca de papel (M2; R1-R3)')
-    s_papel_tr.add_argument('--papel', required=True, choices=['arquiteto', 'revisor', 'execucao', 'coordenador'], help='Papel a ser alterado')
+    s_papel_tr.add_argument('--papel', required=True, help='Papel a ser alterado')
     s_papel_tr.add_argument('--para', default=None, help='Nova plataforma de destino')
     s_papel_tr.add_argument('--motivo', required=True, help='Motivo da troca')
     s_papel_tr.add_argument('--fornecedor', default=None, help='Fornecedor do destino (obrigatório se a plataforma não estiver no perfil)')
@@ -1774,6 +1943,7 @@ def main(argv=None):
     s_papel_tr.add_argument('--autor', required=True, help='Quem faz a troca (registrado no registro.json)')
     s_papel_tr.add_argument('--esforco', default=None, help='Nível de esforço (high, medium, etc.)')
     s_papel_tr.add_argument('--estado', default='ativo', choices=['ativo', 'reserva', 'espera'], help='Estado do papel (padrão: ativo)')
+    s_papel_tr.add_argument('--saida-emulacao', action='store_true', help='Indica que a troca é parte da saída do modo emulação')
     s_papel_tr.add_argument('--decisao-ref', default=None, help='Referência a decisão para exceções (ex.: R3)')
     s_papel_tr.add_argument('--perfil', default=None, help='Caminho do perfil.md (opcional)')
     s_papel_tr.set_defaults(func=cmd_papel_trocar)

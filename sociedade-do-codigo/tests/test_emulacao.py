@@ -386,5 +386,82 @@ class TestePainel(Base):
         self.assertNotIn('emulação', MOD_RESUMO.gerar_html(d))
 
 
+class TesteComandoEmulacao(Base):
+    chave = LIGADA
+
+    def test_papel_status_mostra_estado_da_emulacao(self):
+        r_ligado = rodar(SCRIPT_RODADA, 'papel', 'status', '--pasta', str(self.pasta))
+        self.assertEqual(r_ligado.returncode, 0)
+        self.assertIn('Modo emulação: ligado', r_ligado.stdout)
+        self.assertIn('AVISO', r_ligado.stdout)
+
+        self.arq_perfil.write_text(perfil_com(DESLIGADA), encoding='utf-8')
+        r_desligado = rodar(SCRIPT_RODADA, 'papel', 'status', '--pasta', str(self.pasta))
+        self.assertEqual(r_desligado.returncode, 0)
+        self.assertIn('Modo emulação: desligado', r_desligado.stdout)
+        self.assertNotIn('AVISO: Modo emulação ativo', r_desligado.stdout)
+
+    def test_desligar_recusa_se_violar_r1_r3_estrito(self):
+        # O perfil inicial tem Arquiteto e Revisor na Anthropic (viola R1) e Coordenador na Anthropic (viola R3)
+        r = rodar(SCRIPT_RODADA, 'papel', 'emulacao', 'desligar', '--motivo', 'tentativa indevida',
+                  '--autor', 'Odival', '--pasta', str(self.pasta), '--aplicar')
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn('recusado por violação de regra invariante', r.stderr)
+        # Perfil e registro continuam inalterados
+        self.assertTrue(MOD_PERFIL.emulacao_ligada(self.arq_perfil.read_text(encoding='utf-8')))
+        self.assertEqual(len(self.eventos('emulacao_alterada')), 0)
+
+    def test_desligar_com_equipe_conforme_grava_evento_e_altera_perfil(self):
+        # Ajusta perfil para formação real conforme (R1: Arquiteto Anthropic != Revisor OpenAI; R3: Coordenador/Especialistas Google)
+        perfil_conforme = """# Perfil Conforme
+## Papel × ferramenta
+| Papel | Nome | Plataforma | Fornecedor | Modelo | Esforço | Estado (ativo/reserva/espera) | Desde | Motivo |
+|---|---|---|---|---|---|---|---|---|
+| Arquiteto | Círdan | Claude Code | Anthropic | Claude Opus 5.5 | high | ativo | 2026-10-03 | arquitetura |
+| Revisor Independente | Barbárvore | Codex | OpenAI | GPT-6 Sol | high | ativo | 2026-10-03 | revisão |
+| Coordenador | Gandalf | Antigravity | Google | Gemini 3.8 Flash | high | ativo | 2026-10-03 | coordenação |
+| Dados e persistência | Elrond | Antigravity | Google | Gemini 3.8 Flash | high | ativo | 2026-10-03 | dados |
+
+## Modo emulação (Q147)
+- **Emulação:** sim. Modo emulação inicial.
+"""
+        self.arq_perfil.write_text(perfil_conforme, encoding='utf-8')
+        r = rodar(SCRIPT_RODADA, 'papel', 'emulacao', 'desligar', '--motivo', 'formação real estabelecida',
+                  '--autor', 'Odival', '--pasta', str(self.pasta), '--aplicar')
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn("alterado para 'desligar' com sucesso", r.stdout)
+        # Confere que o perfil foi alterado para 'não'
+        self.assertFalse(MOD_PERFIL.emulacao_ligada(self.arq_perfil.read_text(encoding='utf-8')))
+        self.assertIn('- **Emulação:** não. formação real estabelecida', self.arq_perfil.read_text(encoding='utf-8'))
+        # Confere que o evento foi registrado na cadeia
+        evts = self.eventos('emulacao_alterada')
+        self.assertEqual(len(evts), 1)
+        self.assertEqual(evts[0]['dados']['estado'], 'desligado')
+        self.assertEqual(evts[0]['dados']['autor'], 'Odival')
+        # E pode ligar novamente
+        r_ligar = rodar(SCRIPT_RODADA, 'papel', 'emulacao', 'ligar', '--motivo', 'retornando para testes',
+                        '--autor', 'Odival', '--pasta', str(self.pasta), '--aplicar')
+        self.assertEqual(r_ligar.returncode, 0, r_ligar.stdout + r_ligar.stderr)
+        self.assertTrue(MOD_PERFIL.emulacao_ligada(self.arq_perfil.read_text(encoding='utf-8')))
+
+    def test_prefixo_emulacao_omitido_quando_saida_de_emulacao(self):
+        # Com emulação ligada, uma troca normal ganha prefixo 'emulação:'
+        r_normal = rodar(SCRIPT_RODADA, 'papel', 'trocar', '--papel', 'coordenador', '--motivo', 'ajuste operacional',
+                         '--autor', 'Odival', '--pasta', str(self.pasta), '--aplicar')
+        self.assertEqual(r_normal.returncode, 0)
+        perfil_txt = self.arq_perfil.read_text(encoding='utf-8')
+        self.assertIn('emulação: ajuste operacional', perfil_txt)
+
+        # Com indicação de saída de emulação (--saida-emulacao ou motivo 'formação real'), não ganha 'emulação:'
+        r_saida = rodar(SCRIPT_RODADA, 'papel', 'trocar', '--papel', 'coordenador',
+                        '--para', 'Antigravity', '--fornecedor', 'Google', '--modelo', 'Gemini 3.8 Flash',
+                        '--motivo', 'formação real: fim da emulação em nuvem',
+                        '--autor', 'Odival', '--pasta', str(self.pasta), '--aplicar')
+        self.assertEqual(r_saida.returncode, 0, r_saida.stdout + r_saida.stderr)
+        perfil_txt2 = self.arq_perfil.read_text(encoding='utf-8')
+        self.assertIn('formação real: fim da emulação em nuvem', perfil_txt2)
+        self.assertNotIn('emulação: formação real', perfil_txt2)
+
+
 if __name__ == '__main__':
     unittest.main()

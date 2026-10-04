@@ -31,6 +31,7 @@ from pathlib import Path
 
 HOME = Path.home()
 AG_BRAIN = HOME / '.gemini' / 'antigravity' / 'brain'
+AG_CONVERSATIONS = HOME / '.gemini' / 'antigravity' / 'conversations'
 CODEX_SESSOES = HOME / '.codex' / 'sessions'
 CLAUDE_PROJETOS = HOME / '.claude' / 'projects'
 TESTE = re.compile(r'unittest|pytest|sc_pre_devolucao|sc\.py entregar|validar_pacote|npm (?:run )?test')
@@ -79,6 +80,46 @@ def relidos(contagem, limite=8):
 
 # ------------------------------------------------------------------ Antigravity
 
+def inspecionar_base_antigravity(conversa=None):
+    """Lê as bases de ~/.gemini/antigravity/conversations/ e tenta extrair tokens; se não expuser, sai 'n/d' com hipóteses."""
+    banco = None
+    if conversa:
+        cand = AG_CONVERSATIONS / f'{conversa}.db'
+        if cand.is_file():
+            banco = cand
+    if not banco and AG_CONVERSATIONS.is_dir():
+        dbs = sorted(AG_CONVERSATIONS.glob('*.db'), key=lambda p: p.stat().st_mtime, reverse=True)
+        if dbs:
+            banco = dbs[0]
+
+    tokens_expostos = False
+    if banco and banco.is_file():
+        try:
+            import sqlite3
+            conn = sqlite3.connect(banco)
+            cur = conn.cursor()
+            cur.execute("SELECT name, sql FROM sqlite_master WHERE type='table';")
+            tabelas = cur.fetchall()
+            for _, sql in tabelas:
+                if sql and any(k in sql.lower() for k in ('tokens', 'input_tokens', 'output_tokens', 'prompt_tokens')):
+                    tokens_expostos = True
+                    break
+            conn.close()
+        except Exception:
+            pass
+
+    hipoteses = [
+        '1. Bases SQLite do Antigravity (~/.gemini/antigravity/conversations/*.db) armazenam dados brutos e metadados em blobs protobuf sem colunas de tokens explícitas.',
+        '2. A telemetria e faturamento de tokens do Gemini são geridos e contabilizados pelo backend em nuvem do Google, sem replicação de contadores locais.',
+        '3. O transcript local (transcript.jsonl) registra apenas chamadas de ferramentas e mensagens sem os campos de usageMetadata retornados pela API.'
+    ]
+    return {
+        'consumo': 'n/d',
+        'motivo': 'Tokens não expostos localmente nas bases do Antigravity (Q12)',
+        'hipoteses': hipoteses
+    }
+
+
 def log_antigravity(conversa=None):
     if conversa:
         arq = AG_BRAIN / conversa / '.system_generated' / 'logs' / 'transcript.jsonl'
@@ -116,10 +157,13 @@ def medir_antigravity(log):
                     lidos[arq] += 1
     inicio = passos[0].get('created_at') if passos else None
     fim = passos[-1].get('created_at') if passos else None
+    conversa_id = Path(log).parents[2].name if len(Path(log).parents) > 2 else None
+    dados_consumo = inspecionar_base_antigravity(conversa_id)
+
     return {
         'aplicativo': 'antigravity',
         'log': str(log),
-        'conversa': Path(log).parents[2].name if len(Path(log).parents) > 2 else None,
+        'conversa': conversa_id,
         'inicio': inicio, 'fim': fim, 'duracao_min': duracao_min(inicio, fim),
         'passos': len(passos),
         'ordens_na_conversa': ordens,
@@ -129,27 +173,100 @@ def medir_antigravity(log):
         'ferramentas': dict(ferramentas.most_common()),
         'execucoes_de_teste': testes,
         'arquivos_relidos': relidos(lidos),
+        'consumo': dados_consumo['consumo'],
+        'motivo_consumo': dados_consumo['motivo'],
+        'hipoteses_consumo': dados_consumo['hipoteses'],
     }
 
 
 # ------------------------------------------------------------------------ Codex
 
-def log_codex(pasta):
+def consumo_codex(log):
+    """Soma entrada, cache lido e saída pelo log de rollout do Codex (~/.codex/sessions)."""
+    linhas = list(ler_jsonl(log)) if isinstance(log, (str, Path)) else list(log)
+    entrada = 0
+    cache_lido = 0
+    cache_escrito = 0
+    saida = 0
+    mensagens = 0
+    modelos = set()
+    for o in linhas:
+        if o.get('type') == 'turn_context':
+            m = (o.get('payload') or {}).get('model')
+            if m:
+                modelos.add(m)
+        p = o.get('payload') or {}
+        if p.get('type') == 'token_count':
+            info = p.get('info') or {}
+            u = info.get('last_token_usage') or info.get('total_token_usage') or {}
+            if u:
+                mensagens += 1
+                entrada += int(u.get('input_tokens') or 0)
+                cache_lido += int(u.get('cached_input_tokens') or 0)
+                cache_escrito += int(u.get('cache_write_input_tokens') or 0)
+                saida += int(u.get('output_tokens') or 0)
+            continue
+        u = p.get('usage') or o.get('usage') or {}
+        if u:
+            mensagens += 1
+            entrada += int(u.get('input_tokens') or 0)
+            cache_lido += int(u.get('cached_input_tokens') or 0)
+            cache_escrito += int(u.get('cache_write_input_tokens') or 0)
+            saida += int(u.get('output_tokens') or 0)
+            if p.get('model'):
+                modelos.add(p.get('model'))
+    modelo_str = ', '.join(sorted(modelos)) if modelos else 'codex'
+    tabela = [{
+        'agente': 'barbarvore',
+        'modelo': modelo_str,
+        'mensagens': mensagens,
+        'entrada': entrada,
+        'cache_escrito': cache_escrito,
+        'cache_lido': cache_lido,
+        'saida': saida
+    }] if mensagens else []
+    total = {
+        'mensagens': mensagens,
+        'entrada': entrada,
+        'cache_escrito': cache_escrito,
+        'cache_lido': cache_lido,
+        'saida': saida
+    }
+    return {
+        'por_agente_e_modelo': tabela,
+        'total': total
+    }
+
+
+def log_codex(pasta=None):
     candidatos = sorted(CODEX_SESSOES.rglob('rollout-*.jsonl'), key=lambda p: p.stat().st_mtime, reverse=True)
-    for arq in candidatos:
-        texto = arq.read_text(encoding='utf-8', errors='replace')
-        if pasta in texto and '"codex-auto-review"' not in texto:
-            return arq
-    raise ErroSessao('Nenhuma sessão do Codex menciona essa pasta.')
+    if pasta:
+        for arq in candidatos:
+            texto = arq.read_text(encoding='utf-8', errors='replace')
+            if pasta in texto and '"codex-auto-review"' not in texto:
+                return arq
+        raise ErroSessao('Nenhuma sessão do Codex menciona essa pasta.')
+    if candidatos:
+        return candidatos[0]
+    raise ErroSessao('Nenhuma sessão do Codex encontrada.')
 
 
 def _texto_mensagem(payload):
     return ' '.join(c.get('text', '') for c in payload.get('content', []) if isinstance(c, dict))
 
 
-def medir_codex(log, pasta):
-    pasta = normalizar(pasta)
+def medir_codex(log, pasta=None):
     linhas = list(ler_jsonl(log))
+    if not pasta:
+        for o in linhas:
+            if o.get('type') == 'turn_context':
+                cwd = (o.get('payload') or {}).get('cwd')
+                if cwd:
+                    pasta = cwd
+                    break
+        if not pasta:
+            pasta = str(Path.cwd())
+    pasta = normalizar(pasta)
     turnos, mensagens, fora, lidos = [], 0, collections.Counter(), collections.Counter()
     memoria_injetada = memoria_lida = relativos = testes = 0
     sensiveis = collections.Counter()
@@ -197,6 +314,7 @@ def medir_codex(log, pasta):
         'arquivos_relidos': relidos(lidos),
         'caminhos_fora_da_pasta': dict(fora.most_common(15)),
         'mencoes_sensiveis': {k: v for k, v in sensiveis.items() if v},
+        'consumo': consumo_codex(linhas),
     }
 
 
@@ -481,9 +599,9 @@ def medir(app, log=None, pasta=None, conversa=None, projetos=None, sessao=None, 
     if app == 'antigravity':
         return medir_antigravity(Path(log) if log else log_antigravity(conversa))
     if app == 'codex':
-        if not pasta:
-            raise ErroSessao('codex exige --pasta (a pasta permitida da sessão).')
-        return medir_codex(Path(log) if log else log_codex(normalizar(pasta)), pasta)
+        if not pasta and not log:
+            pasta = str(Path.cwd())
+        return medir_codex(Path(log) if log else log_codex(normalizar(pasta) if pasta else None), pasta)
     if app == 'claude':
         if not log and sessao:
             tipo, achado = localizar_claude(sessao, projetos)
@@ -510,6 +628,10 @@ def imprimir(rel):
     for chave, valor in rel.items():
         if chave == 'consumo' and isinstance(valor, dict) and 'por_agente_e_modelo' in valor:
             imprimir_consumo(valor)
+        elif chave == 'hipoteses_consumo' and isinstance(valor, list):
+            print('hipóteses para ausência de tokens expostos (Q12):')
+            for h in valor:
+                print(f'    {h}')
         elif isinstance(valor, dict):
             print(f'{chave}:')
             for k, v in (valor or {}).items():

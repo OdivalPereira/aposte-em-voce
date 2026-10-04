@@ -13,8 +13,10 @@ Critérios de aceite observáveis de F4:
 """
 import tempfile
 import unittest
+import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 from util import NUCLEO, rodar, carregar
 
 MOD_REGISTRO = carregar(NUCLEO / 'scripts' / 'sc_registro.py', 'sc_registro')
@@ -219,6 +221,46 @@ class TestTrocaPapel(unittest.TestCase):
         self.assertIn('- Esforço: high', r.stdout)
         self.assertIn('- Motivo: Claude sem cota (B4)', r.stdout)
         self.assertIn('Instruções para o próximo agente:', r.stdout)
+
+    def test_papel_execucao_altera_todos_especialistas_ativos(self):
+        # --papel execucao altera coordenador e todos os especialistas ativos (Aragorn, Elrond, Galadriel, Legolas)
+        r = self.trocar('--papel', 'execucao', '--para', 'Antigravity', '--modelo', 'Gemini 3.9 Flash',
+                        '--esforco', 'high', '--motivo', 'atualização modelo execução', '--aplicar')
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        perfil = carregar_perfil(self.arquivo_perfil)
+        papeis = {p['papel']: p for p in perfil.listar_papeis()}
+        for papel_nome in ('Coordenador', 'Coleta e procedência', 'Dados e persistência', 'Métodos e qualidade', 'Interface e acessibilidade'):
+            self.assertEqual(papeis[papel_nome]['modelo'], 'Gemini 3.9 Flash', papel_nome)
+            self.assertEqual(papeis[papel_nome]['fornecedor'], 'Google', papel_nome)
+        # Arquiteto e revisor permanecem inalterados
+        self.assertEqual(papeis['Arquiteto']['fornecedor'], 'Anthropic')
+        self.assertEqual(papeis['Revisor Independente']['fornecedor'], 'OpenAI')
+
+    def test_alcancar_jules_e_executores_locais_em_espera(self):
+        r1 = self.trocar('--papel', 'jules', '--estado', 'espera', '--motivo', 'sem tarefas na nuvem', '--aplicar')
+        self.assertEqual(r1.returncode, 0, r1.stdout + r1.stderr)
+        r2 = self.trocar('--papel', 'executores_locais', '--estado', 'espera', '--motivo', 'sem tarefas offline', '--aplicar')
+        self.assertEqual(r2.returncode, 0, r2.stdout + r2.stderr)
+        perfil = carregar_perfil(self.arquivo_perfil)
+        papeis = {p['papel']: p for p in perfil.listar_papeis()}
+        self.assertEqual(papeis['Executor júnior em nuvem']['estado'], 'espera')
+        self.assertEqual(papeis['Executores locais']['estado'], 'espera')
+
+    def test_troca_sem_alterar_nenhuma_linha_falha_sem_evento(self):
+        # Tenta trocar arquiteto para os mesmos dados atuais
+        contagem_antes = len(Registro(self.pasta_sociedade).dados['eventos'])
+        r = self.trocar('--papel', 'arquiteto', '--para', 'Claude Code', '--modelo', 'Claude Opus 5.5',
+                        '--esforco', 'high', '--estado', 'ativo', '--motivo', 'planejamento', '--aplicar')
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn('nenhuma linha do perfil foi alterada', r.stderr)
+        self.assertEqual(len(Registro(self.pasta_sociedade).dados['eventos']), contagem_antes)
+
+    def test_recusa_r3_para_especialista_ativo_fora_do_google(self):
+        # Tenta trocar Elrond para fornecedor fora do Google sem decisão registrada
+        r = self.trocar('--papel', 'elrond', '--para', 'Claude Code', '--modelo', 'Claude Sonnet 5',
+                        '--fornecedor', 'Anthropic', '--motivo', 'teste R3 especialista')
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn('Violação de R3', r.stderr)
 
 
 if __name__ == '__main__':
