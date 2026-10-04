@@ -2,6 +2,7 @@ import { Botao } from './Botao';
 import { Progresso } from './Progresso';
 
 export interface EstadoCarregandoProps {
+  titulo?: string;
   mensagem: string;
   textoAcao?: string;
   aoExecutarAcao?: () => void;
@@ -9,6 +10,7 @@ export interface EstadoCarregandoProps {
 }
 
 export function EstadoCarregando({
+  titulo = 'Processando no seu aparelho',
   mensagem,
   textoAcao,
   aoExecutarAcao,
@@ -22,7 +24,7 @@ export function EstadoCarregando({
       aria-busy="true"
     >
       <div class="spinner" aria-hidden="true" />
-      <h3 class="estado-titulo">Processando no seu aparelho</h3>
+      <h3 class="estado-titulo">{titulo}</h3>
       <p class="estado-texto">{mensagem}</p>
       {progresso && (
         <Progresso

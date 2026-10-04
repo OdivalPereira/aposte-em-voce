@@ -5,7 +5,8 @@ export interface EstadoVazioProps {
   titulo: string;
   descricao: ComponentChildren;
   textoAcao: string;
-  aoExecutarAcao: () => void;
+  aoExecutarAcao?: () => void;
+  idInput?: string;
   icone?: string;
   acaoSecundaria?: {
     texto: string;
@@ -18,6 +19,7 @@ export function EstadoVazio({
   descricao,
   textoAcao,
   aoExecutarAcao,
+  idInput,
   icone = '📄',
   acaoSecundaria,
 }: EstadoVazioProps) {
@@ -31,9 +33,15 @@ export function EstadoVazio({
       </h3>
       <p class="estado-texto">{descricao}</p>
       <div class="estado-acoes">
-        <Botao variante="primario" aoClicar={aoExecutarAcao}>
-          {textoAcao}
-        </Botao>
+        {idInput ? (
+          <label for={idInput} class="botao botao-primario">
+            {textoAcao}
+          </label>
+        ) : (
+          <Botao variante="primario" aoClicar={aoExecutarAcao}>
+            {textoAcao}
+          </Botao>
+        )}
         {acaoSecundaria && (
           <Botao variante="secundario" aoClicar={acaoSecundaria.aoExecutar}>
             {acaoSecundaria.texto}

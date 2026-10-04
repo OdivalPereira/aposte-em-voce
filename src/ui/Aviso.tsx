@@ -5,6 +5,7 @@ export interface AvisoProps {
   titulo?: string;
   children: ComponentChildren;
   classeExtra?: string;
+  papel?: 'alert' | 'status';
 }
 
 export function Aviso({
@@ -12,6 +13,7 @@ export function Aviso({
   titulo,
   children,
   classeExtra = '',
+  papel,
 }: AvisoProps) {
   const classeTipo =
     tipo === 'info'
@@ -27,7 +29,7 @@ export function Aviso({
         ? '🛑'
         : '⚠️';
 
-  const papelAcessivel = tipo === 'erro' ? 'alert' : 'status';
+  const papelAcessivel = papel ?? (tipo === 'erro' ? 'alert' : 'status');
 
   return (
     <div

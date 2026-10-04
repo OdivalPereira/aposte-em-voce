@@ -7,6 +7,8 @@ import { Diagnostico } from './telas/Diagnostico';
 import { Extratos } from './telas/Extratos';
 import { ResultadoLeitura } from './telas/ResultadoLeitura';
 
+import { Botao } from './ui';
+
 export interface ItemArquivo {
   id: number;
   nome: string;
@@ -59,17 +61,21 @@ export function App() {
 
   return (
     <div class="pagina">
+      <header class="app-cabecalho">
+        <span class="app-logo">Aposte em Você</span>
+        <span class="app-tag">No seu celular</span>
+      </header>
       <main>
         {tela === 'extratos' && <Extratos itens={itens} aoEscolher={escolher} aoEnviarSenha={(id, senha) => { const i = itens.find((x) => x.id === id); if (i?.bytes) void ler(id, i.bytes, senha); }} aoPular={pular} aoContinuar={() => setTela('resultado')} />}
         {tela === 'resultado' && <ResultadoLeitura itens={itens} aoVoltar={() => setTela('extratos')} />}
         {tela === 'diagnostico' && <Diagnostico itens={itens} aoVoltar={() => setTela('extratos')} />}
       </main>
-      <footer>
+      <footer class="app-rodape">
         <p class="suave">Versão de teste: conteúdo ainda sem revisão profissional. Nada do que você escolhe sai do seu celular; ao fechar a página, tudo some.</p>
         {tela !== 'diagnostico' && (
-          <button type="button" class="link" onClick={() => setTela('diagnostico')}>
+          <Botao variante="discreto" tipo="button" aoClicar={() => setTela('diagnostico')}>
             Diagnóstico
-          </button>
+          </Botao>
         )}
       </footer>
     </div>

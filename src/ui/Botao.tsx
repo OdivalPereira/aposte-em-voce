@@ -4,6 +4,7 @@ export interface BotaoProps {
   children: ComponentChildren;
   variante?: 'primario' | 'secundario' | 'discreto';
   tipo?: 'button' | 'submit' | 'reset';
+  type?: 'button' | 'submit' | 'reset';
   aoClicar?: (evento: MouseEvent) => void;
   desabilitado?: boolean;
   rotuloAcessivel?: string;
@@ -13,12 +14,14 @@ export interface BotaoProps {
 export function Botao({
   children,
   variante = 'primario',
-  tipo = 'button',
+  tipo,
+  type,
   aoClicar,
   desabilitado = false,
   rotuloAcessivel,
   classeExtra = '',
 }: BotaoProps) {
+  const tipoFinal = tipo ?? type ?? 'button';
   const classeVariante =
     variante === 'secundario'
       ? 'botao-secundario secundario'
@@ -30,7 +33,7 @@ export function Botao({
 
   return (
     <button
-      type={tipo}
+      type={tipoFinal}
       class={classes}
       onClick={aoClicar}
       disabled={desabilitado}
