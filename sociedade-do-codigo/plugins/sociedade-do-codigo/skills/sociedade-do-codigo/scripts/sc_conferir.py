@@ -116,6 +116,46 @@ def arquivos_do_intervalo(raiz, base, head):
     return [a for a in todos if not (_em_gov(a) and a not in arqs_em_commits_nao_gov)]
 
 
+class ConversaResolvida(str):
+    """Representa a conversa da rodada atual do Gandalf, mantendo a lista de todas as conversas das rodadas."""
+    def __new__(cls, conv_id, todas_conversas=None):
+        obj = super().__new__(cls, conv_id)
+        obj.todas_conversas = list(todas_conversas) if todas_conversas else [conv_id]
+        return obj
+
+
+def obter_ultimo_commit_produto(raiz, ref='HEAD'):
+    """Retorna o SHA do último commit que tocou arquivos fora de sociedade/.
+    Se commits posteriores tocam exclusivamente sociedade/ (cauda de governança, Q149/Q178 / K2),
+    retrocede pelo histórico a partir da ref até encontrar o commit de produto."""
+    sha = git(raiz, 'rev-parse', '--verify', f'{ref}^{{commit}}')
+    if not sha:
+        return None
+    atual = sha
+    while atual:
+        r_c = subprocess.run(
+            ['git', '-C', str(raiz), '-c', 'core.quotepath=off', 'diff-tree', '--no-commit-id', '--name-only', '-r', '-z', '--no-renames', '-m', atual],
+            capture_output=True
+        )
+        if r_c.returncode != 0:
+            break
+        arqs = [unicodedata.normalize('NFC', os.fsdecode(x)) for x in r_c.stdout.split(b'\0') if x]
+        if not arqs:
+            pai = git(raiz, 'rev-parse', '--verify', f'{atual}^')
+            if not pai:
+                return atual
+            atual = pai
+            continue
+        eh_gov = all(x == 'sociedade' or x.startswith('sociedade/') for x in arqs)
+        if not eh_gov:
+            return atual
+        pai = git(raiz, 'rev-parse', '--verify', f'{atual}^')
+        if not pai:
+            return atual
+        atual = pai
+    return sha
+
+
 def ler_entregas(texto):
     m = BLOCO.search(texto)
     if not m:
@@ -261,8 +301,9 @@ def _contar_delegacoes_antigravity(log_path, especialistas_ativos):
         return None
 
 
-def resolver_conversa_etapa(etapa, pasta_sociedade=None, brain_dir=None, summaries_db=None):
-    """Resolve @<etapa> para o ID da conversa do Antigravity aberta no worktree após a passagem para Gandalf."""
+def resolver_conversas_etapa(etapa, pasta_sociedade=None, brain_dir=None, summaries_db=None):
+    """Resolve @<etapa> para as conversas do Antigravity abertas no worktree em cada rodada (K3 / K4).
+    Retorna (lista_de_conversas, motivo_de_erro). Em caso de sucesso, motivo_de_erro é None."""
     from sc_registro import Registro, localizar_sociedade_da_etapa, localizar_sociedade_canonica
     try:
         soc = Path(pasta_sociedade) if pasta_sociedade else localizar_sociedade_da_etapa(etapa)
@@ -274,24 +315,27 @@ def resolver_conversa_etapa(etapa, pasta_sociedade=None, brain_dir=None, summari
 
     pasta_wt = soc.parent.resolve() if soc else None
     if not pasta_wt or not pasta_wt.exists():
-        return None, f'worktree da etapa "{etapa}" não encontrado'
+        return [], f'worktree da etapa "{etapa}" não encontrado'
 
     pasta_wt_norm = pasta_wt.as_posix()
+    # K3: identidade estrita de worktree. NÃO aceitar common_git (raiz principal).
     pastas_validas = {pasta_wt_norm}
+    pasta_raiz_git = None
     try:
-        common_git = subprocess.run(['git', '-C', str(pasta_wt), 'rev-parse', '--path-format=absolute', '--git-common-dir'], capture_output=True, text=True).stdout.strip()
-        if common_git.endswith('/.git'):
-            pastas_validas.add(common_git[:-5])
-        elif common_git:
-            pastas_validas.add(common_git)
+        cg = subprocess.run(['git', '-C', str(pasta_wt), 'rev-parse', '--path-format=absolute', '--git-common-dir'], capture_output=True, text=True).stdout.strip()
+        if cg.endswith('/.git'):
+            pasta_raiz_git = Path(cg[:-5]).resolve().as_posix()
+        elif cg:
+            pasta_raiz_git = Path(cg).resolve().as_posix()
     except Exception:
         pass
+    ramo_etapa = git(pasta_wt, 'branch', '--show-current')
 
     try:
         reg = Registro(soc)
         eventos = reg.dados.get('eventos', [])
     except Exception as e:
-        return None, f'erro ao ler registro da etapa "{etapa}": {e}'
+        return [], f'erro ao ler registro da etapa "{etapa}": {e}'
 
     passagens = [
         ev for ev in eventos
@@ -299,25 +343,31 @@ def resolver_conversa_etapa(etapa, pasta_sociedade=None, brain_dir=None, summari
         and (not (ev.get('dados') or {}).get('etapa') or (ev.get('dados') or {}).get('etapa') == etapa)
     ]
     if not passagens:
-        return None, f'nenhum evento de passagem para o Gandalf registrado na etapa "{etapa}"'
+        return [], f'nenhum evento de passagem para o Gandalf registrado na etapa "{etapa}"'
 
-    passagem_ev = passagens[-1]
-    ts_str = passagem_ev.get('timestamp') or (passagem_ev.get('dados') or {}).get('data_hora')
-    if not ts_str:
-        return None, f'timestamp da passagem para Gandalf ausente na etapa "{etapa}"'
-    try:
-        ts_passagem = datetime.fromisoformat(str(ts_str).replace('Z', '+00:00'))
-        if ts_passagem.tzinfo is None:
-            ts_passagem = ts_passagem.replace(tzinfo=timezone.utc)
-    except Exception:
-        return None, f'timestamp da passagem para Gandalf inválido: "{ts_str}"'
+    passagens_dt = []
+    for p in passagens:
+        ts_str = p.get('timestamp') or (p.get('dados') or {}).get('data_hora')
+        if not ts_str:
+            continue
+        try:
+            dt = datetime.fromisoformat(str(ts_str).replace('Z', '+00:00'))
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            passagens_dt.append(dt)
+        except Exception:
+            continue
+
+    if not passagens_dt:
+        return [], f'timestamp da passagem para Gandalf inválido ou ausente na etapa "{etapa}"'
+
+    passagens_dt.sort()
+    ts_primeira_passagem = passagens_dt[0]
 
     b_dir = Path(brain_dir) if brain_dir else (Path.home() / '.gemini' / 'antigravity' / 'brain')
     s_db = Path(summaries_db) if summaries_db else (Path.home() / '.gemini' / 'antigravity' / 'conversation_summaries.db')
 
-    candidatas = set()
-    divergentes = set()
-    conversas_sem_campo_estruturado = set()
+    info_conversas = {}
 
     if s_db and s_db.is_file():
         try:
@@ -335,14 +385,18 @@ def resolver_conversa_etapa(etapa, pasta_sociedade=None, brain_dir=None, summari
                         t_dt = t_dt.replace(tzinfo=timezone.utc)
                 except Exception:
                     continue
-                if t_dt < ts_passagem:
+                if t_dt < ts_primeira_passagem:
                     continue
                 uris_cands = _extrair_uris_workspace(uris)
-                if uris_cands and not any(p in uris_cands for p in pastas_validas):
-                    divergentes.add(cid)
-                    continue
-                if any(p in uris_cands for p in pastas_validas):
-                    candidatas.add(cid)
+                info_conversas[cid] = {
+                    'cid': cid,
+                    't_inicio': t_dt,
+                    'pastas_estruturadas': set(uris_cands),
+                    'pastas_declaradas': set(),
+                    'ramos_estruturados': set(),
+                    'menciona_ordem': False,
+                    'menciona_gandalf': False,
+                }
             conn.close()
         except Exception:
             pass
@@ -350,31 +404,31 @@ def resolver_conversa_etapa(etapa, pasta_sociedade=None, brain_dir=None, summari
     if b_dir and b_dir.is_dir():
         for t_file in b_dir.glob('*/.system_generated/logs/transcript*.jsonl'):
             cid = t_file.parents[2].name
-            if cid in divergentes:
-                candidatas.discard(cid)
-                continue
             try:
                 with t_file.open(encoding='utf-8', errors='replace') as f:
                     primeira_linha = f.readline()
                 if not primeira_linha.strip():
-                    candidatas.discard(cid)
                     continue
                 o = json.loads(primeira_linha)
                 c_at = o.get('created_at')
-                if not c_at:
-                    candidatas.discard(cid)
-                    continue
-                t_dt = datetime.fromisoformat(str(c_at).replace('Z', '+00:00'))
-                if t_dt.tzinfo is None:
-                    t_dt = t_dt.replace(tzinfo=timezone.utc)
-                if t_dt < ts_passagem:
-                    candidatas.discard(cid)
-                    continue
+                t_dt = None
+                if c_at:
+                    try:
+                        t_dt = datetime.fromisoformat(str(c_at).replace('Z', '+00:00'))
+                        if t_dt.tzinfo is None:
+                            t_dt = t_dt.replace(tzinfo=timezone.utc)
+                    except Exception:
+                        t_dt = None
 
                 caminhos_explicit = set()
                 for k in ('workspace', 'workspace_uris', 'workspaces', 'cwd', 'app_data_dir'):
                     if k in o and o[k]:
                         caminhos_explicit.update(_extrair_uris_workspace(o[k]))
+
+                ramos_explicit = set()
+                for k in ('branch', 'git_branch'):
+                    if k in o and o[k]:
+                        ramos_explicit.add(str(o[k]).strip())
 
                 texto_busca = o.get('content') or primeira_linha
                 if not isinstance(texto_busca, str):
@@ -382,54 +436,108 @@ def resolver_conversa_etapa(etapa, pasta_sociedade=None, brain_dir=None, summari
 
                 pastas_declaradas = _extrair_pastas_declaradas(texto_busca)
                 ordem_mencionada = (f"ordens/{etapa}.md" in texto_busca or f"{etapa}.md" in texto_busca or f"etapa {etapa}" in texto_busca.lower())
+                gandalf_mencionado = 'gandalf' in texto_busca.lower()
 
-                if caminhos_explicit:
-                    if not any(p in caminhos_explicit for p in pastas_validas):
-                        divergentes.add(cid)
-                        candidatas.discard(cid)
+                if cid not in info_conversas:
+                    if t_dt and t_dt < ts_primeira_passagem:
                         continue
-                    candidatas.add(cid)
-
-                if pastas_declaradas:
-                    if not any(p in pastas_declaradas for p in pastas_validas):
-                        divergentes.add(cid)
-                        candidatas.discard(cid)
-                        continue
-                    candidatas.add(cid)
-
-                if not caminhos_explicit and not pastas_declaradas and cid not in candidatas:
-                    candidatas.discard(cid)
-                    if ordem_mencionada:
-                        conversas_sem_campo_estruturado.add(cid)
-                    continue
-
+                    info_conversas[cid] = {
+                        'cid': cid,
+                        't_inicio': t_dt or ts_primeira_passagem,
+                        'pastas_estruturadas': caminhos_explicit,
+                        'pastas_declaradas': pastas_declaradas,
+                        'ramos_estruturados': ramos_explicit,
+                        'menciona_ordem': ordem_mencionada,
+                        'menciona_gandalf': gandalf_mencionado,
+                    }
+                else:
+                    if t_dt:
+                        info_conversas[cid]['t_inicio'] = t_dt
+                    info_conversas[cid]['pastas_estruturadas'].update(caminhos_explicit)
+                    info_conversas[cid]['pastas_declaradas'].update(pastas_declaradas)
+                    info_conversas[cid]['ramos_estruturados'].update(ramos_explicit)
+                    info_conversas[cid]['menciona_ordem'] = info_conversas[cid]['menciona_ordem'] or ordem_mencionada
+                    info_conversas[cid]['menciona_gandalf'] = info_conversas[cid]['menciona_gandalf'] or gandalf_mencionado
             except Exception:
-                candidatas.discard(cid)
                 continue
 
-    if len(candidatas) > 1 and b_dir and b_dir.is_dir():
-        gandalf_cands = set()
-        for cid in candidatas:
-            t_file = b_dir / cid / '.system_generated' / 'logs' / 'transcript.jsonl'
-            if t_file.is_file():
-                try:
-                    with t_file.open(encoding='utf-8', errors='replace') as f:
-                        line1 = f.readline()
-                    if (f"ordens/{etapa}.md" in line1 or f"{etapa}.md" in line1 or f"etapa {etapa}" in line1.lower()) and ('gandalf' in line1.lower()):
-                        gandalf_cands.add(cid)
-                except Exception:
-                    pass
-        if gandalf_cands:
-            candidatas = gandalf_cands
+    def _tem_vinculo_estruturado(info):
+        # K3: A identidade usa estritamente campos estruturados de workspace que apontem para o worktree da etapa
+        # ou ramo da etapa
+        if any(p in pastas_validas for p in info.get('pastas_estruturadas', set())):
+            return True
+        if ramo_etapa and ramo_etapa in info.get('ramos_estruturados', set()):
+            return True
+        if any(r == f'etapa/{etapa}' or r == etapa for r in info.get('ramos_estruturados', set())):
+            return True
+        return False
 
-    if not candidatas:
-        if conversas_sem_campo_estruturado:
-            return None, f'sem campo estruturado de workspace para a etapa "{etapa}" no Antigravity'
-        return None, f'nenhuma conversa do Antigravity encontrada para a etapa "{etapa}" após a passagem'
-    if len(candidatas) > 1:
-        return None, f'ambiguidade: {len(candidatas)} conversas do Antigravity encontradas para a etapa "{etapa}" após a passagem'
+    def _eh_divergente(info):
+        pe = info.get('pastas_estruturadas', set())
+        pd = info.get('pastas_declaradas', set())
+        todas = pe | pd
+        if todas and not any(p in pastas_validas for p in todas) and not _tem_vinculo_estruturado(info):
+            if pasta_raiz_git and all(p == pasta_raiz_git for p in todas):
+                return False
+            return True
+        return False
 
-    return list(candidatas)[0], None
+    conversas_por_rodada = []
+    num_passagens = len(passagens_dt)
+
+    for k in range(num_passagens):
+        ts_inicio = passagens_dt[k]
+        ts_fim = passagens_dt[k + 1] if (k + 1 < num_passagens) else None
+
+        cands_rodada = []
+        sem_campo_rodada = []
+
+        for cid, info in info_conversas.items():
+            t = info['t_inicio']
+            if t < ts_inicio:
+                continue
+            if ts_fim and t >= ts_fim:
+                continue
+            if _eh_divergente(info):
+                continue
+            if _tem_vinculo_estruturado(info):
+                cands_rodada.append(info)
+            elif info.get('menciona_ordem'):
+                sem_campo_rodada.append(info)
+
+        if not cands_rodada:
+            if k == num_passagens - 1:
+                if sem_campo_rodada:
+                    return [], f'sem campo estruturado de workspace para a etapa "{etapa}" no Antigravity'
+                return [], f'nenhuma conversa do Antigravity encontrada para a etapa "{etapa}" após a passagem'
+            continue
+
+        if len(cands_rodada) == 1:
+            conversas_por_rodada.append(cands_rodada[0]['cid'])
+        else:
+            # K4: Ambiguidade só é reportada se houver múltiplas conversas conflitantes dentro da mesma rodada
+            gandalf_cands = [c for c in cands_rodada if c.get('menciona_ordem') and c.get('menciona_gandalf')]
+            if not gandalf_cands:
+                gandalf_cands = [c for c in cands_rodada if c.get('menciona_ordem')]
+            cands_filtradas = gandalf_cands if gandalf_cands else cands_rodada
+
+            if len(cands_filtradas) > 1:
+                return [], f'ambiguidade: {len(cands_filtradas)} conversas do Antigravity encontradas para a etapa "{etapa}" após a passagem'
+
+            conversas_por_rodada.append(cands_filtradas[0]['cid'])
+
+    if not conversas_por_rodada:
+        return [], f'nenhuma conversa do Antigravity encontrada para a etapa "{etapa}" após a passagem'
+
+    return conversas_por_rodada, None
+
+
+def resolver_conversa_etapa(etapa, pasta_sociedade=None, brain_dir=None, summaries_db=None):
+    """Resolve @<etapa> para o ID da conversa do Antigravity aberta no worktree após a passagem para Gandalf."""
+    cids, motivo = resolver_conversas_etapa(etapa, pasta_sociedade=pasta_sociedade, brain_dir=brain_dir, summaries_db=summaries_db)
+    if not cids:
+        return None, motivo
+    return ConversaResolvida(cids[-1], todas_conversas=cids), None
 
 
 def conferir_item(item, raiz):
@@ -439,8 +547,35 @@ def conferir_item(item, raiz):
     caminho = lambda rel: (raiz / rel) if not Path(rel).is_absolute() else Path(rel)  # noqa: E731
 
     if tipo == 'commit_existe':
-        sha = git(raiz, 'rev-parse', '--verify', f'{args[0]}^{{commit}}')
-        return (FEITO, sha[:12]) if sha else (NAO_FEITO, f'commit {args[0]} não existe')
+        ref = args[0]
+        sha = git(raiz, 'rev-parse', '--verify', f'{ref}^{{commit}}')
+        if not sha:
+            return NAO_FEITO, f'commit {ref} não existe'
+        sha_produto = obter_ultimo_commit_produto(raiz, sha)
+        sha_avaliar = sha_produto or sha
+        if len(args) > 1:
+            esperado = git(raiz, 'rev-parse', '--verify', f'{args[1]}^{{commit}}') or args[1]
+            esperado_sha = git(raiz, 'rev-parse', '--verify', f'{esperado}^{{commit}}')
+            esperado_produto = obter_ultimo_commit_produto(raiz, esperado) if esperado_sha else esperado
+            bate = (sha.startswith(esperado[:7]) or esperado.startswith(sha[:7]) or
+                    sha_avaliar.startswith(esperado[:7]) or esperado.startswith(sha_avaliar[:7]) or
+                    (esperado_produto and (sha_avaliar.startswith(esperado_produto[:7]) or esperado_produto.startswith(sha_avaliar[:7]))))
+            if not bate:
+                return NAO_FEITO, f'commit {sha[:12]}, esperado {esperado[:12]}'
+            if not (sha.startswith(esperado[:7]) or esperado.startswith(sha[:7])):
+                c_antigo = esperado_sha if (esperado_sha and sha_avaliar.startswith(esperado_sha[:7])) else sha_avaliar
+                c_recente = sha
+                r_diff = subprocess.run(
+                    ['git', '-C', str(raiz), '-c', 'core.quotepath=off', 'diff', '--name-only', '-z', '--no-renames', c_antigo, c_recente],
+                    capture_output=True
+                )
+                if r_diff.returncode == 0:
+                    diff_arqs = [unicodedata.normalize('NFC', os.fsdecode(x)) for x in r_diff.stdout.split(b'\0') if x]
+                    tocou_fora = [x for x in diff_arqs if not (x == 'sociedade' or x.startswith('sociedade/'))]
+                    if tocou_fora:
+                        return NAO_FEITO, f'commit {sha[:12]}, esperado {esperado[:12]} (alterações fora de sociedade/)'
+            return FEITO, sha_avaliar[:12]
+        return FEITO, sha_avaliar[:12]
 
     if tipo == 'arquivos_em':
         if '..' not in args[0] or len(args) < 2:
@@ -480,8 +615,32 @@ def conferir_item(item, raiz):
             esperado = git(raiz, 'rev-parse', '--verify', f'{args[1]}^{{commit}}') or args[1]
             if not at.get('commit'):
                 return NAO_FEITO, 'atestado sem commit (versão anterior à 1.2.0)'
-            if not esperado.startswith(at['commit'][:7]) and not at['commit'].startswith(esperado[:7]):
-                return NAO_FEITO, f'atestado do commit {at["commit"][:12]}, esperado {esperado[:12]}'
+            at_commit = at['commit']
+            at_commit_sha = git(raiz, 'rev-parse', '--verify', f'{at_commit}^{{commit}}')
+            bate = (esperado.startswith(at_commit[:7]) or at_commit.startswith(esperado[:7]))
+            if not bate:
+                # K2: Cauda de governança pós-atestado (Q149/Q178)
+                is_ancestor = False
+                if at_commit_sha and esperado:
+                    res_anc = subprocess.run(
+                        ['git', '-C', str(raiz), 'merge-base', '--is-ancestor', at_commit_sha, esperado],
+                        capture_output=True
+                    )
+                    is_ancestor = (res_anc.returncode == 0)
+                if is_ancestor:
+                    r_diff = subprocess.run(
+                        ['git', '-C', str(raiz), '-c', 'core.quotepath=off', 'diff', '--name-only', '-z', '--no-renames', at_commit_sha, esperado],
+                        capture_output=True
+                    )
+                    if r_diff.returncode == 0:
+                        diff_arqs = [unicodedata.normalize('NFC', os.fsdecode(x)) for x in r_diff.stdout.split(b'\0') if x]
+                        tocou_fora = [x for x in diff_arqs if not (x == 'sociedade' or x.startswith('sociedade/'))]
+                        if not tocou_fora:
+                            bate = True
+                        else:
+                            return NAO_FEITO, f'atestado do commit {at_commit[:12]}, esperado {esperado[:12]} (alterações fora de sociedade/ após atestado: {", ".join(tocou_fora[:3])})'
+                if not bate:
+                    return NAO_FEITO, f'atestado do commit {at_commit[:12]}, esperado {esperado[:12]}'
         if not at.get('total_arquivos_inspecionados'):
             return NAO_FEITO, 'atestado aprovado sem nenhum arquivo inspecionado'
         return FEITO, f'APROVADO, {at["total_arquivos_inspecionados"]} arquivos, commit {str(at.get("commit"))[:12]}'
@@ -519,6 +678,7 @@ def conferir_item(item, raiz):
         if args[0] not in ('antigravity', 'claude') or len(args) < 2:
             return NAO_PREENCHIDO, 'use "antigravity | <conversa>" ou "claude | <sessão>"'
         ident = args[1].strip()
+        todas_conversas = [ident]
         if args[0] == 'antigravity' and ident.startswith('@'):
             etapa_alvo = ident[1:].strip()
             if not etapa_alvo or etapa_alvo == 'etapa':
@@ -528,27 +688,46 @@ def conferir_item(item, raiz):
                 if motivo and 'sem campo estruturado' in motivo:
                     return NAO_VERIFICADO, motivo
                 return NAO_FEITO, motivo
-            ident = conv_id
-        try:
-            if args[0] == 'claude':
-                m = medir('claude', sessao=ident)
-            else:
-                m = medir('antigravity', conversa=ident)
-        except ErroSessao as e:
-            return NAO_FEITO, str(e)
+            ident = str(conv_id)
+            todas_conversas = getattr(conv_id, 'todas_conversas', [ident])
+
         if tipo == 'conversa_nova':
-            return (FEITO, '1 ordem na conversa') if m['conversa_nova'] else \
-                   (NAO_FEITO, f'{m["ordens_na_conversa"]} ordens na mesma conversa')
-        if 'delegacoes_total' not in m:
-            return NAO_FEITO, 'o identificador é de um subagente, não de uma sessão; delegações não medidas'
+            # K4: conversa_nova valida que em cada rodada há apenas uma ordem por conversa
+            for cid in todas_conversas:
+                try:
+                    if args[0] == 'claude':
+                        m = medir('claude', sessao=cid)
+                    else:
+                        m = medir('antigravity', conversa=cid)
+                except ErroSessao as e:
+                    return NAO_FEITO, str(e)
+                if not m.get('conversa_nova'):
+                    return NAO_FEITO, f'{m.get("ordens_na_conversa", "?")} ordens na mesma conversa'
+            return FEITO, '1 ordem na conversa'
+
+        # tipo == 'delegacoes'
         minimo = int(args[2]) if len(args) > 2 and args[2].isdigit() else 1
-        total_delegacoes = m['delegacoes_total']
-        if args[0] == 'antigravity' and m.get('log'):
-            pasta_soc = raiz / 'sociedade'
-            especialistas = _obter_especialistas_ativos(pasta_soc)
-            validas = _contar_delegacoes_antigravity(m['log'], especialistas)
-            if validas is not None:
-                total_delegacoes = validas
+        total_delegacoes = 0
+        pasta_soc = raiz / 'sociedade'
+        especialistas = _obter_especialistas_ativos(pasta_soc)
+
+        for cid in todas_conversas:
+            try:
+                if args[0] == 'claude':
+                    m = medir('claude', sessao=cid)
+                else:
+                    m = medir('antigravity', conversa=cid)
+            except ErroSessao as e:
+                return NAO_FEITO, str(e)
+            if 'delegacoes_total' not in m:
+                return NAO_FEITO, 'o identificador é de um subagente, não de uma sessão; delegações não medidas'
+            del_conv = m['delegacoes_total']
+            if args[0] == 'antigravity' and m.get('log'):
+                validas = _contar_delegacoes_antigravity(m['log'], especialistas)
+                if validas is not None:
+                    del_conv = validas
+            total_delegacoes += del_conv
+
         return (FEITO, f'{total_delegacoes} delegações') if total_delegacoes >= minimo else \
                (NAO_FEITO, f'{total_delegacoes} delegações, mínimo {minimo}')
 
