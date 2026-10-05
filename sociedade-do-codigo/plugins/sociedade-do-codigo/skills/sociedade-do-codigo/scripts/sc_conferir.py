@@ -229,10 +229,31 @@ def resolver_conversa_etapa(etapa, pasta_sociedade=None, brain_dir=None, summari
                     texto_busca = o.get('content') or primeira_linha
                     if not isinstance(texto_busca, str):
                         texto_busca = str(texto_busca)
-                    if not padrao_pasta.search(texto_busca):
+                    ordem_mencionada = (f"ordens/{etapa}.md" in texto_busca or f"{etapa}.md" in texto_busca)
+                    pasta_encontrada = bool(padrao_pasta.search(texto_busca))
+
+                    if not (pasta_encontrada or ordem_mencionada):
                         if cid in candidatas:
                             candidatas.remove(cid)
                         continue
+
+                    if not pasta_encontrada and ordem_mencionada:
+                        achou_no_corpo = False
+                        try:
+                            with t_file.open(encoding='utf-8', errors='replace') as f_corpo:
+                                for _ in range(40):
+                                    l_corpo = f_corpo.readline()
+                                    if not l_corpo:
+                                        break
+                                    if padrao_pasta.search(l_corpo):
+                                        achou_no_corpo = True
+                                        break
+                        except Exception:
+                            pass
+                        if not achou_no_corpo:
+                            if cid in candidatas:
+                                candidatas.remove(cid)
+                            continue
 
                 candidatas.add(cid)
             except Exception:
