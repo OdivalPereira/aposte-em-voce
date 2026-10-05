@@ -277,6 +277,15 @@ def resolver_conversa_etapa(etapa, pasta_sociedade=None, brain_dir=None, summari
         return None, f'worktree da etapa "{etapa}" não encontrado'
 
     pasta_wt_norm = pasta_wt.as_posix()
+    pastas_validas = {pasta_wt_norm}
+    try:
+        common_git = subprocess.run(['git', '-C', str(pasta_wt), 'rev-parse', '--path-format=absolute', '--git-common-dir'], capture_output=True, text=True).stdout.strip()
+        if common_git.endswith('/.git'):
+            pastas_validas.add(common_git[:-5])
+        elif common_git:
+            pastas_validas.add(common_git)
+    except Exception:
+        pass
 
     try:
         reg = Registro(soc)
@@ -329,10 +338,10 @@ def resolver_conversa_etapa(etapa, pasta_sociedade=None, brain_dir=None, summari
                 if t_dt < ts_passagem:
                     continue
                 uris_cands = _extrair_uris_workspace(uris)
-                if uris_cands and pasta_wt_norm not in uris_cands:
+                if uris_cands and not any(p in uris_cands for p in pastas_validas):
                     divergentes.add(cid)
                     continue
-                if pasta_wt_norm in uris_cands:
+                if any(p in uris_cands for p in pastas_validas):
                     candidatas.add(cid)
             conn.close()
         except Exception:
@@ -375,14 +384,14 @@ def resolver_conversa_etapa(etapa, pasta_sociedade=None, brain_dir=None, summari
                 ordem_mencionada = (f"ordens/{etapa}.md" in texto_busca or f"{etapa}.md" in texto_busca or f"etapa {etapa}" in texto_busca.lower())
 
                 if caminhos_explicit:
-                    if pasta_wt_norm not in caminhos_explicit:
+                    if not any(p in caminhos_explicit for p in pastas_validas):
                         divergentes.add(cid)
                         candidatas.discard(cid)
                         continue
                     candidatas.add(cid)
 
                 if pastas_declaradas:
-                    if pasta_wt_norm not in pastas_declaradas:
+                    if not any(p in pastas_declaradas for p in pastas_validas):
                         divergentes.add(cid)
                         candidatas.discard(cid)
                         continue
@@ -406,7 +415,7 @@ def resolver_conversa_etapa(etapa, pasta_sociedade=None, brain_dir=None, summari
                 try:
                     with t_file.open(encoding='utf-8', errors='replace') as f:
                         line1 = f.readline()
-                    if 'Para: Gandalf' in line1 or 'para: gandalf' in line1.lower():
+                    if (f"ordens/{etapa}.md" in line1 or f"{etapa}.md" in line1 or f"etapa {etapa}" in line1.lower()) and ('gandalf' in line1.lower()):
                         gandalf_cands.add(cid)
                 except Exception:
                     pass
