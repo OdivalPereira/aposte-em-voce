@@ -78,7 +78,7 @@ Sem nível numérico; o rigor fica na ordem (Q17). Antes do despacho, Odival con
    - **e** o CI verde **no mesmo SHA**.
 3. A `main` protegida exige os status `ci`, `portao` e `aceite`.
 4. **Cauda de governança (Q149).** O SHA revisado é o último commit de produto. Commits posteriores, só de `sociedade/`, entram no mesmo PR.
-5. Integrar é o merge do PR, feito por Odival (Q154; Q32, Q68).
+5. Integrar é o merge do PR, sempre como merge commit, com o "sim" de Odival na conversa: o Círdan roda `gh pr merge <n> --merge`; `--squash`, `--rebase`, `--auto` e `--admin` são negados (Q174, ajusta Q154; Q32, Q68).
 
 ## 5. Revisão
 
@@ -96,6 +96,7 @@ Sem nível numérico; o rigor fica na ordem (Q17). Antes do despacho, Odival con
 1. Param sempre para Odival: integrar, publicar, gastar, mudar credencial, MCP ou modelo, contato externo, dado real e mudança de escopo.
 2. **Metas por etapa (Q153, substitui a Q89):** até 12 comandos do método, 0 edições manuais em arquivos de controle, até 5 intervenções e 30 min de Odival. Acima da meta, vira item de correção.
 3. O Círdan corrige sozinho bug, teste e texto que não muda regra. Mudança de regra vira proposta de decisão, que Odival confirma (Q82).
+4. **Passagem entre ferramentas (Q175):** a cada passo no Antigravity ou no Codex, o Círdan diz a Odival a pasta exata a abrir e a linha exata a colar (`sc.py passar`) e espera o retorno.
 
 ## 7. Registro e governança
 

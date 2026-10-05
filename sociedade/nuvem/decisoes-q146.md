@@ -34,3 +34,5 @@
 | Q171 | 03/10/2026 | **Correção por agente novo**, que lê só o arquivo de retorno e o achado, e não a instância antiga retomada por mensagem | fechamento-nuvem, P7 | Detalha Q170 |
 | Q172 | 03/10/2026 | **Ordem com usos conferidos:** `grep` dos usos reais da lista de escrita antes da aprovação | fechamento-nuvem, P8 | — |
 | Q173 | 03/10/2026 | **Especialista pelo tipo da fatia** (Elrond: scripts e dados; Galadriel: métodos e testes; Legolas: telas; Aragorn: fontes externas) | fechamento-nuvem, P9 (ajuste de Odival na ordem) | Generaliza a Q169 |
+| Q174 | 03/10/2026 | **Integrar é o merge do PR, sempre como merge commit, com o "sim" de Odival na conversa.** Com o "sim", o Círdan roda `gh pr merge <n> --merge`, que fica em `ask`. `--squash`, `--rebase`, `--auto` e `--admin` são negados | Abertura da d1-design (pedido de Odival) | Ajusta Q154 |
+| Q175 | 03/10/2026 | **Passagem entre ferramentas.** A cada passo no Antigravity ou no Codex, o Círdan diz a Odival a pasta exata a abrir e a linha exata a colar (por `sc.py passar`, quando existir) e espera o retorno | Abertura da d1-design (pedido de Odival) | Complementa R4 e Q61 |
