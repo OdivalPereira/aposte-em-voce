@@ -2,7 +2,7 @@
 name: sociedade-do-codigo
 description: Método da Sociedade do Código: arquiteto, coordenador, especialistas, revisor e conferência. Pipeline, regras e comandos. Use ao acionar a Sociedade ou receber uma ordem. Fora disso, não use.
 metadata:
-  versao: "3.2.0"
+  versao: "3.3.0"
 ---
 # Sociedade do Código: núcleo
 

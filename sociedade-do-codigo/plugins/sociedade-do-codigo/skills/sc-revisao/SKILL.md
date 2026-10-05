@@ -2,7 +2,7 @@
 name: sc-revisao
 description: A revisão independente da Sociedade do Código (Barbárvore): independência por fornecedor, revisão única do candidato consolidado, protocolo com oito lentes e matriz de cobertura, três severidades, parecer com hash e limite de uma correção e uma reconferência. Use ao revisar o candidato de uma etapa ou ao reconferir uma correção.
 metadata:
-  versao: "3.2.0"
+  versao: "3.3.0"
 ---
 # Revisão independente
 

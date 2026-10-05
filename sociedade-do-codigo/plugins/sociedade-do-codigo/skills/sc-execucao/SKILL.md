@@ -2,7 +2,7 @@
 name: sc-execucao
 description: Como o coordenador executa uma etapa: fatias delegadas a especialistas, tarefas do Jules, subordem autocontida, disjunção e portão por fatia. Use ao dividir etapa, delegar fatia ou receber resultado.
 metadata:
-  versao: "3.2.0"
+  versao: "3.3.0"
 ---
 # Execução de uma etapa
 

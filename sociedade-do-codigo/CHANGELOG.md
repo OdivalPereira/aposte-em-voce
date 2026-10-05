@@ -2,6 +2,20 @@
 
 Versionamento semântico. Major: muda o comportamento a ponto de exigir ajuste nos projetos.
 
+## 3.3.0 (05/10/2026)
+
+Etapa `d1b-robustez`: fechamento dos resíduos da d1 no pacote, integridade estrita e processo honesto (Q176–Q182).
+
+**Entrou**
+
+- **A01 (@etapa estruturado e exclusão de self):** `sc_conferir.py` resolve pasta exclusivamente por metadados estruturados de workspace; descarta menções no corpo e exige `TypeName` de especialista ativo (Q182).
+- **A02 (Cadeia de registro estrita):** `sc_registro.py` estabelece corte explícito gravado; eventos subsequentes sem `hash` ou `prev_hash` são corrompidos, inclusive na cauda.
+- **A03 e A05 (Trava da troca e rollback):** `sc_rodada.py` serializa leitura, validação e escrita sob trava comum em `papel trocar` e `papel emulacao`, garantindo rollback e impedindo estado inconsistente.
+- **A06 (Permissões de merge delimitadas):** `.claude/settings.json` e modelo delimitam `-s` e `-r` para negar apenas argumentos curtos sem afetar `--subject`, `--repo` e merges legítimos.
+- **P1 (Passagem com autor e hora):** `sc.py passar` exige `--por`, carimba timestamp atual e exige `--nova-rodada --motivo` para repetições.
+- **P2 (Ambiente honesto de revisão):** `sc.py revisar` valida `perfil.md` e `regras.md` contra HEAD (Q178), symlinka dependências e testa áreas sem rede.
+- **P3 (Decisão e reconferência sem sobrescrita):** `sc.py decidir` exige `--motivo` para `corrigir|rejeitar`. Reconferência grava em arquivo próprio (`parecer-<etapa>-reconferencia.md`) e encadeia registros.
+
 ## 3.2.0 (04/10/2026)
 
 Etapa `d1-design`: prontidão para a formação real e resolução das lacunas L1–L8.
