@@ -87,6 +87,27 @@ def calcular_hash_evento(ev):
     return hashlib.sha256(texto.encode('utf-8')).hexdigest()
 
 
+def resolver_corte_cadeia(eventos_disco, eventos_novos=None, corte_existente=None):
+    """Determina o corte da cadeia de hash na migração de registros legados (K1, F1).
+
+    Se corte_existente já estiver definido, preserva-o.
+    Se já houver eventos com hash nos eventos existentes em disco, o corte é o
+    seq do primeiro evento com hash.
+    Se nenhum evento anterior tinha hash, é o seq do primeiro evento formatado novo.
+    """
+    if corte_existente is not None:
+        return corte_existente
+    for ev in eventos_disco or []:
+        if ev.get('hash'):
+            return ev['seq']
+    if eventos_novos:
+        for ev in eventos_novos:
+            if ev.get('hash'):
+                return ev['seq']
+    return None
+
+
+
 def localizar_sociedade_canonica(pasta_base=None):
     """Localiza o diretório canônico 'sociedade/' a partir do diretório comum do Git.
 
@@ -906,9 +927,11 @@ class Registro:
             disco_atualizado['eventos'] = list(disco['eventos']) + eventos_formatados
             disco_atualizado['revisao'] = disco['revisao'] + 1
             disco_atualizado['atualizado_em'] = agora_iso()
-            corte_atual = disco.get('corte_cadeia')
-            if corte_atual is None and eventos_formatados:
-                corte_atual = eventos_formatados[0]['seq']
+            corte_atual = resolver_corte_cadeia(
+                disco.get('eventos', []),
+                eventos_formatados,
+                disco.get('corte_cadeia')
+            )
             if corte_atual is not None:
                 disco_atualizado['corte_cadeia'] = corte_atual
 
@@ -956,9 +979,11 @@ class Registro:
             disco_atualizado['eventos'] = list(disco['eventos']) + eventos_formatados
             disco_atualizado['revisao'] = disco['revisao'] + 1
             disco_atualizado['atualizado_em'] = agora_iso()
-            corte_atual = disco.get('corte_cadeia')
-            if corte_atual is None and eventos_formatados:
-                corte_atual = eventos_formatados[0]['seq']
+            corte_atual = resolver_corte_cadeia(
+                disco.get('eventos', []),
+                eventos_formatados,
+                disco.get('corte_cadeia')
+            )
             if corte_atual is not None:
                 disco_atualizado['corte_cadeia'] = corte_atual
 
@@ -1660,10 +1685,13 @@ class Registro:
             }
             ev['hash'] = calcular_hash_evento(ev)
             disco_atualizado['eventos'] = list(disco['eventos']) + [ev]
-            corte_atual = disco.get('corte_cadeia')
-            if corte_atual is None:
-                corte_atual = prox_seq
-            disco_atualizado['corte_cadeia'] = corte_atual
+            corte_atual = resolver_corte_cadeia(
+                disco.get('eventos', []),
+                [ev],
+                disco.get('corte_cadeia')
+            )
+            if corte_atual is not None:
+                disco_atualizado['corte_cadeia'] = corte_atual
 
             salvar_dados_registro_atomico(self.registro_path, disco_atualizado)
             self._dados = disco_atualizado
