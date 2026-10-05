@@ -190,36 +190,98 @@ def carregar_dados_registro(registro_path):
     if not isinstance(dados['eventos'], list):
         raise ErroRegistroCorrompido('Campo "eventos" deve ser uma lista.')
 
-    # Valida integridade, monotonicidade e cadeia de hash dos eventos (REV-001, REV-014, C25, F5/L1)
+    corte_cadeia = dados.get('corte_cadeia')
+    if corte_cadeia is not None:
+        if isinstance(corte_cadeia, bool) or not isinstance(corte_cadeia, int) or corte_cadeia < 1:
+            raise ErroRegistroCorrompido(
+                f'Campo "corte_cadeia" inválido: {corte_cadeia!r}. Deve ser um número inteiro >= 1.'
+            )
+
+    # Valida integridade, monotonicidade e cadeia de hash dos eventos (REV-001, REV-014, C25, F5/L1, A02)
     ultimo_seq = 0
     ultimo_hash = ''
+    primeiro_seq_hash = None
     for ev in dados['eventos']:
         if not isinstance(ev, dict):
             raise ErroRegistroCorrompido('Evento malformado (deve ser objeto JSON).')
         for k in ('id', 'seq', 'tipo', 'timestamp'):
             if k not in ev:
                 raise ErroRegistroCorrompido(f'Evento incompleto: ausente campo "{k}".')
-        if ev['seq'] <= ultimo_seq:
+        if isinstance(ev['seq'], bool) or not isinstance(ev['seq'], int) or ev['seq'] <= ultimo_seq:
             raise ErroRegistroCorrompido(
-                f'Monotonicidade de eventos violada: seq {ev["seq"]} <= {ultimo_seq}.'
+                f'Monotonicidade de eventos violada: seq {ev.get("seq")} <= {ultimo_seq}.'
             )
-        ultimo_seq = ev['seq']
+        seq_atual = ev['seq']
+        ultimo_seq = seq_atual
 
-        if 'hash' in ev:
-            ev_hash = ev['hash']
-            prev_hash = ev.get('prev_hash', '')
-            if prev_hash != ultimo_hash:
-                raise ErroRegistroCorrompido(
-                    f'Cadeia de hash rompida no evento {ev.get("id")}: '
-                    f'prev_hash "{prev_hash}" != esperado "{ultimo_hash}".'
-                )
-            calc_hash = calcular_hash_evento(ev)
-            if ev_hash != calc_hash:
-                raise ErroRegistroCorrompido(
-                    f'Hash corrompido no evento {ev.get("id")}: '
-                    f'hash registrado "{ev_hash}" != recalculado "{calc_hash}".'
-                )
-            ultimo_hash = ev_hash
+        if corte_cadeia is not None:
+            if seq_atual >= corte_cadeia:
+                if 'hash' not in ev or not isinstance(ev['hash'], str) or not ev['hash']:
+                    raise ErroRegistroCorrompido(
+                        f'Evento {ev.get("id")} (seq {seq_atual}) a partir do corte da cadeia '
+                        f'({corte_cadeia}) sem hash obrigatório.'
+                    )
+                if 'prev_hash' not in ev or not isinstance(ev['prev_hash'], str):
+                    raise ErroRegistroCorrompido(
+                        f'Evento {ev.get("id")} (seq {seq_atual}) a partir do corte da cadeia '
+                        f'({corte_cadeia}) sem prev_hash obrigatório.'
+                    )
+                prev_hash = ev['prev_hash']
+                if prev_hash != ultimo_hash:
+                    raise ErroRegistroCorrompido(
+                        f'Cadeia de hash rompida no evento {ev.get("id")}: '
+                        f'prev_hash "{prev_hash}" != esperado "{ultimo_hash}".'
+                    )
+                calc_hash = calcular_hash_evento(ev)
+                if ev['hash'] != calc_hash:
+                    raise ErroRegistroCorrompido(
+                        f'Hash corrompido no evento {ev.get("id")}: '
+                        f'hash registrado "{ev["hash"]}" != recalculado "{calc_hash}".'
+                    )
+                ultimo_hash = ev['hash']
+            else:
+                # O legado só vale antes do corte
+                if 'hash' in ev:
+                    raise ErroRegistroCorrompido(
+                        f'Evento legado {ev.get("id")} (seq {seq_atual}) anterior ao corte da cadeia '
+                        f'({corte_cadeia}) não pode conter hash.'
+                    )
+                if 'prev_hash' in ev:
+                    raise ErroRegistroCorrompido(
+                        f'Evento legado {ev.get("id")} (seq {seq_atual}) anterior ao corte da cadeia '
+                        f'({corte_cadeia}) não pode conter prev_hash.'
+                    )
+        else:
+            if 'hash' in ev:
+                if primeiro_seq_hash is None:
+                    primeiro_seq_hash = seq_atual
+                ev_hash = ev['hash']
+                if not isinstance(ev_hash, str) or not ev_hash:
+                    raise ErroRegistroCorrompido(f'Hash inválido no evento {ev.get("id")}.')
+                prev_hash = ev.get('prev_hash', '')
+                if not isinstance(prev_hash, str) or prev_hash != ultimo_hash:
+                    raise ErroRegistroCorrompido(
+                        f'Cadeia de hash rompida no evento {ev.get("id")}: '
+                        f'prev_hash "{prev_hash}" != esperado "{ultimo_hash}".'
+                    )
+                calc_hash = calcular_hash_evento(ev)
+                if ev_hash != calc_hash:
+                    raise ErroRegistroCorrompido(
+                        f'Hash corrompido no evento {ev.get("id")}: '
+                        f'hash registrado "{ev_hash}" != recalculado "{calc_hash}".'
+                    )
+                ultimo_hash = ev_hash
+            else:
+                if primeiro_seq_hash is not None:
+                    raise ErroRegistroCorrompido(
+                        f'Cadeia de integridade rompida: evento {ev.get("id")} (seq {seq_atual}) '
+                        f'sem hash após início da cadeia no seq {primeiro_seq_hash}.'
+                    )
+
+    if corte_cadeia is not None and dados['eventos'] and corte_cadeia > ultimo_seq + 1:
+        raise ErroRegistroCorrompido(
+            f'Campo "corte_cadeia" ({corte_cadeia}) superior ao próximo evento esperado ({ultimo_seq + 1}).'
+        )
 
     return dados
 
@@ -720,6 +782,10 @@ class Registro:
         return self._dados.get('versao_inicial')
 
     @property
+    def corte_cadeia(self):
+        return self._dados.get('corte_cadeia')
+
+    @property
     def perfil(self):
         if not hasattr(self, '_perfil_cache'):
             self._perfil_cache = None
@@ -743,10 +809,12 @@ class Registro:
         return self._dados
 
     @classmethod
-    def inicializar(cls, pasta, projeto_id, caminho_canonico, aplicar=True, versao_inicial=None, **kwargs):
+    def inicializar(cls, pasta, projeto_id, caminho_canonico, aplicar=True, versao_inicial=None, corte_cadeia=None, **kwargs):
         """Inicializa registro.json atomicamente dentro de lock exclusivo (elimina TOCTOU)."""
         if versao_inicial is None and 'versao_inicial' in kwargs:
             versao_inicial = kwargs['versao_inicial']
+        if corte_cadeia is None and 'corte_cadeia' in kwargs:
+            corte_cadeia = kwargs['corte_cadeia']
         pasta = Path(pasta)
         reg_path, lock_path = caminhos_registro(pasta)
         if not aplicar:
@@ -763,6 +831,8 @@ class Registro:
             }
             if versao_inicial:
                 novos_dados['versao_inicial'] = str(versao_inicial).strip()
+            if corte_cadeia is not None:
+                novos_dados['corte_cadeia'] = corte_cadeia
             return cls(pasta, novos_dados)
 
         pasta.mkdir(parents=True, exist_ok=True)
@@ -784,6 +854,8 @@ class Registro:
             }
             if versao_inicial:
                 novos_dados['versao_inicial'] = str(versao_inicial).strip()
+            if corte_cadeia is not None:
+                novos_dados['corte_cadeia'] = corte_cadeia
             salvar_dados_registro_atomico(reg_path, novos_dados)
             return cls(pasta, novos_dados)
 
@@ -834,6 +906,11 @@ class Registro:
             disco_atualizado['eventos'] = list(disco['eventos']) + eventos_formatados
             disco_atualizado['revisao'] = disco['revisao'] + 1
             disco_atualizado['atualizado_em'] = agora_iso()
+            corte_atual = disco.get('corte_cadeia')
+            if corte_atual is None and eventos_formatados:
+                corte_atual = eventos_formatados[0]['seq']
+            if corte_atual is not None:
+                disco_atualizado['corte_cadeia'] = corte_atual
 
             derivar_estado(disco_atualizado)
             # Atualiza self._dados em memória para que mutações subsequentes na mesma instância vejam a simulação!
@@ -879,6 +956,11 @@ class Registro:
             disco_atualizado['eventos'] = list(disco['eventos']) + eventos_formatados
             disco_atualizado['revisao'] = disco['revisao'] + 1
             disco_atualizado['atualizado_em'] = agora_iso()
+            corte_atual = disco.get('corte_cadeia')
+            if corte_atual is None and eventos_formatados:
+                corte_atual = eventos_formatados[0]['seq']
+            if corte_atual is not None:
+                disco_atualizado['corte_cadeia'] = corte_atual
 
             # Valida estado resultante rigorosamente (lança ErroValidacaoRegistro se inválido)
             derivar_estado(disco_atualizado)
@@ -1560,6 +1642,12 @@ class Registro:
             disco_atualizado['atualizado_em'] = agora_iso()
 
             prox_seq = len(disco['eventos']) + 1
+            ultimo_hash = ''
+            for e_ant in reversed(disco['eventos']):
+                if 'hash' in e_ant and e_ant['hash']:
+                    ultimo_hash = e_ant['hash']
+                    break
+
             ev = {
                 'id': f'EVT-{prox_seq:06d}',
                 'seq': prox_seq,
@@ -1568,8 +1656,14 @@ class Registro:
                 'autor': autor,
                 'simulacao': False,
                 'dados': {'chave': chave, 'resumo': resumo_externo},
+                'prev_hash': ultimo_hash,
             }
+            ev['hash'] = calcular_hash_evento(ev)
             disco_atualizado['eventos'] = list(disco['eventos']) + [ev]
+            corte_atual = disco.get('corte_cadeia')
+            if corte_atual is None:
+                corte_atual = prox_seq
+            disco_atualizado['corte_cadeia'] = corte_atual
 
             salvar_dados_registro_atomico(self.registro_path, disco_atualizado)
             self._dados = disco_atualizado
