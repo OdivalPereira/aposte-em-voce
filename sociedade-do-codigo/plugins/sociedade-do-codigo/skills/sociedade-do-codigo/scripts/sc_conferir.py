@@ -118,6 +118,93 @@ def _extrair_uris_workspace(uris_raw):
     return caminhos
 
 
+def _extrair_pastas_declaradas(texto):
+    """Extrai caminhos declarados formalmente no prompt inicial (Pasta: ..., Worktree: ... ou <user_information>)."""
+    declaradas = set()
+    if not isinstance(texto, str):
+        return declaradas
+    for m in re.finditer(r'(?:^|[\s\n\r])(?:Pasta|Worktree):\s*([^\s\n\r`\'"]+)', texto, re.I):
+        c = _normalizar_caminho_posix(m.group(1))
+        if c:
+            declaradas.add(c)
+    for m in re.finditer(r'([/][^\s\n\r`\'"]+)\s*->\s*[^\s\n\r`\'"]+', texto):
+        c = _normalizar_caminho_posix(m.group(1))
+        if c:
+            declaradas.add(c)
+    return declaradas
+
+
+def _obter_especialistas_ativos(pasta_sociedade):
+    """Obtém conjunto de nomes em minúsculas dos especialistas com estado ativo no perfil."""
+    import sc_perfil
+    especialistas = set()
+    papeis_lideranca = {'arquiteto', 'coordenador', 'revisor independente', 'revisor'}
+    try:
+        perfil = sc_perfil.carregar_perfil(pasta_sociedade)
+        for p in perfil.papeis:
+            papel = (p.get('papel') or '').strip().lower()
+            estado = (p.get('estado') or '').strip().lower()
+            if estado == 'ativo' and papel not in papeis_lideranca:
+                nome = (p.get('nome') or '').strip().lower()
+                for n in re.split(r'[,/]', nome):
+                    n = n.strip()
+                    if n:
+                        especialistas.add(n)
+    except Exception:
+        pass
+    return especialistas
+
+
+def _contar_delegacoes_antigravity(log_path, especialistas_ativos):
+    """Conta chamadas invoke_subagent filtrando apenas especialistas do perfil ativo. Self não conta (Q182)."""
+    log_p = Path(log_path)
+    if not log_p.is_file():
+        return None
+    qtd_validas = 0
+    try:
+        with log_p.open(encoding='utf-8', errors='replace') as f:
+            for linha in f:
+                linha = linha.strip()
+                if not linha:
+                    continue
+                try:
+                    passo = json.loads(linha)
+                except Exception:
+                    continue
+                for tc in passo.get('tool_calls') or []:
+                    if tc.get('name') != 'invoke_subagent':
+                        continue
+                    args = tc.get('args') or {}
+                    subs = args.get('Subagents') or []
+                    if isinstance(subs, str):
+                        try:
+                            subs = json.loads(subs)
+                        except Exception:
+                            matches = re.findall(r'"(?:Role|TypeName|name)"\s*:\s*"([^"]+)"', subs)
+                            subs = [{'TypeName': m} for m in matches] if matches else [1]
+                    if not isinstance(subs, list):
+                        subs = [subs]
+                    if not subs and ('TypeName' in args or 'Role' in args):
+                        subs = [args]
+                    for sub in subs:
+                        if isinstance(sub, dict):
+                            t_nome = (sub.get('TypeName') or sub.get('Role') or sub.get('name') or '').strip().lower()
+                        elif isinstance(sub, str):
+                            t_nome = sub.strip().lower()
+                        else:
+                            continue
+                        if t_nome == 'self':
+                            # Q182: self não conta
+                            continue
+                        if t_nome == 'especialista' or (especialistas_ativos and t_nome in especialistas_ativos):
+                            qtd_validas += 1
+                        elif not especialistas_ativos and t_nome:
+                            qtd_validas += 1
+        return qtd_validas
+    except Exception:
+        return None
+
+
 def resolver_conversa_etapa(etapa, pasta_sociedade=None, brain_dir=None, summaries_db=None):
     """Resolve @<etapa> para o ID da conversa do Antigravity aberta no worktree após a passagem para Gandalf."""
     from sc_registro import Registro, localizar_sociedade_da_etapa, localizar_sociedade_canonica
@@ -164,6 +251,8 @@ def resolver_conversa_etapa(etapa, pasta_sociedade=None, brain_dir=None, summari
     s_db = Path(summaries_db) if summaries_db else (Path.home() / '.gemini' / 'antigravity' / 'conversation_summaries.db')
 
     candidatas = set()
+    divergentes = set()
+    conversas_sem_campo_estruturado = set()
 
     if s_db and s_db.is_file():
         try:
@@ -172,9 +261,6 @@ def resolver_conversa_etapa(etapa, pasta_sociedade=None, brain_dir=None, summari
             cur = conn.cursor()
             cur.execute("SELECT conversation_id, last_user_input_time, last_modified_time, workspace_uris FROM conversation_summaries")
             for cid, l_input, l_mod, uris in cur.fetchall():
-                uris_cands = _extrair_uris_workspace(uris)
-                if pasta_wt_norm not in uris_cands:
-                    continue
                 t_str = l_input or l_mod
                 if not t_str:
                     continue
@@ -184,81 +270,76 @@ def resolver_conversa_etapa(etapa, pasta_sociedade=None, brain_dir=None, summari
                         t_dt = t_dt.replace(tzinfo=timezone.utc)
                 except Exception:
                     continue
-                if t_dt >= ts_passagem:
+                if t_dt < ts_passagem:
+                    continue
+                uris_cands = _extrair_uris_workspace(uris)
+                if uris_cands and pasta_wt_norm not in uris_cands:
+                    divergentes.add(cid)
+                    continue
+                if pasta_wt_norm in uris_cands:
                     candidatas.add(cid)
             conn.close()
         except Exception:
             pass
 
-    padrao_pasta = re.compile(r'(?:^|[\s\'"`,;:(<\[])' + re.escape(pasta_wt_norm) + r'(?:$|[\s\'"`,;:)>\]]|\.(?:\s|$))')
-
     if b_dir and b_dir.is_dir():
         for t_file in b_dir.glob('*/.system_generated/logs/transcript*.jsonl'):
             cid = t_file.parents[2].name
+            if cid in divergentes:
+                candidatas.discard(cid)
+                continue
             try:
                 with t_file.open(encoding='utf-8', errors='replace') as f:
                     primeira_linha = f.readline()
                 if not primeira_linha.strip():
-                    if cid in candidatas:
-                        candidatas.remove(cid)
+                    candidatas.discard(cid)
                     continue
                 o = json.loads(primeira_linha)
                 c_at = o.get('created_at')
                 if not c_at:
-                    if cid in candidatas:
-                        candidatas.remove(cid)
+                    candidatas.discard(cid)
                     continue
                 t_dt = datetime.fromisoformat(str(c_at).replace('Z', '+00:00'))
                 if t_dt.tzinfo is None:
                     t_dt = t_dt.replace(tzinfo=timezone.utc)
                 if t_dt < ts_passagem:
-                    if cid in candidatas:
-                        candidatas.remove(cid)
+                    candidatas.discard(cid)
                     continue
 
                 caminhos_explicit = set()
-                for k in ('workspace', 'workspace_uris', 'workspaces', 'cwd'):
+                for k in ('workspace', 'workspace_uris', 'workspaces', 'cwd', 'app_data_dir'):
                     if k in o and o[k]:
                         caminhos_explicit.update(_extrair_uris_workspace(o[k]))
+
+                texto_busca = o.get('content') or primeira_linha
+                if not isinstance(texto_busca, str):
+                    texto_busca = str(texto_busca)
+
+                pastas_declaradas = _extrair_pastas_declaradas(texto_busca)
+                ordem_mencionada = (f"ordens/{etapa}.md" in texto_busca or f"{etapa}.md" in texto_busca or f"etapa {etapa}" in texto_busca.lower())
+
                 if caminhos_explicit:
                     if pasta_wt_norm not in caminhos_explicit:
-                        if cid in candidatas:
-                            candidatas.remove(cid)
+                        divergentes.add(cid)
+                        candidatas.discard(cid)
                         continue
-                else:
-                    texto_busca = o.get('content') or primeira_linha
-                    if not isinstance(texto_busca, str):
-                        texto_busca = str(texto_busca)
-                    ordem_mencionada = (f"ordens/{etapa}.md" in texto_busca or f"{etapa}.md" in texto_busca)
-                    pasta_encontrada = bool(padrao_pasta.search(texto_busca))
+                    candidatas.add(cid)
 
-                    if not (pasta_encontrada or ordem_mencionada):
-                        if cid in candidatas:
-                            candidatas.remove(cid)
+                if pastas_declaradas:
+                    if pasta_wt_norm not in pastas_declaradas:
+                        divergentes.add(cid)
+                        candidatas.discard(cid)
                         continue
+                    candidatas.add(cid)
 
-                    if not pasta_encontrada and ordem_mencionada:
-                        achou_no_corpo = False
-                        try:
-                            with t_file.open(encoding='utf-8', errors='replace') as f_corpo:
-                                for _ in range(40):
-                                    l_corpo = f_corpo.readline()
-                                    if not l_corpo:
-                                        break
-                                    if padrao_pasta.search(l_corpo):
-                                        achou_no_corpo = True
-                                        break
-                        except Exception:
-                            pass
-                        if not achou_no_corpo:
-                            if cid in candidatas:
-                                candidatas.remove(cid)
-                            continue
+                if not caminhos_explicit and not pastas_declaradas and cid not in candidatas:
+                    candidatas.discard(cid)
+                    if ordem_mencionada:
+                        conversas_sem_campo_estruturado.add(cid)
+                    continue
 
-                candidatas.add(cid)
             except Exception:
-                if cid in candidatas:
-                    candidatas.remove(cid)
+                candidatas.discard(cid)
                 continue
 
     if len(candidatas) > 1 and b_dir and b_dir.is_dir():
@@ -277,6 +358,8 @@ def resolver_conversa_etapa(etapa, pasta_sociedade=None, brain_dir=None, summari
             candidatas = gandalf_cands
 
     if not candidatas:
+        if conversas_sem_campo_estruturado:
+            return None, f'sem campo estruturado de workspace para a etapa "{etapa}" no Antigravity'
         return None, f'nenhuma conversa do Antigravity encontrada para a etapa "{etapa}" após a passagem'
     if len(candidatas) > 1:
         return None, f'ambiguidade: {len(candidatas)} conversas do Antigravity encontradas para a etapa "{etapa}" após a passagem'
@@ -377,6 +460,8 @@ def conferir_item(item, raiz):
                 etapa_alvo = raiz.name
             conv_id, motivo = resolver_conversa_etapa(etapa_alvo, pasta_sociedade=raiz / 'sociedade')
             if not conv_id:
+                if motivo and 'sem campo estruturado' in motivo:
+                    return NAO_VERIFICADO, motivo
                 return NAO_FEITO, motivo
             ident = conv_id
         try:
@@ -392,8 +477,15 @@ def conferir_item(item, raiz):
         if 'delegacoes_total' not in m:
             return NAO_FEITO, 'o identificador é de um subagente, não de uma sessão; delegações não medidas'
         minimo = int(args[2]) if len(args) > 2 and args[2].isdigit() else 1
-        return (FEITO, f'{m["delegacoes_total"]} delegações') if m['delegacoes_total'] >= minimo else \
-               (NAO_FEITO, f'{m["delegacoes_total"]} delegações, mínimo {minimo}')
+        total_delegacoes = m['delegacoes_total']
+        if args[0] == 'antigravity' and m.get('log'):
+            pasta_soc = raiz / 'sociedade'
+            especialistas = _obter_especialistas_ativos(pasta_soc)
+            validas = _contar_delegacoes_antigravity(m['log'], especialistas)
+            if validas is not None:
+                total_delegacoes = validas
+        return (FEITO, f'{total_delegacoes} delegações') if total_delegacoes >= minimo else \
+               (NAO_FEITO, f'{total_delegacoes} delegações, mínimo {minimo}')
 
     return NAO_PREENCHIDO, f'tipo desconhecido: {tipo}'
 
