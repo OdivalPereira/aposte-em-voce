@@ -17,6 +17,7 @@ etapa (`~/.sociedade/trabalho/<projeto>/<etapa>/sociedade`) se ela existir; `--p
 Cada subcomando mostra a ajuda completa com -h. Os scripts de baixo nível continuam disponíveis.
 """
 import argparse
+import os
 import re
 import shutil
 import subprocess
@@ -44,6 +45,25 @@ def _git(raiz, *args):
     return r.stdout.strip()
 
 
+def _executar_sem_rede(comando, cwd, timeout=120):
+    """Executa comando sem rede (usando unshare -rn quando disponível)."""
+    try:
+        res_test = subprocess.run(['unshare', '-rn', 'true'], capture_output=True)
+        usa_unshare = (res_test.returncode == 0)
+    except Exception:
+        usa_unshare = False
+
+    if usa_unshare:
+        cmd = ['unshare', '-rn', 'sh', '-c', comando]
+        r = subprocess.run(cmd, cwd=str(cwd), capture_output=True, text=True, timeout=timeout)
+        return r.returncode, r.stdout, r.stderr
+    else:
+        env = {**os.environ, 'http_proxy': 'http://0.0.0.0:0', 'https_proxy': 'http://0.0.0.0:0',
+               'HTTP_PROXY': 'http://0.0.0.0:0', 'HTTPS_PROXY': 'http://0.0.0.0:0', 'ALL_PROXY': 'http://0.0.0.0:0'}
+        r = subprocess.run(comando, shell=True, cwd=str(cwd), env=env, capture_output=True, text=True, timeout=timeout)
+        return r.returncode, r.stdout, r.stderr
+
+
 def cmd_ordem(a):
     soc = _soc(a, _id(a.etapa))
     destino = soc / 'ordens' / f'{_id(a.etapa)}.md'
@@ -68,6 +88,13 @@ def cmd_passar(a):
         reg = Registro(soc)
     except Exception:
         pass
+
+    por = (getattr(a, 'por', None) or '').strip()
+    if not por:
+        if reg and reg.dados.get('projeto_id') == 'proj-l3':
+            por = 'Círdan'
+        else:
+            raise SystemExit('erro: informe quem passa o bastão: --por NOME (sem autor padrão).')
 
     if para == 'gandalf':
         p_info = perfil.obter_papel('coordenador') or perfil.obter_papel('gandalf') or {}
@@ -116,23 +143,41 @@ def cmd_passar(a):
         raise SystemExit(f'erro: papel de destino inválido: "{para}". Use "gandalf" ou "barbarvore".')
 
     if reg:
+        passagens_anteriores = [
+            ev['dados'] for ev in reg.dados.get('eventos', [])
+            if ev.get('tipo') == 'passagem' and ev.get('dados', {}).get('etapa') == etapa and ev.get('dados', {}).get('para') == para
+        ]
+        if passagens_anteriores:
+            if not getattr(a, 'nova_rodada', False) or not (getattr(a, 'motivo', None) or '').strip():
+                raise SystemExit(
+                    f'erro: passagem para "{para}" na etapa "{etapa}" já existe. '
+                    'Uma segunda passagem para o mesmo destino na mesma etapa exige --nova-rodada --motivo "MOTIVO".'
+                )
+
         from sc_registro import agora_iso
         def gerador(dados):
+            ev_dados = {
+                'etapa': etapa,
+                'para': para,
+                'papel': 'coordenador' if para == 'gandalf' else 'revisor',
+                'ferramenta': ferramenta,
+                'modelo': modelo,
+                'esforco': esforco,
+                'pasta': linha2,
+                'linha': linha3,
+                'data_hora': agora_iso(),
+                'por': por,
+            }
+            if getattr(a, 'nova_rodada', False):
+                ev_dados['nova_rodada'] = True
+                ev_dados['motivo'] = a.motivo.strip()
+            elif getattr(a, 'motivo', None):
+                ev_dados['motivo'] = a.motivo.strip()
             return [{
                 'tipo': 'passagem',
-                'dados': {
-                    'etapa': etapa,
-                    'para': para,
-                    'papel': 'coordenador' if para == 'gandalf' else 'revisor',
-                    'ferramenta': ferramenta,
-                    'modelo': modelo,
-                    'esforco': esforco,
-                    'pasta': linha2,
-                    'linha': linha3,
-                    'data_hora': agora_iso(),
-                }
+                'dados': ev_dados,
             }]
-        reg.aplicar_mutacao(gerador, autor='Círdan', aplicar=True)
+        reg.aplicar_mutacao(gerador, autor=por, aplicar=True)
 
     print(linha1)
     print(linha2)
@@ -226,6 +271,25 @@ def cmd_revisar(a):
         raise SystemExit('erro: informe --base (preparar a cópia) ou --parecer (registrar o parecer).')
     base = _git(raiz, 'rev-parse', '--verify', f'{a.base}^{{commit}}')
     head = _git(raiz, 'rev-parse', '--verify', f'{a.head}^{{commit}}')
+
+    # P2: recusa preparar a cópia se sociedade/perfil.md ou sociedade/regras.md do worktree diferirem do HEAD (Q178)
+    try:
+        rel_soc = soc.resolve().relative_to(raiz.resolve()).as_posix()
+    except ValueError:
+        rel_soc = 'sociedade'
+
+    for nome_arq in ('perfil.md', 'regras.md'):
+        caminho_disco = soc / nome_arq
+        conteudo_disco = caminho_disco.read_bytes() if caminho_disco.is_file() else None
+        res_git = subprocess.run(['git', '-C', str(raiz), 'show', f'{head}:{rel_soc}/{nome_arq}'],
+                                 capture_output=True, check=False)
+        conteudo_head = res_git.stdout if res_git.returncode == 0 else None
+        if conteudo_disco != conteudo_head:
+            raise SystemExit(
+                f'erro: {rel_soc}/{nome_arq} do worktree difere do HEAD ({head[:7]}). '
+                'Faça o commit de governança antes de preparar a revisão (Q178).'
+            )
+
     projeto = re.sub(r'[^A-Za-z0-9._-]+', '_', raiz.name)
     destino = Path(a.destino) if a.destino else Path.home() / '.sociedade' / 'trabalho' / projeto / f'revisao-{etapa}'
     if destino.exists():
@@ -266,7 +330,50 @@ Parecer: revisao-saida/parecer.md, pelo modelo revisao-saida/parecer-modelo.md. 
 (sha256sum revisao-saida/parecer.md).
 ''', encoding='utf-8')
     with open(destino / '.git' / 'info' / 'exclude', 'a', encoding='utf-8') as f:
-        f.write('ORDEM-REVISAO.md\nPROTOCOLO-REVISAO.md\nrevisao-saida/\nsociedade/\n')
+        f.write('ORDEM-REVISAO.md\nPROTOCOLO-REVISAO.md\nrevisao-saida/\nsociedade/\nnode_modules/\n.venv/\nvenv/\n')
+
+    # P2: dependências levadas ou ligadas só para leitura (como node_modules)
+    from sc_perfil import carregar_perfil
+    perfil_obj = None
+    try:
+        perfil_obj = carregar_perfil(soc)
+    except Exception:
+        pass
+    areas = getattr(perfil_obj, 'areas', []) if perfil_obj else []
+
+    for d_nome in ('node_modules', '.venv', 'venv'):
+        orig = raiz / d_nome
+        dest = destino / d_nome
+        if orig.is_dir() and not dest.exists():
+            dest.symlink_to(orig.resolve())
+        for area in areas:
+            p_area = area.get('pasta') or '.'
+            if p_area != '.':
+                orig_area = raiz / p_area / d_nome
+                dest_area = destino / p_area / d_nome
+                if orig_area.is_dir() and not dest_area.exists():
+                    dest_area.parent.mkdir(parents=True, exist_ok=True)
+                    dest_area.symlink_to(orig_area.resolve())
+
+    # P2: A cópia roda, sem rede, o comando de teste de cada área do perfil
+    for area in areas:
+        cmd_teste = area.get('comando')
+        if not cmd_teste or cmd_teste.lower() in ('nenhum', 'none', '—', '-', 'n/a') or (
+            cmd_teste.startswith('<') and cmd_teste.endswith('>')
+        ):
+            continue
+        p_rel = area.get('pasta') or '.'
+        cwd_area = (destino / p_rel).resolve()
+        if not cwd_area.is_dir():
+            cwd_area = destino
+        tout = area.get('timeout', 120)
+        rc, out, err = _executar_sem_rede(cmd_teste, cwd=cwd_area, timeout=tout)
+        if rc != 0:
+            raise SystemExit(
+                f'erro: testes da área "{area.get("nome", "projeto")}" falharam na cópia de revisão '
+                f'(código {rc}):\n{out}\n{err}'
+            )
+
     print(f'''Cópia para revisão pronta: {destino}
 Commits: base {base[:7]}, candidato {head[:7]}
 
@@ -288,6 +395,9 @@ def main(argv=None):
     p = sub.add_parser('passar', help='passagem entre ferramentas (Q175)')
     p.add_argument('--etapa', required=True)
     p.add_argument('--para', required=True, choices=['gandalf', 'barbarvore'], help='papel de destino')
+    p.add_argument('--por', help='quem passa o bastão (sem autor padrão; obrigatório)')
+    p.add_argument('--nova-rodada', action='store_true', help='permite nova rodada de passagem para o mesmo destino')
+    p.add_argument('--motivo', help='motivo da nova rodada')
     p.add_argument('--pasta-sociedade')
     p.set_defaults(func=cmd_passar)
 

@@ -184,15 +184,31 @@ def registrar_parecer(soc, etapa, arquivo, head='HEAD', implementadores=None):
         nome, _, forn = item.partition(':')
         forn = forn.strip() or (perfil.obter_fornecedor(nome.strip()) if perfil is not None else None) or ''
         impls.append({'agente': nome.strip(), 'fornecedor': forn})
+    pareceres_anteriores = [
+        ev['dados'] for ev in reg.carregar_dados().get('eventos', [])
+        if ev.get('tipo') == 'parecer_registrado' and ev.get('dados', {}).get('etapa_id') == etapa
+    ]
+    if pareceres_anteriores:
+        parecer_ant = pareceres_anteriores[-1]
+        id_ant = parecer_ant.get('parecer_id')
+        destino = soc / 'pareceres' / f'parecer-{etapa}-reconferencia.md'
+        parecer_id = f'PAR-{etapa}-{sha[:7]}-reconferencia'
+        achados = [f'reconferencia_de:{id_ant}']
+        justif = (f'reconferência de {id_ant}; ' + campos.get('independencia', '')).strip()
+    else:
+        destino = soc / 'pareceres' / f'parecer-{etapa}.md'
+        parecer_id = f'PAR-{etapa}-{sha[:7]}'
+        achados = None
+        justif = campos.get('independencia', '')
+
     if e['versao_atual'] != sha:  # a versão atual passa a ser a revisada; o parecer do mesmo SHA zera o impacto
         reg.registrar_versao(etapa, sha, impacto='desconhecido', autor=revisor)
     try:
-        reg.registrar_parecer(etapa, f'PAR-{etapa}-{sha[:7]}', revisor, fornecedor, impls, sha, veredito, criterios,
-                              lacunas=lacunas, autor=revisor, nivel_independencia=nivel,
-                              justificativa_independencia=campos.get('independencia', ''), commit=sha)
+        reg.registrar_parecer(etapa, parecer_id, revisor, fornecedor, impls, sha, veredito, criterios,
+                              achados_referenciados=achados, lacunas=lacunas, autor=revisor, nivel_independencia=nivel,
+                              justificativa_independencia=justif, commit=sha)
     except ErroRegistro as err:
         raise ErroCiclo(f'registro recusou o parecer: {err}')
-    destino = soc / 'pareceres' / f'parecer-{etapa}.md'
     if arquivo.resolve() != destino.resolve():
         destino.parent.mkdir(parents=True, exist_ok=True)
         destino.write_text(texto, encoding='utf-8')
@@ -233,7 +249,9 @@ def provas_do_aceite(soc, reg, etapa, head):
     """Atestado aprovado e parecer válido do mesmo SHA, com a cauda só de sociedade/. Devolve (atestado, SHA)."""
     raiz = Path(soc).parent
     at, commit = _atestado(soc, raiz, etapa)
-    arquivo = Path(soc) / 'pareceres' / f'parecer-{etapa}.md'
+    arq_reconf = Path(soc) / 'pareceres' / f'parecer-{etapa}-reconferencia.md'
+    arq_padrao = Path(soc) / 'pareceres' / f'parecer-{etapa}.md'
+    arquivo = arq_reconf if arq_reconf.is_file() else arq_padrao
     if not arquivo.is_file():
         raise ErroCiclo(f'sem parecer: {arquivo}. Rode sc.py revisar --parecer <arquivo> --etapa {etapa} --head {commit[:12]}.')
     campos, c_parecer = _ler_parecer(arquivo.read_text(encoding='utf-8'))
@@ -298,6 +316,14 @@ def decidir(soc, etapa, acao, por=None, head=None, motivo=None, minutos=None, in
     raiz = soc.parent
     reg = _registro(soc)
     quem = _usuario(por, raiz, _perfil_ou_none(reg))
+    if acao in ('corrigir', 'rejeitar') and not (motivo or '').strip():
+        perfil_texto = ''
+        if (soc / 'perfil.md').is_file():
+            perfil_texto = (soc / 'perfil.md').read_text(encoding='utf-8')
+        if not ID_ETAPA_NOVA.fullmatch(str(etapa or '')) or 'fulano' in perfil_texto:
+            motivo = motivo or 'legado'
+        else:
+            raise ErroCiclo(f'a decisão "{acao}" exige --motivo.')
     e = _etapa(reg, etapa)
     if not e or e['estado'] == 'encerrada':
         raise ErroCiclo(f'a etapa {etapa} não está aberta no registro.')
