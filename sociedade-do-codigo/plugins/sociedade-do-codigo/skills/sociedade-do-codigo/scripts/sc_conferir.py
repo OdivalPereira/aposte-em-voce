@@ -52,12 +52,68 @@ def git(raiz, *args):
 
 def arquivos_do_intervalo(raiz, base, head):
     """Caminhos alterados em base..head, lidos com `-z` e sem aspas (`core.quotepath=off`) e normalizados em NFC.
-    `--no-renames`: numa renomeação contam a origem e o destino. None se o intervalo for inválido."""
+    `--no-renames`: numa renomeação contam a origem e o destino. None se o intervalo for inválido.
+    Arquivos alterados exclusivamente em commits puros de governança não são imputados aos prefixos do candidato (Q178, Q149)."""
     r = subprocess.run(['git', '-C', str(raiz), '-c', 'core.quotepath=off', 'diff', '--name-only', '-z', '--no-renames', base, head],
                        capture_output=True)
     if r.returncode != 0:
         return None
-    return [unicodedata.normalize('NFC', os.fsdecode(c)) for c in r.stdout.split(b'\0') if c]
+    todos = [unicodedata.normalize('NFC', os.fsdecode(c)) for c in r.stdout.split(b'\0') if c]
+
+    # Inspeciona commits de base..head para desconsiderar arquivos alterados exclusivamente em commits puros de governança
+    r_rev = subprocess.run(['git', '-C', str(raiz), 'rev-list', '--reverse', f'{base}..{head}'],
+                           capture_output=True, text=True)
+    if r_rev.returncode != 0:
+        return None
+    commits = [c.strip() for c in r_rev.stdout.splitlines() if c.strip()]
+    if not commits:
+        return todos
+
+    def _em_gov(rel):
+        return rel == 'sociedade' or rel.startswith('sociedade/')
+
+    commits_info = []
+    tem_commits_produto = False
+    for c in commits:
+        r_c = subprocess.run(
+            ['git', '-C', str(raiz), '-c', 'core.quotepath=off', 'diff-tree', '--no-commit-id', '--name-only', '-r', '-z', '--no-renames', '-m', c],
+            capture_output=True
+        )
+        if r_c.returncode != 0:
+            return None
+        arqs = [unicodedata.normalize('NFC', os.fsdecode(x)) for x in r_c.stdout.split(b'\0') if x]
+        if not arqs:
+            continue
+        arqs_unicos = set(arqs)
+        eh_gov = all(_em_gov(x) for x in arqs_unicos)
+        if not eh_gov:
+            tem_commits_produto = True
+        commits_info.append((arqs_unicos, eh_gov))
+
+    viu_produto = False
+    arqs_em_commits_nao_gov = set()
+    for arqs_unicos, eh_gov in commits_info:
+        if not eh_gov:
+            viu_produto = True
+            for x in arqs_unicos:
+                arqs_em_commits_nao_gov.add(x)
+            continue
+
+        if not tem_commits_produto:
+            for x in arqs_unicos:
+                arqs_em_commits_nao_gov.add(x)
+        elif not viu_produto:
+            # Governança no início (Q178)
+            continue
+        else:
+            # Commit em sociedade/ após commits de produto: perfil e regras exigem governança no início (Q178)
+            for x in arqs_unicos:
+                rel_clean = x.strip().lstrip('./')
+                if rel_clean in ('sociedade/perfil.md', 'sociedade/regras.md'):
+                    arqs_em_commits_nao_gov.add(x)
+
+    # Exclui arquivos em sociedade/ que só foram alterados em commits estritamente de governança
+    return [a for a in todos if not (_em_gov(a) and a not in arqs_em_commits_nao_gov)]
 
 
 def ler_entregas(texto):

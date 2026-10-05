@@ -154,8 +154,67 @@ def obter_arquivos_candidato(pasta_projeto: Path, base: Optional[str] = None,
         if diff is None:
             resultado['erros'].append(f'git diff {resultado["base"][:12]}..HEAD falhou')
             return resultado
+
+        # Inspeciona commits de base..HEAD para identificar commits estritamente de governança (Q178 / Q149)
+        rev_list = _git(top, 'rev-list', '--reverse', f'{resultado["base"]}..HEAD')
+        if rev_list is None:
+            resultado['erros'].append(f'git rev-list {resultado["base"][:12]}..HEAD falhou')
+            return resultado
+
+        violacoes_governanca_commits: Set[str] = set()
+        arquivos_em_commits_nao_gov: Set[str] = set()
+        commits = [c.strip() for c in rev_list.splitlines() if c.strip()]
+        commits_info: List[Tuple[str, Set[str], bool]] = []
+        tem_commits_produto = False
+        for c in commits:
+            arqs_commit = _git_z(top, 'diff-tree', '--no-commit-id', '--name-only', '-r', '-z', '--no-renames', '-m', c)
+            if arqs_commit is None:
+                continue
+            arqs_unicos = set(arqs_commit)
+            if not arqs_unicos:
+                continue
+            eh_gov = all(_em_governanca(f) for f in arqs_unicos)
+            if not eh_gov:
+                tem_commits_produto = True
+            commits_info.append((c, arqs_unicos, eh_gov))
+
+        viu_produto = False
+        for c, arqs_unicos, eh_gov in commits_info:
+            if not eh_gov:
+                viu_produto = True
+                for f in arqs_unicos:
+                    arquivos_em_commits_nao_gov.add(f)
+                    if _em_governanca(f):
+                        violacoes_governanca_commits.add(f)
+                continue
+
+            # Commit 100% em sociedade/
+            if not tem_commits_produto:
+                # Sem nenhum commit de produto na etapa: candidato mexeu em sociedade/
+                for f in arqs_unicos:
+                    arquivos_em_commits_nao_gov.add(f)
+                    violacoes_governanca_commits.add(f)
+            elif not viu_produto:
+                # Governança no início (Q178): commit sai antes do despacho
+                continue
+            else:
+                # Commit em sociedade/ após commits de produto:
+                # Cauda de governança (Q149) não pode alterar perfil ou regras (Q178)
+                for f in arqs_unicos:
+                    rel_clean = f.strip().lstrip('./')
+                    if rel_clean in ('sociedade/perfil.md', 'sociedade/regras.md'):
+                        arquivos_em_commits_nao_gov.add(f)
+                        violacoes_governanca_commits.add(f)
+
         for rel in diff:
-            caminhos[rel] = 'commit'
+            if not _em_governanca(rel):
+                caminhos[rel] = 'commit'
+            elif rel in arquivos_em_commits_nao_gov:
+                caminhos[rel] = 'commit'
+
+        for rel in violacoes_governanca_commits:
+            if rel not in caminhos:
+                caminhos[rel] = 'commit'
 
     arvore = listar_arvore(top)
     if arvore is None:
