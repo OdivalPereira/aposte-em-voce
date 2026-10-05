@@ -1,7 +1,7 @@
 {
   "tipo": "atestado_pre_devolucao",
   "versao": "1.3.0",
-  "timestamp": "2026-10-05T14:36:57.375068Z",
+  "timestamp": "2026-10-05T19:11:04.622372Z",
   "papel": "Coordenador",
   "etapa_id": "d1b-robustez",
   "fatia_id": "N/A",
@@ -14,7 +14,7 @@
     "build": {
       "ok": true,
       "comando": "npm run build",
-      "detalhes": "dist/assets/main-D1TJGi1R.js            17.49 kB │ gzip: 6.26 kB\ndist/assets/referencia-BC0LVKiy.js      21.08 kB │ gzip: 5.77 kB\ndist/assets/estilos-S66nqa8w.js         23.37 kB │ gzip: 8.58 kB\n\n✓ built in 639ms",
+      "detalhes": "dist/assets/main-D1TJGi1R.js            17.49 kB │ gzip: 6.26 kB\ndist/assets/referencia-BC0LVKiy.js      21.08 kB │ gzip: 5.77 kB\ndist/assets/estilos-S66nqa8w.js         23.37 kB │ gzip: 8.58 kB\n\n✓ built in 476ms",
       "codigo": 0
     },
     "tipos_estaticos": {
@@ -37,10 +37,10 @@
     },
     "testes": {
       "ok": true,
-      "detalhes": "app: 191 testes, 7 pulados, 7.0 s | pacote: 822 testes, 1 pulados, 81.8 s",
+      "detalhes": "app: 191 testes, 7 pulados, 8.0 s | pacote: 845 testes, 1 pulados, 74.5 s",
       "comando": "app: npm test; pacote: python3 -B -m unittest discover -s tests",
       "totais": {
-        "total": 1013,
+        "total": 1036,
         "pulados": 8,
         "falhos": 0
       }
@@ -50,10 +50,10 @@
       "suja": []
     }
   },
-  "commit": "5e95a71577bb5994213257244b436fe3f3c0bbd5",
+  "commit": "02e58dde863495fd78a281e65c9e2913870d701d",
   "base": "4fdd7b5b0f35211e69184075fd43be014e11b104",
   "origem_arquivos": "git",
-  "total_arquivos_inspecionados": 28,
+  "total_arquivos_inspecionados": 30,
   "arquivos_removidos": [],
   "python": "3.12.3",
   "hashes_artefatos": {
@@ -74,16 +74,18 @@
     "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/assets/ordem-modelo.md": "51b826ecbb0df4bd87c79163d8ebf7b9620f62d6b19203526907e4b74f759c38",
     "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc.py": "01c398c4d160726b2ba6aa171c2587d030107dfb25de1952c820be7152a1743b",
     "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_ciclo.py": "8d6418f87dc702176ffb5d0b567d89b34ca9feebb63f1390ed46f872a02008fb",
-    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_conferir.py": "212408d2d34c6c781db2258dd3bd0c1b2930f188621a4a58063ff3f605fa96c5",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_conferir.py": "8cde4a38da8284a7fcfc3d8372e076585436cfbe4deafab940def766b88437b0",
     "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_pre_devolucao.py": "829388b841573055791e861c65b6e7cf6c583d16e221abb7e2b7931b96fa463c",
-    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_registro.py": "25dbb0446f92f799e987542648058ddbc53f04bb7fa05981e5246ceca2442e3d",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_registro.py": "a6e65163c9a50d2bcfbc16a6c5079f2950065539ddebaa5055a376b8b92b638f",
     "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_rodada.py": "5f7db2fcb93f26c8f21b805c64c5ff2980dc0b585e67c8a8db3a850b7f54c068",
     "sociedade-do-codigo/tests/test_conferir_identidade.py": "0ad6826b8ec42a80f53a31cbb748a90c8e5dac32246f36b98e26dc6a6c1afb1a",
+    "sociedade-do-codigo/tests/test_conferir_rodada2.py": "214ef12cefe455f729c8cb4d2e9d8b4a91d843dd440344753c8659d853efd4f1",
     "sociedade-do-codigo/tests/test_instalar.py": "1475d8e631b507f53d9f6d98fc1e39891a953ea1ae9787f2dd63238d2ed96725",
     "sociedade-do-codigo/tests/test_permissoes_merge.py": "f9badf36662f25d54ba29d09392a2ba9d78dbdcefab41f7bc2e0801a7d765823",
     "sociedade-do-codigo/tests/test_portao_governanca_q178.py": "1a2f547e485ac898b92c784ee3cd903228c9b8c7c1ce538cfea5e966cd4d1c5c",
     "sociedade-do-codigo/tests/test_processo_d1b.py": "8dc3c3c75cdac0afcb462b5d6ff2f09463a163c32f62ce78caa4fbb421eace1e",
     "sociedade-do-codigo/tests/test_registro_cadeia_estrita.py": "a8f261091e7ae828ae23ccb8807db2be5752fb78a08f1c5f91af43f1149ac8ab",
+    "sociedade-do-codigo/tests/test_registro_migracao_legado.py": "3d1bebd1a7b11dc39661a9ac506e54ca094e486119b37cb4c60a16df1cea2e9b",
     "sociedade-do-codigo/tests/test_rodada_trava.py": "a6bc9e7dd7d2832063a5dd26191a1becb6be1a834f04d020414a787d00ffe234"
   },
   "arquivos_inspecionados": [
@@ -109,11 +111,13 @@
     "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_registro.py",
     "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_rodada.py",
     "sociedade-do-codigo/tests/test_conferir_identidade.py",
+    "sociedade-do-codigo/tests/test_conferir_rodada2.py",
     "sociedade-do-codigo/tests/test_instalar.py",
     "sociedade-do-codigo/tests/test_permissoes_merge.py",
     "sociedade-do-codigo/tests/test_portao_governanca_q178.py",
     "sociedade-do-codigo/tests/test_processo_d1b.py",
     "sociedade-do-codigo/tests/test_registro_cadeia_estrita.py",
+    "sociedade-do-codigo/tests/test_registro_migracao_legado.py",
     "sociedade-do-codigo/tests/test_rodada_trava.py"
   ],
   "erros": [],
@@ -121,7 +125,7 @@
     "modo": "por_area",
     "perfil": "sociedade/perfil.md",
     "perfil_sha256": "84e01ca7546aab098dfde5be9c69824825f7d48363e4df838d0a986de08bc648",
-    "commit": "5e95a71577bb5994213257244b436fe3f3c0bbd5",
+    "commit": "02e58dde863495fd78a281e65c9e2913870d701d",
     "area_pedida": null,
     "areas_tocadas": [
       "app",
@@ -136,7 +140,7 @@
         "timeout_s": 900,
         "ok": true,
         "codigo": 0,
-        "duracao_s": 7.0,
+        "duracao_s": 8.0,
         "timeout_estourado": false,
         "testes": {
           "total": 191,
@@ -144,7 +148,7 @@
           "falhos": 0
         },
         "motivos": [],
-        "saida_final": "  ✓  16 tests/e2e/leitura.spec.ts:121:3 › jornada de leitura (T08, T09, T99) em perfil de celular › arquivo corrompido: mensagem clara (576ms)\n  ✓  21 tests/e2e/leitura.spec.ts:239:3 › jornada de leitura (T08, T09, T99) em perfil de celular › foco visível por teclado (WCAG 2.4.7) no botão de escolher PDF em vazio e com arquivos (214ms)\n  ✓  17 tests/e2e/leitura.spec.ts:132:3 › jornada de leitura (T08, T09, T99) em perfil de celular › PDF com senha: pede a senha, recusa a errada, lê com a certa; a senha não sai do aparelho (815ms)\n\n  7 skipped\n  14 passed (4.9s)"
+        "saida_final": "  ✓  16 tests/e2e/leitura.spec.ts:121:3 › jornada de leitura (T08, T09, T99) em perfil de celular › arquivo corrompido: mensagem clara (515ms)\n  ✓  21 tests/e2e/leitura.spec.ts:239:3 › jornada de leitura (T08, T09, T99) em perfil de celular › foco visível por teclado (WCAG 2.4.7) no botão de escolher PDF em vazio e com arquivos (181ms)\n  ✓  17 tests/e2e/leitura.spec.ts:132:3 › jornada de leitura (T08, T09, T99) em perfil de celular › PDF com senha: pede a senha, recusa a errada, lê com a certa; a senha não sai do aparelho (774ms)\n\n  7 skipped\n  14 passed (4.8s)"
       },
       {
         "area": "pacote",
@@ -153,17 +157,17 @@
         "timeout_s": 600,
         "ok": true,
         "codigo": 0,
-        "duracao_s": 81.8,
+        "duracao_s": 74.5,
         "timeout_estourado": false,
         "testes": {
-          "total": 822,
+          "total": 845,
           "pulados": 1,
           "falhos": 0
         },
         "motivos": [],
-        "saida_final": "bastão despachado para Legolas: /tmp/tmp3zikqv8u/sociedade/rodada.md\nhistórico: /tmp/tmp3zikqv8u/sociedade/historico.md\nbastão despachado para Legolas: /tmp/tmp2ftp7_i_/sociedade/rodada.md\nhistórico: /tmp/tmp2ftp7_i_/sociedade/historico.md\nfatia 1 concluída e devolvida: /tmp/tmp2ftp7_i_/sociedade/rodada.md\nhistórico: /tmp/tmp2ftp7_i_/sociedade/historico.md"
+        "saida_final": "bastão despachado para Legolas: /tmp/tmpyi4ryhhg/sociedade/rodada.md\nhistórico: /tmp/tmpyi4ryhhg/sociedade/historico.md\nbastão despachado para Legolas: /tmp/tmpl4u211qd/sociedade/rodada.md\nhistórico: /tmp/tmpl4u211qd/sociedade/historico.md\nfatia 1 concluída e devolvida: /tmp/tmpl4u211qd/sociedade/rodada.md\nhistórico: /tmp/tmpl4u211qd/sociedade/historico.md"
       }
     ]
   },
-  "atestado_hash": "d3c736c20764ffd4c2fb081e1cb91a4e70b08525d3cad235b49020d4a952f27c"
+  "atestado_hash": "e56e17b304689a06a6d00dae521174f02a0a93d93623d877601453c5ad0e96dc"
 }
