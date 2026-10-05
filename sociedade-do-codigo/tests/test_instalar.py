@@ -1,3 +1,4 @@
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -128,6 +129,26 @@ class TesteInstalar(unittest.TestCase):
         linha_tools = next(l for l in rev_cl.splitlines() if l.startswith('tools:'))
         self.assertNotIn('Edit', linha_tools)
         self.assertNotIn('Write', linha_tools)
+
+    def test_claude_settings_deny_patterns_contem_opcoes_curtas_gh_pr_merge(self):
+        # A06: deny em .claude/settings.json e adapters/claude/settings.json.modelo possui -s e -r
+        modelo_path = RAIZ / 'adapters' / 'claude' / 'settings.json.modelo'
+        self.assertTrue(modelo_path.is_file())
+        modelo_data = json.loads(modelo_path.read_text(encoding='utf-8'))
+        deny_modelo = modelo_data.get('permissions', {}).get('deny', [])
+        self.assertIn("Bash(gh pr merge*-s*)", deny_modelo)
+        self.assertIn("Bash(gh pr merge*-r*)", deny_modelo)
+        self.assertIn("Bash(gh pr merge*--squash*)", deny_modelo)
+        self.assertIn("Bash(gh pr merge*--rebase*)", deny_modelo)
+
+        settings_path = RAIZ.parent / '.claude' / 'settings.json'
+        if settings_path.is_file():
+            settings_data = json.loads(settings_path.read_text(encoding='utf-8'))
+            deny_settings = settings_data.get('permissions', {}).get('deny', [])
+            self.assertIn("Bash(gh pr merge*-s*)", deny_settings)
+            self.assertIn("Bash(gh pr merge*-r*)", deny_settings)
+            self.assertIn("Bash(gh pr merge*--squash*)", deny_settings)
+            self.assertIn("Bash(gh pr merge*--rebase*)", deny_settings)
 
 
 if __name__ == '__main__':

@@ -169,4 +169,79 @@ test.describe('jornada de leitura (T08, T09, T99) em perfil de celular', () => {
       expect(caixa?.height ?? 0).toBeGreaterThanOrEqual(44);
     }
   });
+
+  test('foco visível por teclado (WCAG 2.4.7) no botão de escolher PDF em vazio e com arquivos', async ({ page }) => {
+    await page.goto('/');
+
+    const labelVazio = page.locator('label[for="escolher-pdf"]');
+    const inputArquivo = page.locator('#escolher-pdf');
+
+    // Antes do foco, o label não exibe anel de foco
+    const outlineInicial = await labelVazio.evaluate((el) => {
+      const s = window.getComputedStyle(el);
+      return { width: s.outlineWidth, style: s.outlineStyle };
+    });
+    expect(outlineInicial.style === 'none' || outlineInicial.width === '0px').toBe(true);
+
+    // Navega via teclado com Tab até o campo de arquivo
+    await page.keyboard.press('Tab');
+    await expect(inputArquivo).toBeFocused();
+
+    // Com o input focado por teclado, o label visível deve exibir outline de 3px solid var(--cor-foco)
+    const estiloFocoVazio = await labelVazio.evaluate((el) => {
+      const s = window.getComputedStyle(el);
+      return {
+        width: s.outlineWidth,
+        style: s.outlineStyle,
+        color: s.outlineColor,
+        offset: s.outlineOffset,
+      };
+    });
+    expect(estiloFocoVazio.width).toBe('3px');
+    expect(estiloFocoVazio.style).toBe('solid');
+    expect(estiloFocoVazio.color).toBe('rgb(11, 79, 156)');
+    expect(estiloFocoVazio.offset).toBe('2px');
+
+    // Adiciona um arquivo PDF para testar T08 no estado com arquivos
+    await page.setInputFiles('#escolher-pdf', arquivoPdf('extrato-ficticio.pdf', await extratoSintetico()));
+    const labelComArquivos = page.locator('label[for="escolher-pdf"]');
+    await expect(labelComArquivos).toHaveText('Acrescentar mais PDFs');
+
+    // Pressiona Tab para navegar na interface com arquivos
+    // Primeiro elemento focável na página é o input de acrescentar arquivos
+    await page.locator('#titulo-extratos').click(); // desfoca para reiniciar a navegação a partir do topo
+    await page.keyboard.press('Tab');
+    await expect(inputArquivo).toBeFocused();
+
+    const estiloFocoComArquivos = await labelComArquivos.evaluate((el) => {
+      const s = window.getComputedStyle(el);
+      return {
+        width: s.outlineWidth,
+        style: s.outlineStyle,
+        color: s.outlineColor,
+        offset: s.outlineOffset,
+      };
+    });
+    expect(estiloFocoComArquivos.width).toBe('3px');
+    expect(estiloFocoComArquivos.style).toBe('solid');
+    expect(estiloFocoComArquivos.color).toBe('rgb(11, 79, 156)');
+    expect(estiloFocoComArquivos.offset).toBe('2px');
+
+    // Testa também em viewport de 320 px (critérios C07 foco, C08 toque e C09 reflow)
+    await page.setViewportSize({ width: 320, height: 640 });
+    const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+    expect(scrollWidth).toBeLessThanOrEqual(320);
+
+    const caixa320 = await labelComArquivos.boundingBox();
+    expect(caixa320?.height ?? 0).toBeGreaterThanOrEqual(44);
+
+    // Ao navegar com Tab para o próximo botão ("Seguir sem este arquivo"), o outline sai do label
+    await page.keyboard.press('Tab');
+    const outlineAposDesfocar = await labelComArquivos.evaluate((el) => {
+      const s = window.getComputedStyle(el);
+      return { width: s.outlineWidth, style: s.outlineStyle };
+    });
+    expect(outlineAposDesfocar.style === 'none' || outlineAposDesfocar.width === '0px').toBe(true);
+  });
 });
+

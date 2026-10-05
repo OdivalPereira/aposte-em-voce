@@ -7,6 +7,7 @@ export interface EstadoVazioProps {
   textoAcao: string;
   aoExecutarAcao?: () => void;
   idInput?: string;
+  elementoInput?: ComponentChildren;
   icone?: string;
   acaoSecundaria?: {
     texto: string;
@@ -20,6 +21,7 @@ export function EstadoVazio({
   textoAcao,
   aoExecutarAcao,
   idInput,
+  elementoInput,
   icone = '📄',
   acaoSecundaria,
 }: EstadoVazioProps) {
@@ -33,6 +35,7 @@ export function EstadoVazio({
       </h3>
       <p class="estado-texto">{descricao}</p>
       <div class="estado-acoes">
+        {elementoInput}
         {idInput ? (
           <label for={idInput} class="botao botao-primario">
             {textoAcao}

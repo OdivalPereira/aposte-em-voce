@@ -152,6 +152,95 @@ class TesteConferirL8(unittest.TestCase):
         self.assertEqual(status, NAO_FEITO)
         self.assertTrue(len(obs) > 0)
 
+    def test_negativo_pasta_errada_recusa(self):
+        self._registrar_passagem()
+        ev = self.reg.dados['eventos'][-1]
+        t_passagem = ev.get('timestamp') or '2026-10-04T00:00:00Z'
+        from datetime import datetime, timedelta
+        dt = datetime.fromisoformat(str(t_passagem).replace('Z', '+00:00'))
+        t1 = (dt + timedelta(minutes=5)).isoformat()
+
+        pasta_errada = self.raiz / 'outro-worktree'
+        pasta_errada.mkdir()
+        self._inserir_conversa_db('cid-errada', t1, str(pasta_errada.resolve()))
+
+        cid, motivo = MOD_CONFERIR.resolver_conversa_etapa(
+            'e8', pasta_sociedade=self.soc_wt, brain_dir=self.brain, summaries_db=self.db_path
+        )
+        self.assertIsNone(cid)
+        self.assertIn('nenhuma conversa do Antigravity encontrada', motivo)
+
+    def test_negativo_prefixo_pasta_recusa(self):
+        self._registrar_passagem()
+        ev = self.reg.dados['eventos'][-1]
+        t_passagem = ev.get('timestamp') or '2026-10-04T00:00:00Z'
+        from datetime import datetime, timedelta
+        dt = datetime.fromisoformat(str(t_passagem).replace('Z', '+00:00'))
+        t1 = (dt + timedelta(minutes=5)).isoformat()
+
+        # Pasta cujo caminho começa com o worktree (prefixo), ex: worktree-e8-outro
+        pasta_prefixo = str(self.wt.resolve()) + '-outro'
+        self._inserir_conversa_db('cid-prefixo', t1, pasta_prefixo)
+
+        cid, motivo = MOD_CONFERIR.resolver_conversa_etapa(
+            'e8', pasta_sociedade=self.soc_wt, brain_dir=self.brain, summaries_db=self.db_path
+        )
+        self.assertIsNone(cid)
+        self.assertIn('nenhuma conversa do Antigravity encontrada', motivo)
+
+    def test_negativo_ausencia_timestamp_recusa(self):
+        self._registrar_passagem()
+        # Sem timestamp no DB (None ou vazio)
+        self._inserir_conversa_db('cid-sem-tempo', None, str(self.wt.resolve()))
+
+        cid, motivo = MOD_CONFERIR.resolver_conversa_etapa(
+            'e8', pasta_sociedade=self.soc_wt, brain_dir=self.brain, summaries_db=self.db_path
+        )
+        self.assertIsNone(cid)
+        self.assertIn('nenhuma conversa do Antigravity encontrada', motivo)
+
+    def test_negativo_timestamp_anterior_passagem_recusa(self):
+        self._registrar_passagem()
+        ev = self.reg.dados['eventos'][-1]
+        t_passagem = ev.get('timestamp') or '2026-10-04T00:00:00Z'
+        from datetime import datetime, timedelta
+        dt = datetime.fromisoformat(str(t_passagem).replace('Z', '+00:00'))
+        t_anterior = (dt - timedelta(seconds=1)).isoformat()
+
+        self._inserir_conversa_db('cid-anterior', t_anterior, str(self.wt.resolve()))
+
+        cid, motivo = MOD_CONFERIR.resolver_conversa_etapa(
+            'e8', pasta_sociedade=self.soc_wt, brain_dir=self.brain, summaries_db=self.db_path
+        )
+        self.assertIsNone(cid)
+        self.assertIn('nenhuma conversa do Antigravity encontrada', motivo)
+
+    def test_negativo_transcript_pasta_diferente_mesmo_citando_ordem_recusa(self):
+        self._registrar_passagem()
+        ev = self.reg.dados['eventos'][-1]
+        t_passagem = ev.get('timestamp') or '2026-10-04T00:00:00Z'
+        from datetime import datetime, timedelta
+        dt = datetime.fromisoformat(str(t_passagem).replace('Z', '+00:00'))
+        t1 = (dt + timedelta(minutes=5)).isoformat()
+
+        # Transcript em brain que cita ordens/e8.md mas pertence a outra pasta
+        cid_dir = self.brain / 'cid-ordem-outra-pasta' / '.system_generated' / 'logs'
+        cid_dir.mkdir(parents=True)
+        t_file = cid_dir / 'transcript.jsonl'
+        primeiro_passo = {
+            'step_index': 0,
+            'created_at': t1,
+            'content': f'Para: Gandalf. Execute sociedade/ordens/e8.md na pasta /tmp/outra-pasta-totalmente-diferente.',
+            'workspace': '/tmp/outra-pasta-totalmente-diferente'
+        }
+        t_file.write_text(json.dumps(primeiro_passo) + '\n', encoding='utf-8')
+
+        cid, motivo = MOD_CONFERIR.resolver_conversa_etapa(
+            'e8', pasta_sociedade=self.soc_wt, brain_dir=self.brain, summaries_db=self.db_path
+        )
+        self.assertIsNone(cid)
+        self.assertIn('nenhuma conversa do Antigravity encontrada', motivo)
+
 
 if __name__ == '__main__':
     unittest.main()

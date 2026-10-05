@@ -1598,6 +1598,18 @@ def cmd_papel_emulacao(a):
         return 0
 
     caminho_perfil = perfil.caminho or (p_soc / 'perfil.md')
+    conteudo_anterior = caminho_perfil.read_text(encoding='utf-8') if caminho_perfil.is_file() else None
+
+    # Revalidação R1-R3 contra concorrência imediatamente antes de gravar (A03)
+    if not ligar:
+        perfil_fresco = carregar_perfil(caminho_perfil)
+        reg_fresco = obter_registro_obrigatorio(p_soc)
+        erros = conferir_regras_estritas_equipe(perfil_fresco, reg_fresco, decisao_ref=getattr(a, 'decisao_ref', None))
+        if erros:
+            for err in erros:
+                print(f"ERRO: {err}", file=sys.stderr)
+            raise SystemExit("erro: desligamento de emulação recusado por violação de regra invariante (R1-R3).")
+
     atualizar_emulacao(caminho_perfil, ligar=ligar, motivo=motivo)
 
     def gerador(dados):
@@ -1614,7 +1626,16 @@ def cmd_papel_emulacao(a):
             }
         }]
 
-    reg.aplicar_mutacao(gerador, autor=autor, aplicar=True)
+    try:
+        reg.aplicar_mutacao(gerador, autor=autor, aplicar=True)
+    except Exception:
+        # Rollback em falha de evento (A05)
+        if conteudo_anterior is not None:
+            caminho_perfil.write_text(conteudo_anterior, encoding='utf-8')
+        elif caminho_perfil.exists():
+            caminho_perfil.unlink()
+        raise
+
     print(f"Modo emulação alterado para '{acao}' com sucesso no perfil.md e registro.json.")
     return 0
 
@@ -1715,24 +1736,34 @@ def cmd_papel_trocar(a):
         print(msg_passagem)
         return 0
 
+    conteudo_anterior = caminho_perfil.read_text(encoding='utf-8') if caminho_perfil.is_file() else None
+
     tmp = caminho_perfil.with_name(caminho_perfil.name + '.tmp')
     tmp.write_text(novo_texto_perfil, encoding='utf-8')
     os.replace(tmp, caminho_perfil)
 
-    reg.registrar_troca_papel(
-        papel=papel,
-        plataforma=plat,
-        fornecedor=forn,
-        modelo=mod,
-        esforco=esf,
-        estado=novo_estado,
-        motivo=motivo,
-        decisao_ref=getattr(a, 'decisao_ref', None),
-        autor=a.autor,
-        aplicar=True,
-        emulacao=emulacao,
-        perfil=perfil
-    )
+    try:
+        reg.registrar_troca_papel(
+            papel=papel,
+            plataforma=plat,
+            fornecedor=forn,
+            modelo=mod,
+            esforco=esf,
+            estado=novo_estado,
+            motivo=motivo,
+            decisao_ref=getattr(a, 'decisao_ref', None),
+            autor=a.autor,
+            aplicar=True,
+            emulacao=emulacao,
+            perfil=perfil
+        )
+    except Exception:
+        # Rollback em falha de evento (A05)
+        if conteudo_anterior is not None:
+            caminho_perfil.write_text(conteudo_anterior, encoding='utf-8')
+        elif caminho_perfil.exists():
+            caminho_perfil.unlink()
+        raise
 
     print(f"Papel '{papel}' atualizado com sucesso para '{plat}' ({novo_estado}) no perfil.md e registro.json.\n")
     print(msg_passagem)

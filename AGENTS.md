@@ -1,7 +1,7 @@
 # aposte-em-voce
 
-<!-- sociedade-do-codigo:inicio nucleo=3.1.0 perfil=sociedade/perfil.md pasta=sociedade jules=sim sha=ba617d499609 -->
-## Sociedade do Código (núcleo 3.1.0)
+<!-- sociedade-do-codigo:inicio nucleo=3.2.0 perfil=sociedade/perfil.md pasta=sociedade jules=sim sha=46ec8830802e -->
+## Sociedade do Código (núcleo 3.2.0)
 
 O método geral **não está neste repositório**: vem da skill `sociedade-do-codigo`, instalada na sua ferramenta. Aqui ficam só o perfil (`sociedade/perfil.md`), o registro e as ordens.
 

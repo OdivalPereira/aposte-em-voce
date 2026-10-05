@@ -80,6 +80,13 @@ def calcular_hash_conteudo(texto_ou_bytes):
     return hashlib.sha256(texto_ou_bytes).hexdigest()
 
 
+def calcular_hash_evento(ev):
+    """Calcula SHA-256 do payload canônico do evento sem a chave 'hash' (C25, F5/L1)."""
+    payload = {k: v for k, v in ev.items() if k != 'hash'}
+    texto = json.dumps(payload, sort_keys=True, ensure_ascii=False)
+    return hashlib.sha256(texto.encode('utf-8')).hexdigest()
+
+
 def localizar_sociedade_canonica(pasta_base=None):
     """Localiza o diretório canônico 'sociedade/' a partir do diretório comum do Git.
 
@@ -183,8 +190,9 @@ def carregar_dados_registro(registro_path):
     if not isinstance(dados['eventos'], list):
         raise ErroRegistroCorrompido('Campo "eventos" deve ser uma lista.')
 
-    # Valida integridade e monotonicidade dos eventos (REV-001, REV-014)
+    # Valida integridade, monotonicidade e cadeia de hash dos eventos (REV-001, REV-014, C25, F5/L1)
     ultimo_seq = 0
+    ultimo_hash = ''
     for ev in dados['eventos']:
         if not isinstance(ev, dict):
             raise ErroRegistroCorrompido('Evento malformado (deve ser objeto JSON).')
@@ -196,6 +204,22 @@ def carregar_dados_registro(registro_path):
                 f'Monotonicidade de eventos violada: seq {ev["seq"]} <= {ultimo_seq}.'
             )
         ultimo_seq = ev['seq']
+
+        if 'hash' in ev:
+            ev_hash = ev['hash']
+            prev_hash = ev.get('prev_hash', '')
+            if prev_hash != ultimo_hash:
+                raise ErroRegistroCorrompido(
+                    f'Cadeia de hash rompida no evento {ev.get("id")}: '
+                    f'prev_hash "{prev_hash}" != esperado "{ultimo_hash}".'
+                )
+            calc_hash = calcular_hash_evento(ev)
+            if ev_hash != calc_hash:
+                raise ErroRegistroCorrompido(
+                    f'Hash corrompido no evento {ev.get("id")}: '
+                    f'hash registrado "{ev_hash}" != recalculado "{calc_hash}".'
+                )
+            ultimo_hash = ev_hash
 
     return dados
 
@@ -787,6 +811,12 @@ class Registro:
 
             prox_seq = len(disco['eventos']) + 1
             eventos_formatados = []
+            ultimo_hash = ''
+            for e_ant in reversed(disco['eventos']):
+                if 'hash' in e_ant and e_ant['hash']:
+                    ultimo_hash = e_ant['hash']
+                    break
+
             for ev in novos_eventos:
                 if 'id' not in ev:
                     ev['id'] = f'EVT-{prox_seq:06d}'
@@ -794,6 +824,9 @@ class Registro:
                 ev['timestamp'] = ev.get('timestamp') or agora_iso()
                 ev['autor'] = ev.get('autor') or autor
                 ev['simulacao'] = True
+                ev['prev_hash'] = ultimo_hash
+                ev['hash'] = calcular_hash_evento(ev)
+                ultimo_hash = ev['hash']
                 eventos_formatados.append(ev)
                 prox_seq += 1
 
@@ -823,6 +856,12 @@ class Registro:
 
             prox_seq = len(disco['eventos']) + 1
             eventos_formatados = []
+            ultimo_hash = ''
+            for e_ant in reversed(disco['eventos']):
+                if 'hash' in e_ant and e_ant['hash']:
+                    ultimo_hash = e_ant['hash']
+                    break
+
             for ev in novos_eventos:
                 if 'id' not in ev:
                     ev['id'] = f'EVT-{prox_seq:06d}'
@@ -830,6 +869,9 @@ class Registro:
                 ev['timestamp'] = ev.get('timestamp') or agora_iso()
                 ev['autor'] = ev.get('autor') or autor
                 ev['simulacao'] = False
+                ev['prev_hash'] = ultimo_hash
+                ev['hash'] = calcular_hash_evento(ev)
+                ultimo_hash = ev['hash']
                 eventos_formatados.append(ev)
                 prox_seq += 1
 

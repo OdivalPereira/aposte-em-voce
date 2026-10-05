@@ -62,25 +62,27 @@ export function Extratos({ itens, aoEscolher, aoEnviarSenha, aoPular, aoContinua
     else hashesVistos.add(h);
   }
 
+  const entradaArquivo = (
+    <input
+      id="escolher-pdf"
+      class="entrada-arquivo"
+      type="file"
+      accept="application/pdf,.pdf"
+      multiple
+      onChange={(e) => {
+        const campo = e.target as HTMLInputElement;
+        const arquivos = [...(campo.files ?? [])];
+        campo.value = '';
+        if (arquivos.length > 0) aoEscolher(arquivos);
+      }}
+    />
+  );
+
   return (
     <section aria-labelledby="titulo-extratos">
       <h1 id="titulo-extratos">Extratos (opcional)</h1>
       <p>Escolha um ou mais extratos em PDF baixados do seu banco. A leitura acontece neste aparelho; nada é enviado.</p>
       <p class="suave">Você pode seguir sem extrato.</p>
-
-      <input
-        id="escolher-pdf"
-        class="entrada-arquivo"
-        type="file"
-        accept="application/pdf,.pdf"
-        multiple
-        onChange={(e) => {
-          const campo = e.target as HTMLInputElement;
-          const arquivos = [...(campo.files ?? [])];
-          campo.value = '';
-          if (arquivos.length > 0) aoEscolher(arquivos);
-        }}
-      />
 
       {itens.length === 0 ? (
         <EstadoVazio
@@ -89,6 +91,7 @@ export function Extratos({ itens, aoEscolher, aoEnviarSenha, aoPular, aoContinua
           descricao="Você pode carregar seus extratos em PDF para conferir as movimentações com privacidade total no aparelho, ou continuar sem extrato."
           textoAcao="Escolher PDF"
           idInput="escolher-pdf"
+          elementoInput={entradaArquivo}
           acaoSecundaria={{
             texto: 'Continuar sem extrato',
             aoExecutar: aoContinuar,
@@ -97,6 +100,7 @@ export function Extratos({ itens, aoEscolher, aoEnviarSenha, aoPular, aoContinua
       ) : (
         <>
           <div style={{ margin: 'var(--esp-3) 0' }}>
+            {entradaArquivo}
             <label class="botao botao-secundario" for="escolher-pdf">
               Acrescentar mais PDFs
             </label>

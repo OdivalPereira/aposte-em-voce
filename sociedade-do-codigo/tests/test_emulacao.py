@@ -462,6 +462,88 @@ class TesteComandoEmulacao(Base):
         self.assertIn('formação real: fim da emulação em nuvem', perfil_txt2)
         self.assertNotIn('emulação: formação real', perfil_txt2)
 
+    def test_rollback_em_falha_de_evento_emulacao(self):
+        # A05: falha no evento restaura perfil.md
+        from unittest.mock import patch
+        import argparse
+        perfil_conforme = """# Perfil Conforme
+## Papel × ferramenta
+| Papel | Nome | Plataforma | Fornecedor | Modelo | Esforço | Estado (ativo/reserva/espera) | Desde | Motivo |
+|---|---|---|---|---|---|---|---|---|
+| Arquiteto | Círdan | Claude Code | Anthropic | Claude Opus 5.5 | high | ativo | 2026-10-03 | arquitetura |
+| Revisor Independente | Barbárvore | Codex | OpenAI | GPT-6 Sol | high | ativo | 2026-10-03 | revisão |
+| Coordenador | Gandalf | Antigravity | Google | Gemini 3.8 Flash | high | ativo | 2026-10-03 | coordenação |
+| Dados e persistência | Elrond | Antigravity | Google | Gemini 3.8 Flash | high | ativo | 2026-10-03 | dados |
+
+## Modo emulação (Q147)
+- **Emulação:** sim. Modo emulação inicial.
+"""
+        self.arq_perfil.write_text(perfil_conforme, encoding='utf-8')
+        conteudo_original = self.arq_perfil.read_text(encoding='utf-8')
+        a = argparse.Namespace(
+            pasta=str(self.pasta),
+            perfil=str(self.arq_perfil),
+            acao='desligar',
+            motivo='tentativa com falha',
+            autor='Odival',
+            decisao_ref=None,
+            aplicar=True
+        )
+        with patch.object(MOD_RODADA.Registro, 'aplicar_mutacao', side_effect=RuntimeError('falha de I/O forçada')):
+            with self.assertRaises(RuntimeError):
+                MOD_RODADA.cmd_papel_emulacao(a)
+        # Confere rollback no perfil.md
+        self.assertEqual(self.arq_perfil.read_text(encoding='utf-8'), conteudo_original)
+
+    def test_rollback_em_falha_de_evento_troca(self):
+        # A05: falha no evento de troca de papel restaura perfil.md
+        from unittest.mock import patch
+        import argparse
+        conteudo_original = self.arq_perfil.read_text(encoding='utf-8')
+        a = argparse.Namespace(
+            pasta=str(self.pasta),
+            perfil=str(self.arq_perfil),
+            papel='coordenador',
+            para='Antigravity',
+            fornecedor='Google',
+            modelo='Gemini 3.8 Flash',
+            esforco='high',
+            estado='ativo',
+            motivo='troca com falha de persistencia',
+            autor='Odival',
+            decisao_ref=None,
+            saida_emulacao=True,
+            aplicar=True
+        )
+        with patch.object(MOD_RODADA.Registro, 'aplicar_mutacao', side_effect=RuntimeError('falha de I/O forçada')):
+            with self.assertRaises(RuntimeError):
+                MOD_RODADA.cmd_papel_trocar(a)
+        # Confere rollback no perfil.md
+        self.assertEqual(self.arq_perfil.read_text(encoding='utf-8'), conteudo_original)
+
+    def test_revalidacao_estrita_r1_r3_concorrente_ao_desligar_emulacao(self):
+        # A03: revalidação estrita contra concorrência recusa desligamento se perfil tiver violação de R3
+        perfil_com_violacao = """# Perfil com violação de R3
+## Papel × ferramenta
+| Papel | Nome | Plataforma | Fornecedor | Modelo | Esforço | Estado (ativo/reserva/espera) | Desde | Motivo |
+|---|---|---|---|---|---|---|---|---|
+| Arquiteto | Círdan | Claude Code | Anthropic | Claude Opus 5.5 | high | ativo | 2026-10-03 | arquitetura |
+| Revisor Independente | Barbárvore | Codex | OpenAI | GPT-6 Sol | high | ativo | 2026-10-03 | revisão |
+| Coordenador | Gandalf | Antigravity | Google | Gemini 3.8 Flash | high | ativo | 2026-10-03 | coordenação |
+| Dados e persistência | Elrond | Claude Code | Anthropic | Claude Sonnet | high | ativo | 2026-10-03 | dados fora do google |
+
+## Modo emulação (Q147)
+- **Emulação:** sim.
+"""
+        self.arq_perfil.write_text(perfil_com_violacao, encoding='utf-8')
+        r = rodar(SCRIPT_RODADA, 'papel', 'emulacao', 'desligar', '--motivo', 'tentativa com violacao r3',
+                  '--autor', 'Odival', '--pasta', str(self.pasta), '--aplicar')
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn('recusado por violação de regra invariante', r.stderr)
+        self.assertIn('Violação de R3', r.stderr)
+        # Perfil permanece intocado com emulação sim
+        self.assertTrue(MOD_PERFIL.emulacao_ligada(self.arq_perfil.read_text(encoding='utf-8')))
+
 
 if __name__ == '__main__':
     unittest.main()

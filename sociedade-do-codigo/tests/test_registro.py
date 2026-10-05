@@ -497,6 +497,44 @@ class TesteRegistro(unittest.TestCase):
         self.assertIn("<!-- bloco_gandalf_inicio: SC-E1 -->", conteudo)
         self.assertIn("## Retorno de Gandalf — SC-E1", conteudo)
 
+    def test_cadeia_hash_adulteracao_campo_lanca_erro_registro_corrompido(self):
+        # A02: evento com hash gravado, campo adulterado no arquivo, recarregamento falha com ErroRegistroCorrompido
+        self.reg.abrir_etapa('SC-E1', 'Objetivo E1', 'ref', 'aut', '90e5a95', ['C01'])
+        self.reg.passar_bastao('SC-E1', 'Legolas', autor='Gandalf', nota='motivo original')
+
+        reg_path = self.pasta_sociedade / 'registro.json'
+        dados = json.loads(reg_path.read_text(encoding='utf-8'))
+        eventos = dados['eventos']
+        self.assertGreaterEqual(len(eventos), 2)
+        # Confere que os eventos possuem hash e prev_hash
+        self.assertEqual(eventos[0]['prev_hash'], '')
+        self.assertTrue(eventos[0]['hash'])
+        self.assertEqual(eventos[1]['prev_hash'], eventos[0]['hash'])
+        self.assertTrue(eventos[1]['hash'])
+
+        # Adultera um campo no arquivo de registro (ex.: nota/motivo)
+        eventos[1]['dados']['nota'] = 'motivo adulterado maliciosamente'
+        reg_path.write_text(json.dumps(dados, indent=2), encoding='utf-8')
+
+        # Recarregamento via Registro falha com ErroRegistroCorrompido
+        with self.assertRaises(ErroRegistroCorrompido):
+            Registro(self.pasta_sociedade)
+
+    def test_cadeia_hash_rompimento_prev_hash_lanca_erro(self):
+        # A02: adulteração do prev_hash rompe a cadeia e lança ErroRegistroCorrompido
+        self.reg.abrir_etapa('SC-E1', 'Objetivo E1', 'ref', 'aut', '90e5a95', ['C01'])
+        self.reg.passar_bastao('SC-E1', 'Legolas', autor='Gandalf', nota='motivo original')
+
+        reg_path = self.pasta_sociedade / 'registro.json'
+        dados = json.loads(reg_path.read_text(encoding='utf-8'))
+        dados['eventos'][1]['prev_hash'] = '0' * 64
+        # Recalcula o hash do evento 1 com prev_hash falso para testar exclusivamente a verificação de prev_hash
+        dados['eventos'][1]['hash'] = MOD_REGISTRO.calcular_hash_evento(dados['eventos'][1])
+        reg_path.write_text(json.dumps(dados, indent=2), encoding='utf-8')
+
+        with self.assertRaises(ErroRegistroCorrompido):
+            Registro(self.pasta_sociedade)
+
 
 if __name__ == '__main__':
     unittest.main()

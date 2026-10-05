@@ -80,6 +80,44 @@ def _sha256(caminho):
     return hashlib.sha256(Path(caminho).read_bytes()).hexdigest()
 
 
+def _normalizar_caminho_posix(c):
+    if not c:
+        return ''
+    s = str(c).strip().strip('"').strip("'")
+    if s.startswith('file://'):
+        s = s[7:]
+    try:
+        return Path(s).resolve().as_posix()
+    except Exception:
+        return s
+
+
+def _extrair_uris_workspace(uris_raw):
+    caminhos = set()
+    if not uris_raw:
+        return caminhos
+    s_raw = str(uris_raw).strip()
+    if not s_raw:
+        return caminhos
+    try:
+        parsed = json.loads(s_raw)
+        if isinstance(parsed, list):
+            for item in parsed:
+                if item:
+                    caminhos.add(_normalizar_caminho_posix(item))
+            return caminhos
+        elif isinstance(parsed, str):
+            caminhos.add(_normalizar_caminho_posix(parsed))
+            return caminhos
+    except Exception:
+        pass
+    for item in s_raw.split(','):
+        item = item.strip()
+        if item:
+            caminhos.add(_normalizar_caminho_posix(item))
+    return caminhos
+
+
 def resolver_conversa_etapa(etapa, pasta_sociedade=None, brain_dir=None, summaries_db=None):
     """Resolve @<etapa> para o ID da conversa do Antigravity aberta no worktree após a passagem para Gandalf."""
     from sc_registro import Registro, localizar_sociedade_da_etapa, localizar_sociedade_canonica
@@ -94,6 +132,8 @@ def resolver_conversa_etapa(etapa, pasta_sociedade=None, brain_dir=None, summari
     pasta_wt = soc.parent.resolve() if soc else None
     if not pasta_wt or not pasta_wt.exists():
         return None, f'worktree da etapa "{etapa}" não encontrado'
+
+    pasta_wt_norm = pasta_wt.as_posix()
 
     try:
         reg = Registro(soc)
@@ -111,21 +151,14 @@ def resolver_conversa_etapa(etapa, pasta_sociedade=None, brain_dir=None, summari
 
     passagem_ev = passagens[-1]
     ts_str = passagem_ev.get('timestamp') or (passagem_ev.get('dados') or {}).get('data_hora')
-    etapa_aberta_ev = next((ev for ev in eventos if ev.get('tipo') == 'etapa_aberta' and (ev.get('dados') or {}).get('etapa_id') == etapa), None)
-    ts_aberta_str = (etapa_aberta_ev.get('timestamp') if etapa_aberta_ev else None) or ts_str
+    if not ts_str:
+        return None, f'timestamp da passagem para Gandalf ausente na etapa "{etapa}"'
     try:
         ts_passagem = datetime.fromisoformat(str(ts_str).replace('Z', '+00:00'))
         if ts_passagem.tzinfo is None:
             ts_passagem = ts_passagem.replace(tzinfo=timezone.utc)
     except Exception:
-        ts_passagem = datetime.min.replace(tzinfo=timezone.utc)
-    try:
-        ts_aberta = datetime.fromisoformat(str(ts_aberta_str).replace('Z', '+00:00'))
-        if ts_aberta.tzinfo is None:
-            ts_aberta = ts_aberta.replace(tzinfo=timezone.utc)
-    except Exception:
-        ts_aberta = ts_passagem
-    ts_limite = min(ts_passagem, ts_aberta)
+        return None, f'timestamp da passagem para Gandalf inválido: "{ts_str}"'
 
     b_dir = Path(brain_dir) if brain_dir else (Path.home() / '.gemini' / 'antigravity' / 'brain')
     s_db = Path(summaries_db) if summaries_db else (Path.home() / '.gemini' / 'antigravity' / 'conversation_summaries.db')
@@ -139,40 +172,72 @@ def resolver_conversa_etapa(etapa, pasta_sociedade=None, brain_dir=None, summari
             cur = conn.cursor()
             cur.execute("SELECT conversation_id, last_user_input_time, last_modified_time, workspace_uris FROM conversation_summaries")
             for cid, l_input, l_mod, uris in cur.fetchall():
-                if str(pasta_wt) in str(uris):
-                    t_str = l_input or l_mod
-                    try:
-                        t_dt = datetime.fromisoformat(str(t_str).replace('Z', '+00:00'))
-                        if t_dt.tzinfo is None:
-                            t_dt = t_dt.replace(tzinfo=timezone.utc)
-                    except Exception:
-                        t_dt = ts_limite
-                    if t_dt >= ts_limite:
-                        candidatas.add(cid)
+                uris_cands = _extrair_uris_workspace(uris)
+                if pasta_wt_norm not in uris_cands:
+                    continue
+                t_str = l_input or l_mod
+                if not t_str:
+                    continue
+                try:
+                    t_dt = datetime.fromisoformat(str(t_str).replace('Z', '+00:00'))
+                    if t_dt.tzinfo is None:
+                        t_dt = t_dt.replace(tzinfo=timezone.utc)
+                except Exception:
+                    continue
+                if t_dt >= ts_passagem:
+                    candidatas.add(cid)
             conn.close()
         except Exception:
             pass
 
+    padrao_pasta = re.compile(r'(?:^|[\s\'"`,;:(<\[])' + re.escape(pasta_wt_norm) + r'(?:$|[\s\'"`,;:)>\]]|\.(?:\s|$))')
+
     if b_dir and b_dir.is_dir():
         for t_file in b_dir.glob('*/.system_generated/logs/transcript*.jsonl'):
             cid = t_file.parents[2].name
-            if cid in candidatas:
-                continue
             try:
                 with t_file.open(encoding='utf-8', errors='replace') as f:
                     primeira_linha = f.readline()
-                if str(pasta_wt) in primeira_linha or f"ordens/{etapa}.md" in primeira_linha or f"{etapa}.md" in primeira_linha:
-                    o = json.loads(primeira_linha)
-                    c_at = o.get('created_at')
-                    if c_at:
-                        t_dt = datetime.fromisoformat(str(c_at).replace('Z', '+00:00'))
-                        if t_dt.tzinfo is None:
-                            t_dt = t_dt.replace(tzinfo=timezone.utc)
-                        if t_dt >= ts_limite:
-                            candidatas.add(cid)
-                    else:
-                        candidatas.add(cid)
+                if not primeira_linha.strip():
+                    if cid in candidatas:
+                        candidatas.remove(cid)
+                    continue
+                o = json.loads(primeira_linha)
+                c_at = o.get('created_at')
+                if not c_at:
+                    if cid in candidatas:
+                        candidatas.remove(cid)
+                    continue
+                t_dt = datetime.fromisoformat(str(c_at).replace('Z', '+00:00'))
+                if t_dt.tzinfo is None:
+                    t_dt = t_dt.replace(tzinfo=timezone.utc)
+                if t_dt < ts_passagem:
+                    if cid in candidatas:
+                        candidatas.remove(cid)
+                    continue
+
+                caminhos_explicit = set()
+                for k in ('workspace', 'workspace_uris', 'workspaces', 'cwd'):
+                    if k in o and o[k]:
+                        caminhos_explicit.update(_extrair_uris_workspace(o[k]))
+                if caminhos_explicit:
+                    if pasta_wt_norm not in caminhos_explicit:
+                        if cid in candidatas:
+                            candidatas.remove(cid)
+                        continue
+                else:
+                    texto_busca = o.get('content') or primeira_linha
+                    if not isinstance(texto_busca, str):
+                        texto_busca = str(texto_busca)
+                    if not padrao_pasta.search(texto_busca):
+                        if cid in candidatas:
+                            candidatas.remove(cid)
+                        continue
+
+                candidatas.add(cid)
             except Exception:
+                if cid in candidatas:
+                    candidatas.remove(cid)
                 continue
 
     if len(candidatas) > 1 and b_dir and b_dir.is_dir():
