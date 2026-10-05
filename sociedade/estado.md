@@ -1,8 +1,10 @@
-# Estado — d1-design
+# Estado — d1b-robustez
 
-Gerado por `sc.py estado` em 05/10/2026 11:51 UTC. Ramo `etapa/d1-design` em `87c8114`. Não edite à mão.
+Gerado por `sc.py estado` em 05/10/2026 12:48 UTC. Ramo `etapa/d1b-robustez` em `4fdd7b5`. Não edite à mão.
 
 ## Precisa de atenção
+- Etapa d1b-robustez aberta (responsável: Coordenador); critérios 0/1.
+- Etapa d1b-robustez: aguardando revisão independente.
 - Etapa m0-destravar: aceite em emulação (independência: não).
 - Etapa a1-parser: aceite em emulação (independência: não).
 - Etapa fechamento-nuvem: aceite em emulação (independência: não).
@@ -28,6 +30,7 @@ Gerado por `sc.py estado` em 05/10/2026 11:51 UTC. Ramo `etapa/d1-design` em `87
 | a1-parser | encerrada | 1/1 | 0/0/0 | aceitar_com_ressalvas (aceite em emulação; independência: não) |
 | fechamento-nuvem | encerrada | 1/1 | 0/0/0 | aceitar_com_ressalvas (aceite em emulação; independência: não) |
 | d1-design | encerrada | 0/1 | 0/0/0 | nao_aceitar |
+| d1b-robustez | aberta | 0/1 | 0/0/0 | — |
 
 ## Conferências (verificado por script)
 - m0-destravar: 9 de 9 entregas feitas (2026-10-03T17:17)
@@ -37,18 +40,19 @@ Gerado por `sc.py estado` em 05/10/2026 11:51 UTC. Ramo `etapa/d1-design` em `87
 - d1-design: 10 de 10 entregas feitas (2026-10-05T11:43)
 
 ## Atestados do portão
-- atestado-d1-design.json: APROVADO, 77 arquivos, commit 87c8114372
-- atestado-d1-design-2.json: APROVADO, 19 arquivos, commit 0cc02a7e98
-- atestado-d1-design-5.json: APROVADO, 12 arquivos, commit 97010fa583
-- atestado-d1-design-3.json: APROVADO, 15 arquivos, commit e9b02ae913
+- atestado-m0-destravar-2.json: APROVADO, 8 arquivos, commit 530d9a2fdc
+- atestado-m0-destravar.json: APROVADO, 46 arquivos, commit fb3ae4265d
+- atestado-m0-destravar-5.json: APROVADO, 8 arquivos, commit ff15c9b93e
+- atestado-m0-destravar-3.json: APROVADO, 12 arquivos, commit a681356482
 
 ## Trabalho em andamento
 - `main` em `~/Documentos/Projetos/aposte-em-voce`
+- `etapa/d1-design` em `~/.sociedade/trabalho/aposte-em-voce/d1-design`
 
 ## Commits recentes
+- `4fdd7b5` 05/10 07:52 sociedade(d1-design): decisão rejeitar
 - `87c8114` 05/10 06:52 fix(d1-design): refinamento em sc_conferir.py para desambiguação e rec
 - `240f1b9` 05/10 06:45 fix(d1-design): correção dos achados da revisão A01 a A06 (foco visíve
 - `28537f7` 03/10 21:13 feat(d1-design): integração da versão 3.2.0, manifestos, skills e CHAN
 - `0cc02a7` 03/10 21:09 feat(d1-design): F2, aplicação da referência visual às telas T08, T09 
 - `97010fa` 03/10 20:08 feat(d1-design): F5, scripts do método, lacunas L1 a L8 (emulação, pas
-- `e9b02ae` 03/10 20:08 feat(d1-design): F3, formação real no projeto e no pacote, remoção de 

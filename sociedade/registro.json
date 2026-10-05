@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-10-05T11:51:49.163640+00:00",
+  "atualizado_em": "2026-10-05T12:48:25.113455+00:00",
   "caminho_canonico": "/home/odival/Documentos/Projetos/aposte-em-voce",
   "criado_em": "2026-10-03T13:50:17.697161+00:00",
   "eventos": [
@@ -1813,10 +1813,56 @@
       "simulacao": false,
       "timestamp": "2026-10-05T11:51:49.163611+00:00",
       "tipo": "etapa_encerrada"
+    },
+    {
+      "autor": "Coordenador",
+      "dados": {
+        "autorizacao_ref": "ordem_sha256:1c26d9a60c28ee8e",
+        "base_efetiva": "4fdd7b5b0f35211e69184075fd43be014e11b104",
+        "criterios": [
+          "portao"
+        ],
+        "etapa_id": "d1b-robustez",
+        "exigir_revisao": true,
+        "limites": "—",
+        "nivel": "2",
+        "objetivo": "Ordem d1b-robustez — fechar os resíduos da d1 no pacote e tornar o processo honesto e econômico",
+        "origem": "real",
+        "plano_ref": "ordem:sociedade/ordens/d1b-robustez.md",
+        "responsavel": "Coordenador"
+      },
+      "hash": "55d62b3efa4f9f0eabc1ed0cd9956278c08cd85863d71af31458ee68f225f39b",
+      "id": "EVT-000050",
+      "prev_hash": "2ea8c5ede160c87520869fcccaa13369c5e66ec95b81ed42ec68ecbd26bf2314",
+      "seq": 50,
+      "simulacao": false,
+      "timestamp": "2026-10-05T12:48:20.452764+00:00",
+      "tipo": "etapa_aberta"
+    },
+    {
+      "autor": "Círdan",
+      "dados": {
+        "data_hora": "2026-10-05T12:48:25.113420+00:00",
+        "esforco": "high",
+        "etapa": "d1b-robustez",
+        "ferramenta": "Antigravity",
+        "linha": "Para: Gandalf. Execute a ordem sociedade/ordens/d1b-robustez.md.",
+        "modelo": "Gemini 3.8 Flash",
+        "papel": "coordenador",
+        "para": "gandalf",
+        "pasta": "/home/odival/.sociedade/trabalho/aposte-em-voce/d1b-robustez"
+      },
+      "hash": "f88641df17430d9bd8c979f339090d9ab354265b64cf60d348cb1ab275aff7f6",
+      "id": "EVT-000051",
+      "prev_hash": "55d62b3efa4f9f0eabc1ed0cd9956278c08cd85863d71af31458ee68f225f39b",
+      "seq": 51,
+      "simulacao": false,
+      "timestamp": "2026-10-05T12:48:25.113436+00:00",
+      "tipo": "passagem"
     }
   ],
   "projeto_id": "aposte-em-voc",
   "resumos_externos": {},
-  "revisao": 50,
+  "revisao": 52,
   "versao_formato": "2.1.0"
 }
