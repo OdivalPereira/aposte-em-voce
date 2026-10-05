@@ -1,6 +1,6 @@
 ---
 name: sc-execucao
-description: Como o coordenador executa uma etapa: fatias delegadas a especialistas por subagente, tarefas mecânicas do Jules, subordem autocontida, disjunção e portão por fatia. Use ao dividir etapa, delegar fatia ou receber resultado.
+description: Como o coordenador executa uma etapa: fatias delegadas a especialistas, tarefas do Jules, subordem autocontida, disjunção e portão por fatia. Use ao dividir etapa, delegar fatia ou receber resultado.
 metadata:
   versao: "3.2.0"
 ---
@@ -10,39 +10,38 @@ Vale para o coordenador e os especialistas.
 
 ## 1. Fatias e subordens
 
-- Fatia é o menor pedaço que se prova sozinho. Revisar e integrar não são fatias.
-- O coordenador abre conversa nova no worktree da etapa, acionado por `sc.py passar` (Q175).
-- Se a etapa mudar o perfil (ocupante ou emulação), crie o worktree antes da ordem.
-- Cada fatia vai a um especialista por `invoke_subagent`, com subordem autocontida:
-  - objetivo e critério de aceite da fatia;
+- Fatia se prova sozinha. Revisar e integrar não são fatias.
+- Gandalf abre conversa nova no worktree (`sc.py passar`, Q175), teto ~250 passos/rodada (Q180). Ordem até 8 KB e uma natureza só.
+- Se mudar perfil/regras, governança antes da ordem (Q178).
+- Antigravity: delegação via TypeName do especialista, nunca self (Q182).
+- Fatia vai a especialista por `invoke_subagent` com subordem autocontida:
+  - objetivo e aceite;
   - "leia só": até 5 caminhos, com linhas em arquivo grande;
-  - "escreva só": arquivos da fatia, sem sobreposição;
-  - comando de teste dirigido com saída curta (`| tail`, `-q`);
-  - estado e retorno em arquivo (2 KB no chat). Correção por agente novo (Q171).
-- Antes de despachar, confira disjunção: `verificar_disjuncao.py` (skill `sociedade-do-codigo`).
-- Delegação que falha é parada: registre e devolva. Não faça trabalho solo.
+  - "escreva só": arquivos da fatia, sem sobreposição (`verificar_disjuncao.py`);
+  - teste dirigido curto; retorno em arquivo (2 KB no chat). Correção por agente novo (Q171).
+- Delegação que falha é parada. Não faça trabalho solo.
+- Coordenador não edita lógica (Q181): só estado, subordens e integração até 30 linhas (Q164); depuração é do especialista.
 
 ## 2. Portão por fatia e integração
 
-- Durante a fatia, rode só testes dirigidos.
-- Ao fechar a fatia: commit e `sc.py entregar --etapa <ID> --base <commit anterior>`.
+- Na fatia: testes dirigidos. Ao fechar: commit e `sc.py entregar --etapa <ID> --base <anterior>`.
 - Fim da etapa: `sc.py entregar --etapa <ID> --base <base>` e atestado em `sociedade/pareceres/`.
-- Fatia de alto impacto (Q10) recebe revisão interna da Galadriel por subagente (Q92).
-- Integrar na branch principal é após a decisão, por merge commit com o "sim" do usuário (Q174).
+- Alto impacto por definição (Q176): fatias de registro, conferência, aceite, portão ou permissões exigem protocolo completo e revisão interna (Galadriel).
+- Onde Gandalf para (Q177): no entregar final e paradas da ordem; não faz PR nem governança (do Círdan). Sem amend, reset ou force push (Q178).
+- Integrar é após decisão do usuário, por merge commit (`gh pr merge <n> --merge`, Q174).
 
 ## 3. Jules
 
-- Só tarefas mecânicas: fixtures, testes de apoio, referências, renomeações (Q93, Q129).
-- Nunca regra crítica, migração, autenticação, cobrança ou dado real.
-- Especialista monta tarefa por `assets/tarefa-jules.md`, confere lote por `scripts/verificar_lote.py` e confere retorno. Teto de 3 tarefas, janela de 45 min (Q48). PR em rascunho, sem merge automático. Publicar é parada humana.
+- Só tarefas mecânicas (Q93, Q129). Nunca regra crítica, migração, credencial ou dado real.
+- Especialista monta tarefa (`assets/tarefa-jules.md`), confere lote (`scripts/verificar_lote.py`) e retorno. Teto 3 tarefas, janela 45 min (Q48). Sem merge automático.
 
 ## 4. Máquina local
 
-Arquivo grande e dado local ficam com executores locais (`modulos/executores-locais/`). Instalar biblioteca ou modelo é parada humana.
+Arquivo grande e dado local ficam com executores locais (`modulos/executores-locais/`). Instalar é parada humana.
 
 ## 5. Retorno do coordenador
 
-Até 2 KB no chat (Q170): veredito, entregas, commits, atestado, Jules e pendências. O detalhe vai para `sociedade/subordens/<ordem>-<fatia>-retorno.md`.
+Até 2 KB no chat (Q170, Q180): veredito, entregas, commits, atestado, Jules e pendências. Detalhe em arquivo de retorno.
 
 ## Arquivos desta skill
 

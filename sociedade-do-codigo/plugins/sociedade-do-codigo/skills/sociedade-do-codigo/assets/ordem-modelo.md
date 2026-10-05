@@ -17,9 +17,13 @@ Especialistas: <nome por fatia> · Revisão interna: <fatias de alto impacto ou 
 1. <nome> · especialista: <nome> · escreva só: <arquivos> · aceite: <critério observável>
 
 ## Paradas
+- Teto da ordem: até 8 KB e uma única natureza (Q180).
+- Teto de cerca de 1.500 linhas de produto por candidato (Q168).
 - Mudança de escopo, de contrato ou instalação: volta ao arquiteto e ao usuário.
-- Teto de cerca de 1.500 linhas de produto por candidato.
-- <outras>
+
+## Onde o Gandalf para
+- No `entregar` final e paradas da ordem (Q177); não faz PR, cópias de revisão nem governança.
+- Não edita lógica de produto (integração até 30 linhas sem lógica nova, Q164, Q181); teto de ~250 passos (Q180).
 
 ## Entregas verificáveis
 Uma por linha: `ID | tipo | argumentos`. Tipos aceitos por `sc.py conferir`:
