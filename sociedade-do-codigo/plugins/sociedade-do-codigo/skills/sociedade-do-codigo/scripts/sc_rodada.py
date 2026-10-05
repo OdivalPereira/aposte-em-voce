@@ -25,6 +25,8 @@ Os comandos que escrevem simulam por padrão; só gravam com --aplicar.
 Sem dependências externas.
 """
 import argparse
+import contextlib
+import fcntl
 import json
 import os
 import re
@@ -1565,6 +1567,40 @@ def cmd_papel_status(a):
     return 0
 
 
+NOME_ARQUIVO_TRAVA_PERFIL = '.trava_perfil.tmp'
+
+
+class ErroTravaPerfil(Exception):
+    """Disparado quando a trava comum de perfil e registro não pode ser obtida."""
+
+
+@contextlib.contextmanager
+def trava_perfil_registro(pasta=None, bloqueante=False):
+    """Trava comum para serializar leitura, validação e gravação de perfil e registro (A03)."""
+    p = Path(pasta) if pasta else localizar_sociedade_canonica()
+    lock_path = p / NOME_ARQUIVO_TRAVA_PERFIL
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    f = open(lock_path, 'a+')
+    try:
+        if bloqueante:
+            fcntl.flock(f.fileno(), fcntl.LOCK_EX)
+        else:
+            fcntl.flock(f.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except (BlockingIOError, OSError) as e:
+        f.close()
+        raise ErroTravaPerfil(
+            "Operação concorrente em andamento no perfil/registro (trava ativa)."
+        ) from e
+    try:
+        yield
+    finally:
+        try:
+            fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+        except OSError:
+            pass
+        f.close()
+
+
 def cmd_papel_emulacao(a):
     p_soc = Path(a.pasta) if getattr(a, 'pasta', None) else localizar_sociedade_canonica()
     c_perfil = getattr(a, 'perfil', None)
@@ -1597,44 +1633,51 @@ def cmd_papel_emulacao(a):
         print("Nenhuma alteração foi gravada em disco. Use --aplicar para efetivar.\n")
         return 0
 
-    caminho_perfil = perfil.caminho or (p_soc / 'perfil.md')
-    conteudo_anterior = caminho_perfil.read_text(encoding='utf-8') if caminho_perfil.is_file() else None
-
-    # Revalidação R1-R3 contra concorrência imediatamente antes de gravar (A03)
-    if not ligar:
-        perfil_fresco = carregar_perfil(caminho_perfil)
-        reg_fresco = obter_registro_obrigatorio(p_soc)
-        erros = conferir_regras_estritas_equipe(perfil_fresco, reg_fresco, decisao_ref=getattr(a, 'decisao_ref', None))
-        if erros:
-            for err in erros:
-                print(f"ERRO: {err}", file=sys.stderr)
-            raise SystemExit("erro: desligamento de emulação recusado por violação de regra invariante (R1-R3).")
-
-    atualizar_emulacao(caminho_perfil, ligar=ligar, motivo=motivo)
-
-    def gerador(dados):
-        return [{
-            'tipo': 'emulacao_alterada',
-            'dados': {
-                'acao': acao,
-                'estado': 'ligado' if ligar else 'desligado',
-                'emulacao': ligar,
-                'motivo': motivo,
-                'autor': autor,
-                'desde': data_str,
-                **({'decisao_ref': a.decisao_ref} if getattr(a, 'decisao_ref', None) else {})
-            }
-        }]
-
     try:
-        reg.aplicar_mutacao(gerador, autor=autor, aplicar=True)
-    except Exception:
-        # Rollback em falha de evento (A05)
-        if conteudo_anterior is not None:
-            caminho_perfil.write_text(conteudo_anterior, encoding='utf-8')
-        elif caminho_perfil.exists():
-            caminho_perfil.unlink()
-        raise
+        with trava_perfil_registro(p_soc):
+            caminho_perfil = perfil.caminho or (p_soc / 'perfil.md')
+            conteudo_anterior = caminho_perfil.read_text(encoding='utf-8') if caminho_perfil.is_file() else None
+
+            # Revalidação R1-R3 contra concorrência imediatamente antes de gravar sob a trava comum (A03)
+            if not ligar:
+                perfil_fresco = carregar_perfil(c_perfil or p_soc)
+                reg_fresco = obter_registro_obrigatorio(p_soc)
+                erros = conferir_regras_estritas_equipe(perfil_fresco, reg_fresco, decisao_ref=getattr(a, 'decisao_ref', None))
+                if erros:
+                    for err in erros:
+                        print(f"ERRO: {err}", file=sys.stderr)
+                    raise SystemExit("erro: desligamento de emulação recusado por violação de regra invariante (R1-R3).")
+            else:
+                reg_fresco = obter_registro_obrigatorio(p_soc)
+
+            atualizar_emulacao(caminho_perfil, ligar=ligar, motivo=motivo)
+
+            def gerador(dados):
+                return [{
+                    'tipo': 'emulacao_alterada',
+                    'dados': {
+                        'acao': acao,
+                        'estado': 'ligado' if ligar else 'desligado',
+                        'emulacao': ligar,
+                        'motivo': motivo,
+                        'autor': autor,
+                        'desde': data_str,
+                        **({'decisao_ref': a.decisao_ref} if getattr(a, 'decisao_ref', None) else {})
+                    }
+                }]
+
+            try:
+                reg_fresco.aplicar_mutacao(gerador, autor=autor, aplicar=True)
+            except Exception:
+                # Rollback em falha de evento (A05)
+                if conteudo_anterior is not None:
+                    caminho_perfil.write_text(conteudo_anterior, encoding='utf-8')
+                elif caminho_perfil.exists():
+                    caminho_perfil.unlink()
+                raise
+    except ErroTravaPerfil as e:
+        print(f"ERRO: {e}", file=sys.stderr)
+        raise SystemExit(f"erro: {e}")
 
     print(f"Modo emulação alterado para '{acao}' com sucesso no perfil.md e registro.json.")
     return 0
@@ -1736,34 +1779,82 @@ def cmd_papel_trocar(a):
         print(msg_passagem)
         return 0
 
-    conteudo_anterior = caminho_perfil.read_text(encoding='utf-8') if caminho_perfil.is_file() else None
-
-    tmp = caminho_perfil.with_name(caminho_perfil.name + '.tmp')
-    tmp.write_text(novo_texto_perfil, encoding='utf-8')
-    os.replace(tmp, caminho_perfil)
-
     try:
-        reg.registrar_troca_papel(
-            papel=papel,
-            plataforma=plat,
-            fornecedor=forn,
-            modelo=mod,
-            esforco=esf,
-            estado=novo_estado,
-            motivo=motivo,
-            decisao_ref=getattr(a, 'decisao_ref', None),
-            autor=a.autor,
-            aplicar=True,
-            emulacao=emulacao,
-            perfil=perfil
-        )
-    except Exception:
-        # Rollback em falha de evento (A05)
-        if conteudo_anterior is not None:
-            caminho_perfil.write_text(conteudo_anterior, encoding='utf-8')
-        elif caminho_perfil.exists():
-            caminho_perfil.unlink()
-        raise
+        with trava_perfil_registro(p_soc):
+            # Leitura fresca, validação e gravação sob a trava comum (A03)
+            perfil_fresco = carregar_perfil(c_perfil or p_soc)
+            reg_fresco = obter_registro_obrigatorio(p_soc)
+            caminho_perfil = perfil_fresco.caminho or (p_soc / 'perfil.md')
+            conteudo_anterior = caminho_perfil.read_text(encoding='utf-8') if caminho_perfil.is_file() else None
+
+            emulacao_fresca = _emulacao_do_perfil(perfil_fresco)
+            avisos_frescos = []
+            ok, erros = validar_regras_troca(
+                papel=papel,
+                novo_estado=novo_estado,
+                nova_plataforma=plat,
+                novo_fornecedor=forn,
+                perfil=perfil_fresco,
+                reg=reg_fresco,
+                decisao_ref=getattr(a, 'decisao_ref', None),
+                emulacao=emulacao_fresca,
+                avisos=avisos_frescos
+            )
+            if not ok:
+                for err in erros:
+                    print(f"ERRO: {err}", file=sys.stderr)
+                raise SystemExit(f"erro: troca de papel recusada por violação de regra invariante.")
+
+            motivo_efetivo = a.motivo.strip()
+            if emulacao_fresca and not eh_saida_emulacao:
+                from sc_perfil import marcar_motivo_emulacao
+                motivo_efetivo = marcar_motivo_emulacao(motivo_efetivo)
+
+            try:
+                texto_perfil_fresco = caminho_perfil.read_text(encoding='utf-8')
+                novo_texto_perfil = atualizar_papel_no_texto(
+                    texto_perfil_fresco,
+                    papel=papel,
+                    plataforma=plat,
+                    fornecedor=forn,
+                    modelo=mod,
+                    esforco=esf,
+                    estado=novo_estado,
+                    motivo=motivo_efetivo,
+                    desde=data_str
+                )
+            except ErroPerfil as e:
+                raise SystemExit(f"erro: {e}")
+
+            tmp = caminho_perfil.with_name(caminho_perfil.name + '.tmp')
+            tmp.write_text(novo_texto_perfil, encoding='utf-8')
+            os.replace(tmp, caminho_perfil)
+
+            try:
+                reg_fresco.registrar_troca_papel(
+                    papel=papel,
+                    plataforma=plat,
+                    fornecedor=forn,
+                    modelo=mod,
+                    esforco=esf,
+                    estado=novo_estado,
+                    motivo=motivo_efetivo,
+                    decisao_ref=getattr(a, 'decisao_ref', None),
+                    autor=a.autor,
+                    aplicar=True,
+                    emulacao=emulacao_fresca,
+                    perfil=perfil_fresco
+                )
+            except Exception:
+                # Rollback em falha de evento (A05)
+                if conteudo_anterior is not None:
+                    caminho_perfil.write_text(conteudo_anterior, encoding='utf-8')
+                elif caminho_perfil.exists():
+                    caminho_perfil.unlink()
+                raise
+    except ErroTravaPerfil as e:
+        print(f"ERRO: {e}", file=sys.stderr)
+        raise SystemExit(f"erro: {e}")
 
     print(f"Papel '{papel}' atualizado com sucesso para '{plat}' ({novo_estado}) no perfil.md e registro.json.\n")
     print(msg_passagem)
