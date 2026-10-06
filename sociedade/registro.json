@@ -1,6 +1,7 @@
 {
-  "atualizado_em": "2026-10-03T22:45:19.240203+00:00",
+  "atualizado_em": "2026-10-06T19:09:06.486947+00:00",
   "caminho_canonico": "/home/odival/Documentos/Projetos/aposte-em-voce",
+  "corte_cadeia": 42,
   "criado_em": "2026-10-03T13:50:17.697161+00:00",
   "eventos": [
     {
@@ -949,10 +950,1070 @@
       "simulacao": false,
       "timestamp": "2026-10-03T22:45:19.240191+00:00",
       "tipo": "etapa_encerrada"
+    },
+    {
+      "autor": "Odival",
+      "dados": {
+        "decisao_ref": null,
+        "desde": "2026-10-03",
+        "esforco": "xhigh",
+        "estado": "ativo",
+        "fornecedor": "OpenAI",
+        "modelo": "GPT-6 Sol",
+        "motivo": "formação real: fim da emulação em nuvem (andamento, C53); revisor não calibrado (Q160)",
+        "papel": "revisor",
+        "plataforma": "Codex"
+      },
+      "id": "EVT-000029",
+      "seq": 29,
+      "simulacao": false,
+      "timestamp": "2026-10-03T23:19:48.205727+00:00",
+      "tipo": "papel_trocado"
+    },
+    {
+      "autor": "Odival",
+      "dados": {
+        "decisao_ref": null,
+        "desde": "2026-10-03",
+        "esforco": "high",
+        "estado": "ativo",
+        "fornecedor": "Google",
+        "modelo": "Gemini 3.8 Flash",
+        "motivo": "formação real: fim da emulação em nuvem (andamento, C53)",
+        "papel": "coordenador",
+        "plataforma": "Antigravity"
+      },
+      "id": "EVT-000030",
+      "seq": 30,
+      "simulacao": false,
+      "timestamp": "2026-10-03T23:19:48.301031+00:00",
+      "tipo": "papel_trocado"
+    },
+    {
+      "autor": "Odival",
+      "dados": {
+        "decisao_ref": null,
+        "desde": "2026-10-03",
+        "esforco": "high",
+        "estado": "ativo",
+        "fornecedor": "Google",
+        "modelo": "Gemini 3.8 Flash",
+        "motivo": "formação real: fim da emulação em nuvem (andamento, C53)",
+        "papel": "execucao",
+        "plataforma": "Antigravity"
+      },
+      "id": "EVT-000031",
+      "seq": 31,
+      "simulacao": false,
+      "timestamp": "2026-10-03T23:19:53.708449+00:00",
+      "tipo": "papel_trocado"
+    },
+    {
+      "autor": "Odival",
+      "dados": {
+        "decisao_ref": null,
+        "desde": "2026-10-03",
+        "esforco": "high",
+        "estado": "ativo",
+        "fornecedor": "Anthropic",
+        "modelo": "Claude Opus 5.5",
+        "motivo": "formação real: fim da emulação em nuvem (andamento, C53)",
+        "papel": "arquiteto",
+        "plataforma": "Claude Code"
+      },
+      "id": "EVT-000032",
+      "seq": 32,
+      "simulacao": false,
+      "timestamp": "2026-10-03T23:19:53.804297+00:00",
+      "tipo": "papel_trocado"
+    },
+    {
+      "autor": "Coordenador",
+      "dados": {
+        "autorizacao_ref": "ordem_sha256:44b49431f81c1f8f",
+        "base_efetiva": "c927e5d170d857399b92a3bf051a5fbf0c4c99fb",
+        "criterios": [
+          "portao"
+        ],
+        "etapa_id": "d1-design",
+        "exigir_revisao": true,
+        "limites": "—",
+        "nivel": "2",
+        "objetivo": "Ordem d1-design — referência visual sóbria e acolhedora em T08, T09 e T99, e a Sociedade pronta para a formação real",
+        "origem": "real",
+        "plano_ref": "ordem:sociedade/ordens/d1-design.md",
+        "responsavel": "Coordenador"
+      },
+      "id": "EVT-000033",
+      "seq": 33,
+      "simulacao": false,
+      "timestamp": "2026-10-03T23:26:38.159318+00:00",
+      "tipo": "etapa_aberta"
+    },
+    {
+      "autor": "Círdan",
+      "dados": {
+        "data_hora": "2026-10-03T23:26:38.159318+00:00",
+        "esforco": "high",
+        "etapa": "d1-design",
+        "ferramenta": "Antigravity",
+        "linha": "Para: Gandalf. Execute a ordem sociedade/ordens/d1-design.md.",
+        "modelo": "Gemini 3.8 Flash",
+        "papel": "coordenador",
+        "para": "gandalf",
+        "pasta": "/home/odival/.sociedade/trabalho/aposte-em-voce/d1-design"
+      },
+      "id": "EVT-000034",
+      "seq": 34,
+      "simulacao": false,
+      "timestamp": "2026-10-03T23:26:38.159318+00:00",
+      "tipo": "passagem"
+    },
+    {
+      "autor": "conferência automática",
+      "dados": {
+        "commit": "28537f715400ef352efc93e82bbf126f605fdfb9",
+        "etapa": "d1-design",
+        "feitos": 9,
+        "itens": [
+          {
+            "detalhe": "28537f715400",
+            "estado": "feito",
+            "id": "E1",
+            "tipo": "commit_existe"
+          },
+          {
+            "detalhe": "83 arquivos, todos nos prefixos",
+            "estado": "feito",
+            "id": "E2",
+            "tipo": "arquivos_em"
+          },
+          {
+            "detalhe": "APROVADO, 73 arquivos, commit 28537f715400",
+            "estado": "feito",
+            "id": "E3",
+            "tipo": "atestado_aprovado"
+          },
+          {
+            "detalhe": "referencia.html",
+            "estado": "feito",
+            "id": "E4",
+            "tipo": "arquivo_existe"
+          },
+          {
+            "detalhe": "docs/capturas/d1-design/t09-historico.png",
+            "estado": "feito",
+            "id": "E5",
+            "tipo": "arquivo_existe"
+          },
+          {
+            "detalhe": "sociedade-do-codigo/tests/test_formacao_real.py",
+            "estado": "feito",
+            "id": "E6",
+            "tipo": "arquivo_existe"
+          },
+          {
+            "detalhe": "5 delegações",
+            "estado": "feito",
+            "id": "E7",
+            "tipo": "delegacoes"
+          },
+          {
+            "detalhe": "1 ordem na conversa",
+            "estado": "feito",
+            "id": "E8",
+            "tipo": "conversa_nova"
+          },
+          {
+            "detalhe": "28537f715400",
+            "estado": "feito",
+            "id": "E9",
+            "tipo": "push_feito"
+          },
+          {
+            "detalhe": "sociedade/pareceres/parecer-d1-design.md não existe",
+            "estado": "não feito",
+            "id": "E10",
+            "tipo": "parecer_valido"
+          }
+        ],
+        "ordem": "sociedade/ordens/d1-design.md",
+        "total": 10
+      },
+      "id": "EVT-000035",
+      "seq": 35,
+      "simulacao": false,
+      "timestamp": "2026-10-04T01:21:41.423478+00:00",
+      "tipo": "conferencia_registrada"
+    },
+    {
+      "autor": "Círdan",
+      "dados": {
+        "data_hora": "2026-10-04T01:22:25.340903+00:00",
+        "esforco": "xhigh",
+        "etapa": "d1-design",
+        "ferramenta": "Codex",
+        "linha": "Para: Barbárvore. Revisão independente: **reduzida**, Barbárvore (Codex, GPT-6 Sol, xhigh), \"revisor não calibrado\" (Q160). Primeira etapa na formação real: sem a marca de emulação. Parecer: revisao-saida/parecer.md.",
+        "modelo": "GPT-6 Sol",
+        "papel": "revisor",
+        "para": "barbarvore",
+        "pasta": "/home/odival/.sociedade/trabalho/d1-design/revisao-d1-design"
+      },
+      "id": "EVT-000036",
+      "seq": 36,
+      "simulacao": false,
+      "timestamp": "2026-10-04T01:22:25.340919+00:00",
+      "tipo": "passagem"
+    },
+    {
+      "autor": "Barbárvore (Codex)",
+      "dados": {
+        "etapa_id": "d1-design",
+        "impacto": "desconhecido",
+        "versao": "28537f715400ef352efc93e82bbf126f605fdfb9"
+      },
+      "id": "EVT-000037",
+      "seq": 37,
+      "simulacao": false,
+      "timestamp": "2026-10-05T10:22:27.840734+00:00",
+      "tipo": "versao_atualizada"
+    },
+    {
+      "autor": "Barbárvore (Codex)",
+      "dados": {
+        "achados_referenciados": [],
+        "commit": "28537f715400ef352efc93e82bbf126f605fdfb9",
+        "criterios_verificados": {
+          "C01 — F4: pacote igual à 3.1.0 canônica; AGENTS com núcleo 3.1.0; suíte e validador verdes": false,
+          "C02 — F1: direção moderna, sóbria e acolhedora, sem estética de cassino ou julgamento": true,
+          "C03 — F1: tokens de cor, tipografia, alturas de linha e escala única de espaçamento": true,
+          "C04 — F1: botão primário/secundário/discreto, cartão, campo, avisos, progresso e lista": true,
+          "C05 — F1: estados vazio, carregando e erro, cada um com texto e ação": true,
+          "C06 — F1: contraste de texto normal 4,5:1 e grande/componentes/foco 3:1": true,
+          "C07 — F1: foco visível e não encoberto (2.4.7 e 2.4.11)": true,
+          "C08 — F1: alvos de pelo menos 24×24 px (2.5.8)": true,
+          "C09 — F1: reflow em 320 px (1.4.10)": true,
+          "C10 — F1: espaçamento de texto (1.4.12)": true,
+          "C11 — F1: prefers-reduced-motion": true,
+          "C12 — F1: contraste.test calcula e reprova cada par declarado": true,
+          "C13 — F1: fonte local/livre, nenhuma fonte externa/CDN; CSP preservada sem script/estilo inline": true,
+          "C14 — F1: referencia.html com tokens, componentes e estados em 360 px e desktop, dados fictícios, sem link do app": true,
+          "C15 — Parada visual: F1 com commit/portão/push/preview; aprovação humana antes de F2, ajustes por instância nova": false,
+          "C16 — F2: T08/T09/T99 usam tokens/componentes nos estados previstos": true,
+          "C17 — F2: T09 inclui período total, meses cobertos/faltantes e aviso de encadeamento": true,
+          "C18 — F2: nenhuma mudança de comportamento ou esperado de teste; src/leitura e formatar intocados, sem dependência nova": true,
+          "C19 — F2: capturas isoladas por CAPTURAS=1, sete arquivos de 360 px, somente dados sintéticos": true,
+          "C20 — F3: .claude/agents ausente; CLAUDE real com @AGENTS, limites do Círdan, formação, passagem, merge autorizado, push de etapa, dados sintéticos e economia": false,
+          "C21 — F3: gh pr merge em ask; squash/rebase/auto/admin em deny; resto igual; comentário Q174": true,
+          "C22 — F3: adaptadores Claude/Antigravity/Codex e skills com formação real, Q174/Q175, emulação/passagem e worktree antes de ordem que muda perfil; validador verde": false,
+          "C23 — F5/L1: CLI emulacao ligar/desligar com motivo/autor, status, mudança da linha e evento; desligamento estrito de R1–R3, sem gravação na recusa": true,
+          "C24 — F5/L1: prefixo emulação deixa de entrar no motivo quando troca faz parte da saída": true,
+          "C25 — F5/L1 e revisão: eventos em cadeia de hash; adulteração detectada; cadeia mantida": true,
+          "C26 — F5/L2: trocar execucao muda especialistas ativos; Jules/locais alcançáveis, inclusive espera sem ocupante; R3 acusa execução fora do Google; formação real termina sem emulação/avisos/linhas emuladas": true,
+          "C27 — F5/L2 e revisão: troca sem alterar qualquer linha falha sem evento": true,
+          "C28 — F5/L3: passar imprime ferramenta/modelo/esforço/conversa nova, pasta absoluta, linha exata e grava evento timestamp": false,
+          "C29 — F5/L4: leitores de sessão Codex e Antigravity com os comportamentos especificados de disponibilidade": false,
+          "C30 — F5/L7: ordem é gravada na sociedade do worktree da etapa quando existente": false,
+          "C31 — F5/L8 e revisão: @etapa exige conversa da pasta exata aberta depois da passagem; ausência/ambiguidade dão não feito": true,
+          "C32 — Revisão: conferir do candidato não afrouxa nenhuma entrega": true,
+          "C33 — F4/F5/integração: suíte do pacote, validador, versão 3.2.0 e manifestos/SKILL/CHANGELOG com L1–L8": true,
+          "C34 — F1/F2 e portão final: npm test, lint, build verdes; portões por fatia/base anterior e final/base c927e5d cobrindo app/pacote": true,
+          "C35 — Limites: escrita autorizada, disjunção, até 30 linhas de integração/1.500 por área; instâncias novas, retorno curto, dados sintéticos, push apenas etapa, PR/capturas e exclusões da ordem": false,
+          "C36 — E1–E10: commit/ref, prefixos, atestado aprovado, referência, histórico, teste formação, cinco delegações, conversa nova, push e parecer válido": true
+        },
+        "etapa_id": "d1-design",
+        "fornecedor_revisor": "OpenAI",
+        "implementadores": [
+          {
+            "agente": "Coordenador",
+            "fornecedor": "Google"
+          }
+        ],
+        "justificativa_independencia": "Nível A quanto aos fornecedores declarados; revisão independente, sem marca de emulação",
+        "lacunas": [],
+        "nivel_independencia": "A",
+        "parecer_id": "PAR-d1-design-28537f7",
+        "revisor": "Barbárvore (Codex)",
+        "veredito": "nao_aceitar",
+        "versao_examinada": "28537f715400ef352efc93e82bbf126f605fdfb9"
+      },
+      "id": "EVT-000038",
+      "seq": 38,
+      "simulacao": false,
+      "timestamp": "2026-10-05T10:22:27.855442+00:00",
+      "tipo": "parecer_registrado"
+    },
+    {
+      "autor": "conferência automática",
+      "dados": {
+        "commit": "28537f715400ef352efc93e82bbf126f605fdfb9",
+        "etapa": "d1-design",
+        "feitos": 10,
+        "itens": [
+          {
+            "detalhe": "28537f715400",
+            "estado": "feito",
+            "id": "E1",
+            "tipo": "commit_existe"
+          },
+          {
+            "detalhe": "83 arquivos, todos nos prefixos",
+            "estado": "feito",
+            "id": "E2",
+            "tipo": "arquivos_em"
+          },
+          {
+            "detalhe": "APROVADO, 73 arquivos, commit 28537f715400",
+            "estado": "feito",
+            "id": "E3",
+            "tipo": "atestado_aprovado"
+          },
+          {
+            "detalhe": "referencia.html",
+            "estado": "feito",
+            "id": "E4",
+            "tipo": "arquivo_existe"
+          },
+          {
+            "detalhe": "docs/capturas/d1-design/t09-historico.png",
+            "estado": "feito",
+            "id": "E5",
+            "tipo": "arquivo_existe"
+          },
+          {
+            "detalhe": "sociedade-do-codigo/tests/test_formacao_real.py",
+            "estado": "feito",
+            "id": "E6",
+            "tipo": "arquivo_existe"
+          },
+          {
+            "detalhe": "5 delegações",
+            "estado": "feito",
+            "id": "E7",
+            "tipo": "delegacoes"
+          },
+          {
+            "detalhe": "1 ordem na conversa",
+            "estado": "feito",
+            "id": "E8",
+            "tipo": "conversa_nova"
+          },
+          {
+            "detalhe": "28537f715400",
+            "estado": "feito",
+            "id": "E9",
+            "tipo": "push_feito"
+          },
+          {
+            "detalhe": "veredito: não aceitar",
+            "estado": "feito",
+            "id": "E10",
+            "tipo": "parecer_valido"
+          }
+        ],
+        "ordem": "sociedade/ordens/d1-design.md",
+        "total": 10
+      },
+      "id": "EVT-000039",
+      "seq": 39,
+      "simulacao": false,
+      "timestamp": "2026-10-05T10:22:39.278442+00:00",
+      "tipo": "conferencia_registrada"
+    },
+    {
+      "autor": "conferência automática",
+      "dados": {
+        "commit": "28537f715400ef352efc93e82bbf126f605fdfb9",
+        "etapa": "d1-design",
+        "feitos": 10,
+        "itens": [
+          {
+            "detalhe": "28537f715400",
+            "estado": "feito",
+            "id": "E1",
+            "tipo": "commit_existe"
+          },
+          {
+            "detalhe": "83 arquivos, todos nos prefixos",
+            "estado": "feito",
+            "id": "E2",
+            "tipo": "arquivos_em"
+          },
+          {
+            "detalhe": "APROVADO, 73 arquivos, commit 28537f715400",
+            "estado": "feito",
+            "id": "E3",
+            "tipo": "atestado_aprovado"
+          },
+          {
+            "detalhe": "referencia.html",
+            "estado": "feito",
+            "id": "E4",
+            "tipo": "arquivo_existe"
+          },
+          {
+            "detalhe": "docs/capturas/d1-design/t09-historico.png",
+            "estado": "feito",
+            "id": "E5",
+            "tipo": "arquivo_existe"
+          },
+          {
+            "detalhe": "sociedade-do-codigo/tests/test_formacao_real.py",
+            "estado": "feito",
+            "id": "E6",
+            "tipo": "arquivo_existe"
+          },
+          {
+            "detalhe": "5 delegações",
+            "estado": "feito",
+            "id": "E7",
+            "tipo": "delegacoes"
+          },
+          {
+            "detalhe": "1 ordem na conversa",
+            "estado": "feito",
+            "id": "E8",
+            "tipo": "conversa_nova"
+          },
+          {
+            "detalhe": "28537f715400",
+            "estado": "feito",
+            "id": "E9",
+            "tipo": "push_feito"
+          },
+          {
+            "detalhe": "veredito: não aceitar",
+            "estado": "feito",
+            "id": "E10",
+            "tipo": "parecer_valido"
+          }
+        ],
+        "ordem": "sociedade/ordens/d1-design.md",
+        "total": 10
+      },
+      "id": "EVT-000040",
+      "seq": 40,
+      "simulacao": false,
+      "timestamp": "2026-10-05T10:25:49.643788+00:00",
+      "tipo": "conferencia_registrada"
+    },
+    {
+      "autor": "Odival",
+      "dados": {
+        "acao": "corrigir",
+        "alcance": "etapa",
+        "decisao_id": "DEC-d1-design-corrigir-41",
+        "etapa_id": "d1-design",
+        "quem": "Odival",
+        "referencia": "corrigir sem motivo informado"
+      },
+      "id": "EVT-000041",
+      "seq": 41,
+      "simulacao": false,
+      "timestamp": "2026-10-05T10:29:53.312868+00:00",
+      "tipo": "decisao_registrada"
+    },
+    {
+      "autor": "conferência automática",
+      "dados": {
+        "commit": "240f1b9932456d5a85688a6ade0230493aca8f39",
+        "etapa": "d1-design",
+        "feitos": 8,
+        "itens": [
+          {
+            "detalhe": "240f1b993245",
+            "estado": "feito",
+            "id": "E1",
+            "tipo": "commit_existe"
+          },
+          {
+            "detalhe": "87 arquivos, todos nos prefixos",
+            "estado": "feito",
+            "id": "E2",
+            "tipo": "arquivos_em"
+          },
+          {
+            "detalhe": "APROVADO, 77 arquivos, commit 240f1b993245",
+            "estado": "feito",
+            "id": "E3",
+            "tipo": "atestado_aprovado"
+          },
+          {
+            "detalhe": "referencia.html",
+            "estado": "feito",
+            "id": "E4",
+            "tipo": "arquivo_existe"
+          },
+          {
+            "detalhe": "docs/capturas/d1-design/t09-historico.png",
+            "estado": "feito",
+            "id": "E5",
+            "tipo": "arquivo_existe"
+          },
+          {
+            "detalhe": "sociedade-do-codigo/tests/test_formacao_real.py",
+            "estado": "feito",
+            "id": "E6",
+            "tipo": "arquivo_existe"
+          },
+          {
+            "detalhe": "ambiguidade: 2 conversas do Antigravity encontradas para a etapa \"d1-design\" após a passagem",
+            "estado": "não feito",
+            "id": "E7",
+            "tipo": "delegacoes"
+          },
+          {
+            "detalhe": "ambiguidade: 2 conversas do Antigravity encontradas para a etapa \"d1-design\" após a passagem",
+            "estado": "não feito",
+            "id": "E8",
+            "tipo": "conversa_nova"
+          },
+          {
+            "detalhe": "240f1b993245",
+            "estado": "feito",
+            "id": "E9",
+            "tipo": "push_feito"
+          },
+          {
+            "detalhe": "veredito: não aceitar",
+            "estado": "feito",
+            "id": "E10",
+            "tipo": "parecer_valido"
+          }
+        ],
+        "ordem": "sociedade/ordens/d1-design.md",
+        "total": 10
+      },
+      "hash": "f59bbdde02e939a8746623139343151d3535ff0b750a907ad66adcd09acb164a",
+      "id": "EVT-000042",
+      "prev_hash": "",
+      "seq": 42,
+      "simulacao": false,
+      "timestamp": "2026-10-05T10:47:30.552683+00:00",
+      "tipo": "conferencia_registrada"
+    },
+    {
+      "autor": "conferência automática",
+      "dados": {
+        "commit": "240f1b9932456d5a85688a6ade0230493aca8f39",
+        "etapa": "d1-design",
+        "feitos": 10,
+        "itens": [
+          {
+            "detalhe": "240f1b993245",
+            "estado": "feito",
+            "id": "E1",
+            "tipo": "commit_existe"
+          },
+          {
+            "detalhe": "87 arquivos, todos nos prefixos",
+            "estado": "feito",
+            "id": "E2",
+            "tipo": "arquivos_em"
+          },
+          {
+            "detalhe": "APROVADO, 77 arquivos, commit 240f1b993245",
+            "estado": "feito",
+            "id": "E3",
+            "tipo": "atestado_aprovado"
+          },
+          {
+            "detalhe": "referencia.html",
+            "estado": "feito",
+            "id": "E4",
+            "tipo": "arquivo_existe"
+          },
+          {
+            "detalhe": "docs/capturas/d1-design/t09-historico.png",
+            "estado": "feito",
+            "id": "E5",
+            "tipo": "arquivo_existe"
+          },
+          {
+            "detalhe": "sociedade-do-codigo/tests/test_formacao_real.py",
+            "estado": "feito",
+            "id": "E6",
+            "tipo": "arquivo_existe"
+          },
+          {
+            "detalhe": "7 delegações",
+            "estado": "feito",
+            "id": "E7",
+            "tipo": "delegacoes"
+          },
+          {
+            "detalhe": "1 ordem na conversa",
+            "estado": "feito",
+            "id": "E8",
+            "tipo": "conversa_nova"
+          },
+          {
+            "detalhe": "240f1b993245",
+            "estado": "feito",
+            "id": "E9",
+            "tipo": "push_feito"
+          },
+          {
+            "detalhe": "veredito: não aceitar",
+            "estado": "feito",
+            "id": "E10",
+            "tipo": "parecer_valido"
+          }
+        ],
+        "ordem": "sociedade/ordens/d1-design.md",
+        "total": 10
+      },
+      "hash": "b1208321b3e5ffebac5028946c34ab4fdf1a2cad018d72817b2779bb6371b06b",
+      "id": "EVT-000043",
+      "prev_hash": "f59bbdde02e939a8746623139343151d3535ff0b750a907ad66adcd09acb164a",
+      "seq": 43,
+      "simulacao": false,
+      "timestamp": "2026-10-05T10:51:47.626440+00:00",
+      "tipo": "conferencia_registrada"
+    },
+    {
+      "autor": "conferência automática",
+      "dados": {
+        "commit": "87c81143729f9109aa5c0ce2b9c96ba2dea4588a",
+        "etapa": "d1-design",
+        "feitos": 10,
+        "itens": [
+          {
+            "detalhe": "87c81143729f",
+            "estado": "feito",
+            "id": "E1",
+            "tipo": "commit_existe"
+          },
+          {
+            "detalhe": "87 arquivos, todos nos prefixos",
+            "estado": "feito",
+            "id": "E2",
+            "tipo": "arquivos_em"
+          },
+          {
+            "detalhe": "APROVADO, 77 arquivos, commit 87c81143729f",
+            "estado": "feito",
+            "id": "E3",
+            "tipo": "atestado_aprovado"
+          },
+          {
+            "detalhe": "referencia.html",
+            "estado": "feito",
+            "id": "E4",
+            "tipo": "arquivo_existe"
+          },
+          {
+            "detalhe": "docs/capturas/d1-design/t09-historico.png",
+            "estado": "feito",
+            "id": "E5",
+            "tipo": "arquivo_existe"
+          },
+          {
+            "detalhe": "sociedade-do-codigo/tests/test_formacao_real.py",
+            "estado": "feito",
+            "id": "E6",
+            "tipo": "arquivo_existe"
+          },
+          {
+            "detalhe": "7 delegações",
+            "estado": "feito",
+            "id": "E7",
+            "tipo": "delegacoes"
+          },
+          {
+            "detalhe": "1 ordem na conversa",
+            "estado": "feito",
+            "id": "E8",
+            "tipo": "conversa_nova"
+          },
+          {
+            "detalhe": "87c81143729f",
+            "estado": "feito",
+            "id": "E9",
+            "tipo": "push_feito"
+          },
+          {
+            "detalhe": "veredito: não aceitar",
+            "estado": "feito",
+            "id": "E10",
+            "tipo": "parecer_valido"
+          }
+        ],
+        "ordem": "sociedade/ordens/d1-design.md",
+        "total": 10
+      },
+      "hash": "6046d334f0bb887320c13bc6d059a952e4be1f12f3196eaf7b8fee6bac6e04f6",
+      "id": "EVT-000044",
+      "prev_hash": "b1208321b3e5ffebac5028946c34ab4fdf1a2cad018d72817b2779bb6371b06b",
+      "seq": 44,
+      "simulacao": false,
+      "timestamp": "2026-10-05T10:53:57.076181+00:00",
+      "tipo": "conferencia_registrada"
+    },
+    {
+      "autor": "Barbárvore (Codex), revisor não calibrado (Q160)",
+      "dados": {
+        "etapa_id": "d1-design",
+        "impacto": "desconhecido",
+        "versao": "87c81143729f9109aa5c0ce2b9c96ba2dea4588a"
+      },
+      "hash": "0a1e657abf7cc5befc22a6503cb192be5d7a969fdc91aeb45eb9d1537ea051a2",
+      "id": "EVT-000045",
+      "prev_hash": "6046d334f0bb887320c13bc6d059a952e4be1f12f3196eaf7b8fee6bac6e04f6",
+      "seq": 45,
+      "simulacao": false,
+      "timestamp": "2026-10-05T11:43:35.569444+00:00",
+      "tipo": "versao_atualizada"
+    },
+    {
+      "autor": "Barbárvore (Codex), revisor não calibrado (Q160)",
+      "dados": {
+        "achados_referenciados": [],
+        "commit": "87c81143729f9109aa5c0ce2b9c96ba2dea4588a",
+        "criterios_verificados": {
+          "C-R01 — A01: @etapa exige identidade exata da pasta, início posterior à passagem e recusa ausência/ambiguidade (F5/L8; C31/C32 anteriores).": true,
+          "C-R02 — A02: escrita e leitura verificáveis da cadeia, inclusive adulteração/legado (F5/L1; C25 anterior).": true,
+          "C-R03 — A03: emulação não desliga com R1–R3 violadas, inclusive intercalação (F5/L1; C23 anterior).": true,
+          "C-R04 — A04: foco visível no seletor de PDF vazio/com arquivos, em 320/360 px (F1/F2; C07 anterior).": true,
+          "C-R05 — A05: falha na gravação do evento preserva perfil e registro, em emulação e troca (C23/C25/C27 anteriores).": true,
+          "C-R06 — A06: aliases proibidos cobertos nas duas configurações e merge commit legítimo preservado (F3/Q174; C21 anterior).": true
+        },
+        "etapa_id": "d1-design",
+        "fornecedor_revisor": "OpenAI",
+        "implementadores": [
+          {
+            "agente": "Coordenador",
+            "fornecedor": "Google"
+          }
+        ],
+        "justificativa_independencia": "Nível A (fornecedor diferente dos implementadores declarados)",
+        "lacunas": [],
+        "nivel_independencia": "A",
+        "parecer_id": "PAR-d1-design-87c8114",
+        "revisor": "Barbárvore (Codex), revisor não calibrado (Q160)",
+        "veredito": "nao_aceitar",
+        "versao_examinada": "87c81143729f9109aa5c0ce2b9c96ba2dea4588a"
+      },
+      "hash": "b027378002138b837b229cfd9b0f32e6565e6cbfb76a0f5c88e1f7aa2dbe6b58",
+      "id": "EVT-000046",
+      "prev_hash": "0a1e657abf7cc5befc22a6503cb192be5d7a969fdc91aeb45eb9d1537ea051a2",
+      "seq": 46,
+      "simulacao": false,
+      "timestamp": "2026-10-05T11:43:35.575355+00:00",
+      "tipo": "parecer_registrado"
+    },
+    {
+      "autor": "conferência automática",
+      "dados": {
+        "commit": "87c81143729f9109aa5c0ce2b9c96ba2dea4588a",
+        "etapa": "d1-design",
+        "feitos": 10,
+        "itens": [
+          {
+            "detalhe": "87c81143729f",
+            "estado": "feito",
+            "id": "E1",
+            "tipo": "commit_existe"
+          },
+          {
+            "detalhe": "87 arquivos, todos nos prefixos",
+            "estado": "feito",
+            "id": "E2",
+            "tipo": "arquivos_em"
+          },
+          {
+            "detalhe": "APROVADO, 77 arquivos, commit 87c81143729f",
+            "estado": "feito",
+            "id": "E3",
+            "tipo": "atestado_aprovado"
+          },
+          {
+            "detalhe": "referencia.html",
+            "estado": "feito",
+            "id": "E4",
+            "tipo": "arquivo_existe"
+          },
+          {
+            "detalhe": "docs/capturas/d1-design/t09-historico.png",
+            "estado": "feito",
+            "id": "E5",
+            "tipo": "arquivo_existe"
+          },
+          {
+            "detalhe": "sociedade-do-codigo/tests/test_formacao_real.py",
+            "estado": "feito",
+            "id": "E6",
+            "tipo": "arquivo_existe"
+          },
+          {
+            "detalhe": "7 delegações",
+            "estado": "feito",
+            "id": "E7",
+            "tipo": "delegacoes"
+          },
+          {
+            "detalhe": "1 ordem na conversa",
+            "estado": "feito",
+            "id": "E8",
+            "tipo": "conversa_nova"
+          },
+          {
+            "detalhe": "87c81143729f",
+            "estado": "feito",
+            "id": "E9",
+            "tipo": "push_feito"
+          },
+          {
+            "detalhe": "veredito: não aceitar",
+            "estado": "feito",
+            "id": "E10",
+            "tipo": "parecer_valido"
+          }
+        ],
+        "ordem": "sociedade/ordens/d1-design.md",
+        "total": 10
+      },
+      "hash": "876380f67bd5e4bf7b130640f4d5e1cf9bc493f4980602485fce138d596e9cfd",
+      "id": "EVT-000047",
+      "prev_hash": "b027378002138b837b229cfd9b0f32e6565e6cbfb76a0f5c88e1f7aa2dbe6b58",
+      "seq": 47,
+      "simulacao": false,
+      "timestamp": "2026-10-05T11:43:41.747470+00:00",
+      "tipo": "conferencia_registrada"
+    },
+    {
+      "autor": "Odival",
+      "dados": {
+        "acao": "rejeitar",
+        "alcance": "etapa",
+        "decisao_id": "DEC-d1-design-rejeitar-48",
+        "etapa_id": "d1-design",
+        "quem": "Odival",
+        "referencia": "rejeitar sem motivo informado"
+      },
+      "hash": "0f8b54ef8d2b536af421cbdccfe06414c80049d081e276a9f453bec5fbdf1170",
+      "id": "EVT-000048",
+      "prev_hash": "876380f67bd5e4bf7b130640f4d5e1cf9bc493f4980602485fce138d596e9cfd",
+      "seq": 48,
+      "simulacao": false,
+      "timestamp": "2026-10-05T11:51:49.158831+00:00",
+      "tipo": "decisao_registrada"
+    },
+    {
+      "autor": "Odival",
+      "dados": {
+        "desfecho": "rejeitar",
+        "elegivel_publicacao": false,
+        "etapa_id": "d1-design",
+        "resumo": "rejeitar por Odival: rejeitar sem motivo informado"
+      },
+      "hash": "2ea8c5ede160c87520869fcccaa13369c5e66ec95b81ed42ec68ecbd26bf2314",
+      "id": "EVT-000049",
+      "prev_hash": "0f8b54ef8d2b536af421cbdccfe06414c80049d081e276a9f453bec5fbdf1170",
+      "seq": 49,
+      "simulacao": false,
+      "timestamp": "2026-10-05T11:51:49.163611+00:00",
+      "tipo": "etapa_encerrada"
+    },
+    {
+      "autor": "Coordenador",
+      "dados": {
+        "autorizacao_ref": "ordem_sha256:1c26d9a60c28ee8e",
+        "base_efetiva": "4fdd7b5b0f35211e69184075fd43be014e11b104",
+        "criterios": [
+          "portao"
+        ],
+        "etapa_id": "d1b-robustez",
+        "exigir_revisao": true,
+        "limites": "—",
+        "nivel": "2",
+        "objetivo": "Ordem d1b-robustez — fechar os resíduos da d1 no pacote e tornar o processo honesto e econômico",
+        "origem": "real",
+        "plano_ref": "ordem:sociedade/ordens/d1b-robustez.md",
+        "responsavel": "Coordenador"
+      },
+      "hash": "55d62b3efa4f9f0eabc1ed0cd9956278c08cd85863d71af31458ee68f225f39b",
+      "id": "EVT-000050",
+      "prev_hash": "2ea8c5ede160c87520869fcccaa13369c5e66ec95b81ed42ec68ecbd26bf2314",
+      "seq": 50,
+      "simulacao": false,
+      "timestamp": "2026-10-05T12:48:20.452764+00:00",
+      "tipo": "etapa_aberta"
+    },
+    {
+      "autor": "Círdan",
+      "dados": {
+        "data_hora": "2026-10-05T12:48:25.113420+00:00",
+        "esforco": "high",
+        "etapa": "d1b-robustez",
+        "ferramenta": "Antigravity",
+        "linha": "Para: Gandalf. Execute a ordem sociedade/ordens/d1b-robustez.md.",
+        "modelo": "Gemini 3.8 Flash",
+        "papel": "coordenador",
+        "para": "gandalf",
+        "pasta": "/home/odival/.sociedade/trabalho/aposte-em-voce/d1b-robustez"
+      },
+      "hash": "f88641df17430d9bd8c979f339090d9ab354265b64cf60d348cb1ab275aff7f6",
+      "id": "EVT-000051",
+      "prev_hash": "55d62b3efa4f9f0eabc1ed0cd9956278c08cd85863d71af31458ee68f225f39b",
+      "seq": 51,
+      "simulacao": false,
+      "timestamp": "2026-10-05T12:48:25.113436+00:00",
+      "tipo": "passagem"
+    },
+    {
+      "autor": "Círdan",
+      "dados": {
+        "data_hora": "2026-10-05T18:26:07.756344+00:00",
+        "esforco": "high",
+        "etapa": "d1b-robustez",
+        "ferramenta": "Antigravity",
+        "linha": "Para: Gandalf. Execute a ordem sociedade/ordens/d1b-robustez.md.",
+        "modelo": "Gemini 3.8 Flash",
+        "papel": "coordenador",
+        "para": "gandalf",
+        "pasta": "/home/odival/.sociedade/trabalho/aposte-em-voce/d1b-robustez"
+      },
+      "hash": "f3848d751f78e942333fa2242f3cbf925478c337f5f2a8dd9b7e1f0697d32060",
+      "id": "EVT-000052",
+      "prev_hash": "f88641df17430d9bd8c979f339090d9ab354265b64cf60d348cb1ab275aff7f6",
+      "seq": 52,
+      "simulacao": false,
+      "timestamp": "2026-10-05T18:26:07.756367+00:00",
+      "tipo": "passagem"
+    },
+    {
+      "autor": "conferência automática",
+      "dados": {
+        "commit": "261efadbe29aea258228375b87140abff83c8c72",
+        "etapa": "d1b-robustez",
+        "feitos": 6,
+        "itens": [
+          {
+            "detalhe": "02e58dde8634",
+            "estado": "feito",
+            "id": "E1",
+            "tipo": "commit_existe"
+          },
+          {
+            "detalhe": "30 arquivos, todos nos prefixos",
+            "estado": "feito",
+            "id": "E2",
+            "tipo": "arquivos_em"
+          },
+          {
+            "detalhe": "APROVADO, 30 arquivos, commit 02e58dde8634",
+            "estado": "feito",
+            "id": "E3",
+            "tipo": "atestado_aprovado"
+          },
+          {
+            "detalhe": "sociedade-do-codigo/tests/test_registro_cadeia_estrita.py",
+            "estado": "feito",
+            "id": "E4",
+            "tipo": "arquivo_existe"
+          },
+          {
+            "detalhe": "sociedade/subordens/d1b-robustez-revisao-interna.md",
+            "estado": "feito",
+            "id": "E5",
+            "tipo": "arquivo_existe"
+          },
+          {
+            "detalhe": "sem campo estruturado de workspace para a etapa \"d1b-robustez\" no Antigravity",
+            "estado": "não verificado",
+            "id": "E6",
+            "tipo": "delegacoes"
+          },
+          {
+            "detalhe": "sem campo estruturado de workspace para a etapa \"d1b-robustez\" no Antigravity",
+            "estado": "não verificado",
+            "id": "E7",
+            "tipo": "conversa_nova"
+          },
+          {
+            "detalhe": "261efadbe29a",
+            "estado": "feito",
+            "id": "E8",
+            "tipo": "push_feito"
+          },
+          {
+            "detalhe": "sociedade/pareceres/parecer-d1b-robustez.md não existe",
+            "estado": "não feito",
+            "id": "E9",
+            "tipo": "parecer_valido"
+          }
+        ],
+        "ordem": "sociedade/ordens/d1b-robustez.md",
+        "total": 9
+      },
+      "hash": "e81edba88697c1c21acbc27c55223ed258b898b0576bd8edb9fb82c899e35e30",
+      "id": "EVT-000053",
+      "prev_hash": "f3848d751f78e942333fa2242f3cbf925478c337f5f2a8dd9b7e1f0697d32060",
+      "seq": 53,
+      "simulacao": false,
+      "timestamp": "2026-10-06T17:50:38.797611+00:00",
+      "tipo": "conferencia_registrada"
+    },
+    {
+      "autor": "Círdan",
+      "dados": {
+        "data_hora": "2026-10-06T17:51:30.685681+00:00",
+        "esforco": "xhigh",
+        "etapa": "d1b-robustez",
+        "ferramenta": "Codex",
+        "linha": "Para: Barbárvore. Revisão independente da etapa d1b-robustez. Parecer: revisao-saida/parecer.md.",
+        "modelo": "GPT-6 Sol",
+        "papel": "revisor",
+        "para": "barbarvore",
+        "pasta": "/home/odival/.sociedade/trabalho/d1b-robustez/revisao-d1b-robustez",
+        "por": "Círdan"
+      },
+      "hash": "795a3fe75bebdd3c69cebeb882a4e73bd7dc7c37f619e75235d019d797953f06",
+      "id": "EVT-000054",
+      "prev_hash": "e81edba88697c1c21acbc27c55223ed258b898b0576bd8edb9fb82c899e35e30",
+      "seq": 54,
+      "simulacao": false,
+      "timestamp": "2026-10-06T17:51:30.685697+00:00",
+      "tipo": "passagem"
+    },
+    {
+      "autor": "Odival",
+      "dados": {
+        "acao": "rejeitar",
+        "alcance": "etapa",
+        "decisao_id": "DEC-d1b-robustez-rejeitar-55",
+        "etapa_id": "d1b-robustez",
+        "quem": "Odival",
+        "referencia": "Separar app e método (Odival, 06/10/2026). Parecer completo do Barbárvore: não aceitar (D01–D08 bloqueadores, D09–D13 relevantes, D14 opcional). O design vai para a d1c-design (só app) e o método para a trilha no repositório canônico. Parecer arquivado sem alteração em sociedade/pareceres/parecer-d1b-robustez.md (sha256 dfe902ccaf7ff150); não registrado por revisar --parecer porque cita o SHA da cópia (79078ec), e não o original (02e58dd)."
+      },
+      "hash": "a1f1c9ec83545f2c0f3a342e27c718542f7eb1c55ee79d5fc70cd099f1809032",
+      "id": "EVT-000055",
+      "prev_hash": "795a3fe75bebdd3c69cebeb882a4e73bd7dc7c37f619e75235d019d797953f06",
+      "seq": 55,
+      "simulacao": false,
+      "timestamp": "2026-10-06T19:09:06.482931+00:00",
+      "tipo": "decisao_registrada"
+    },
+    {
+      "autor": "Odival",
+      "dados": {
+        "desfecho": "rejeitar",
+        "elegivel_publicacao": false,
+        "etapa_id": "d1b-robustez",
+        "resumo": "rejeitar por Odival: Separar app e método (Odival, 06/10/2026). Parecer completo do Barbárvore: não aceitar (D01–D08 bloqueadores, D09–D13 relevantes, D14 opcional). O design vai para a d1c-design (só app) e o método para a trilha no repositório canônico. Parecer arquivado sem alteração em sociedade/pareceres/parecer-d1b-robustez.md (sha256 dfe902ccaf7ff150); não registrado por revisar --parecer porque cita o SHA da cópia (79078ec), e não o original (02e58dd)."
+      },
+      "hash": "361bbe8764fb61222c2e9004dc6c78f78c23d4a347df38bfc710c29497912827",
+      "id": "EVT-000056",
+      "prev_hash": "a1f1c9ec83545f2c0f3a342e27c718542f7eb1c55ee79d5fc70cd099f1809032",
+      "seq": 56,
+      "simulacao": false,
+      "timestamp": "2026-10-06T19:09:06.486923+00:00",
+      "tipo": "etapa_encerrada"
     }
   ],
   "projeto_id": "aposte-em-voc",
   "resumos_externos": {},
-  "revisao": 29,
+  "revisao": 57,
   "versao_formato": "2.1.0"
 }
