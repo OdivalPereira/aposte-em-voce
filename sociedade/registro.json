@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-10-06T17:51:30.685722+00:00",
+  "atualizado_em": "2026-10-06T19:09:06.486947+00:00",
   "caminho_canonico": "/home/odival/Documentos/Projetos/aposte-em-voce",
   "corte_cadeia": 42,
   "criado_em": "2026-10-03T13:50:17.697161+00:00",
@@ -1976,10 +1976,44 @@
       "simulacao": false,
       "timestamp": "2026-10-06T17:51:30.685697+00:00",
       "tipo": "passagem"
+    },
+    {
+      "autor": "Odival",
+      "dados": {
+        "acao": "rejeitar",
+        "alcance": "etapa",
+        "decisao_id": "DEC-d1b-robustez-rejeitar-55",
+        "etapa_id": "d1b-robustez",
+        "quem": "Odival",
+        "referencia": "Separar app e método (Odival, 06/10/2026). Parecer completo do Barbárvore: não aceitar (D01–D08 bloqueadores, D09–D13 relevantes, D14 opcional). O design vai para a d1c-design (só app) e o método para a trilha no repositório canônico. Parecer arquivado sem alteração em sociedade/pareceres/parecer-d1b-robustez.md (sha256 dfe902ccaf7ff150); não registrado por revisar --parecer porque cita o SHA da cópia (79078ec), e não o original (02e58dd)."
+      },
+      "hash": "a1f1c9ec83545f2c0f3a342e27c718542f7eb1c55ee79d5fc70cd099f1809032",
+      "id": "EVT-000055",
+      "prev_hash": "795a3fe75bebdd3c69cebeb882a4e73bd7dc7c37f619e75235d019d797953f06",
+      "seq": 55,
+      "simulacao": false,
+      "timestamp": "2026-10-06T19:09:06.482931+00:00",
+      "tipo": "decisao_registrada"
+    },
+    {
+      "autor": "Odival",
+      "dados": {
+        "desfecho": "rejeitar",
+        "elegivel_publicacao": false,
+        "etapa_id": "d1b-robustez",
+        "resumo": "rejeitar por Odival: Separar app e método (Odival, 06/10/2026). Parecer completo do Barbárvore: não aceitar (D01–D08 bloqueadores, D09–D13 relevantes, D14 opcional). O design vai para a d1c-design (só app) e o método para a trilha no repositório canônico. Parecer arquivado sem alteração em sociedade/pareceres/parecer-d1b-robustez.md (sha256 dfe902ccaf7ff150); não registrado por revisar --parecer porque cita o SHA da cópia (79078ec), e não o original (02e58dd)."
+      },
+      "hash": "361bbe8764fb61222c2e9004dc6c78f78c23d4a347df38bfc710c29497912827",
+      "id": "EVT-000056",
+      "prev_hash": "a1f1c9ec83545f2c0f3a342e27c718542f7eb1c55ee79d5fc70cd099f1809032",
+      "seq": 56,
+      "simulacao": false,
+      "timestamp": "2026-10-06T19:09:06.486923+00:00",
+      "tipo": "etapa_encerrada"
     }
   ],
   "projeto_id": "aposte-em-voc",
   "resumos_externos": {},
-  "revisao": 55,
+  "revisao": 57,
   "versao_formato": "2.1.0"
 }

@@ -1,6 +1,6 @@
 # Andamento — Aposte em Você na formação real
 
-Atualizado em 05/10/2026 pelo Círdan. Limite: 5 KB (Q170).
+Atualizado em 06/10/2026 pelo Círdan. Limite: 5 KB (Q170).
 
 ## Formação (desde 03/10, na d1-design)
 | Papel | Ferramenta | Modelo |
@@ -16,13 +16,14 @@ Emulação desligada. Jules e executores locais em espera.
 |---|---|---|
 | m0, a1, fechamento-nuvem | integradas (PR #1–#3) | aceite em emulação |
 | d1-design | `etapa/d1-design` (`4fdd7b5`), sem PR | **rejeitada** (Q85 esgotado): A01, A02 e A03 nos scripts do método e regressão A06 nas permissões. O design (referência, T08, T09, T99 e capturas em 360 px) ficou sem achado aberto |
-| d1b-robustez | `etapa/d1b-robustez`, base `4fdd7b5` | **aberta**: resíduos da d1 e processo honesto; leva o design da d1 para a `main` |
+| d1b-robustez | `etapa/d1b-robustez` (PR #4 fechado) | **rejeitada** para separar app e método (Q185). Parecer completo: D01–D14 |
+| d1c-design | `etapa/d1c-design`, base `main` | **próxima**: só o app da d1 (referência, T08, T09, T99 e capturas), revisão reduzida com o app rodando |
 
-A avaliação da d1, com consumo e retrabalho medidos, está em `sociedade/avaliacao-d1-design.md`. Ela originou as decisões Q176–Q182.
+As avaliações estão em `sociedade/avaliacao-d1-design.md` (origem de Q176–Q182) e `sociedade/avaliacao-d1b-robustez.md` (origem de Q183–Q186).
 
 ## Pendente, em ordem
-1. **d1b-robustez:** a ordem está em `sociedade/ordens/d1b-robustez.md`.
-2. Depois do merge: devolver a 3.3.0 ao `sociedade_do_codigo` (C40) e reinstalar no Antigravity e no Codex (C53).
+1. **d1c-design:** só o app, a partir de `02e58dd`, levando a governança atual em `sociedade/`.
+2. **Trilha de método no `sociedade_do_codigo` (Q185):** parte de `02e58dd` e dos achados D01–D14, com modelo de ameaça (Q183); o projeto recebe a versão pronta.
 3. **a2a:** conferência e catálogo, com B17a e B17c. **O Jules estreia aqui** (catálogo com fontes e conferência de links). Antes, o Círdan o ativa no perfil e Odival confirma o acesso dele ao repositório (decisão de 05/10).
 4. **a2b:** entrevista, com B14 e B15r.
 5. a3, a4 e a sessão final.

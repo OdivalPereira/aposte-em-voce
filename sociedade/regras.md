@@ -72,6 +72,8 @@ Sem nível numérico; o rigor fica na ordem (Q17). Antes do despacho, Odival con
 12. **Estações do Círdan (Q177):** PR, `conferir --registrar`, `revisar` (cópia), `passar` e commits de governança são do Círdan; `decidir` é de Odival. O Gandalf para no `entregar` final e em cada parada da ordem, grava o estado e devolve. Evento gravado em nome de outro papel é atrito e invalida a entrega que dependa dele.
 13. **Contexto por rodada (Q180):** o Gandalf usa uma conversa por rodada (execução até o `entregar` final; cada correção em conversa nova), com teto de cerca de 250 passos: perto dele, grava o estado e devolve. A ordem tem até 8 KB e uma natureza só.
 14. **Coordenador não edita lógica (Q181):** o Gandalf escreve só estado, subordens e o ajuste de integração (Q164); a depuração é do especialista. A subordem de correção traz as sondas do revisor como aceite, e o Gandalf as roda antes de pedir a reconferência.
+15. **Achado não muda a ordem (Q184):** mudar requisito exige ajuste formal aprovado por Odival, registrado como adendo da ordem.
+16. **Método em trilha própria (Q185):** o método é desenvolvido no `sociedade_do_codigo` e chega aos projetos como versão pronta; etapa de app nunca espera método; etapa de método tem até 3 mecanismos novos; correção não acrescenta recurso.
 
 ## 4. Prova e integração
 
@@ -88,11 +90,12 @@ Sem nível numérico; o rigor fica na ordem (Q17). Antes do despacho, Odival con
 1. Revisão independente é de fornecedor diferente de todos os implementadores. Do mesmo fornecedor, é interna (D-RT-001), salvo o modo emulação, com marca.
 2. Uma revisão por etapa, no candidato consolidado; no máximo uma correção e uma reconferência (Q84, Q85); teste de reversão nos bloqueadores (Q86). A reconferência é em sessão nova, que lê só os achados e o diff da correção (Q180), e grava parecer próprio, sem sobrescrever o primeiro (Q179).
 3. **Revisão proporcional ao risco (Q150).** A ordem diz a profundidade:
-   - etapas de alto impacto (inclusive por definição, Q176): protocolo completo (passo 0, oito lentes e matriz, Q126);
+   - etapas de alto impacto (inclusive por definição, Q176): protocolo completo (passo 0, oito lentes e matriz, Q126), **dentro do modelo de ameaça da ordem (Q183)**: achado fora dele vira observação;
    - etapas triviais: passo 0 e as lentes pertinentes.
 4. Decide o parecer independente mais recente para a versão atual (Q144). Mudança depois da revisão tem impacto desconhecido até ser classificada; a cauda só de `sociedade/` é `sem_alto` automático (Q145, Q149).
 5. **Revisor indisponível: aceite condicional (Q159).** A etapa fecha e é integrada, mas não é publicada até a revisão chegar. Há no máximo 1 aceite condicional aberto por vez, e uma rejeição posterior reabre a etapa.
 6. Enquanto não houver calibração, o parecer vale marcado "revisor não calibrado" (Q160, Q135 suspensa).
+7. **Cópia do revisor completa (Q186):** `sociedade/` do HEAD, dependências dentro da cópia e o SHA original no cabeçalho do parecer.
 
 ## 6. Paradas e intervenções
 
