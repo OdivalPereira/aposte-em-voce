@@ -4,6 +4,7 @@ import { diagnosticar } from '../leitura/diagnostico';
 import { assinaturaDoLayout } from '../leitura/layout';
 import type { ResultadoArquivo } from '../leitura/tipos';
 import type { ItemArquivo } from '../app';
+import { Botao, EstadoVazio } from '../ui';
 
 const SALDO = { fecha: 'confere', 'nao-fecha': 'não fecha', indisponivel: 'indisponível' } as const;
 
@@ -21,12 +22,20 @@ export function Diagnostico({ itens, aoVoltar }: { itens: ItemArquivo[]; aoVolta
       setCopia({ rotulo, ok: false });
     }
   }
+
   return (
     <section aria-labelledby="titulo-diagnostico">
       <h1 id="titulo-diagnostico">Diagnóstico da leitura</h1>
       <p class="suave">Só contagens. Nenhum valor, nome ou descrição aparece aqui.</p>
+
       {linhas.length === 0 ? (
-        <p>Nenhum arquivo lido nesta visita.</p>
+        <EstadoVazio
+          icone="📊"
+          titulo="Nenhum arquivo lido"
+          descricao="Nenhum arquivo lido nesta visita. Volte aos extratos para carregar um arquivo PDF."
+          textoAcao="Voltar aos extratos"
+          aoExecutarAcao={aoVoltar}
+        />
       ) : (
         <div class="tabela-rolagem">
           <table>
@@ -48,13 +57,24 @@ export function Diagnostico({ itens, aoVoltar }: { itens: ItemArquivo[]; aoVolta
                   <td>{l.paginas}</td>
                   <td>{l.linhasCandidatas}</td>
                   <td>{l.lancamentosReconstruidos}</td>
-                  <td>{SALDO[l.conferenciaDeSaldo]}{l.progressao ? ` (${l.progressao.verificadas} linhas conferidas, ${l.progressao.divergentes} divergentes)` : ''}</td>
-                  <td>{l.statusRotulo}{l.motivo ? ` (${l.motivo})` : ''}</td>
+                  <td>
+                    {SALDO[l.conferenciaDeSaldo]}
+                    {l.progressao ? ` (${l.progressao.verificadas} linhas conferidas, ${l.progressao.divergentes} divergentes)` : ''}
+                  </td>
+                  <td>
+                    {l.statusRotulo}
+                    {l.motivo ? ` (${l.motivo})` : ''}
+                  </td>
                   <td>
                     {resultados[i]?.estrutura ? (
-                      <button type="button" class="secundario" aria-label={`Copiar assinatura do layout (${l.rotulo})`} onClick={() => void copiar(l.rotulo, resultados[i] as ResultadoArquivo)}>
+                      <Botao
+                        type="button"
+                        variante="secundario"
+                        rotuloAcessivel={`Copiar assinatura do layout (${l.rotulo})`}
+                        aoClicar={() => void copiar(l.rotulo, resultados[i] as ResultadoArquivo)}
+                      >
                         Copiar assinatura do layout
-                      </button>
+                      </Botao>
                     ) : (
                       'sem assinatura'
                     )}
@@ -65,14 +85,24 @@ export function Diagnostico({ itens, aoVoltar }: { itens: ItemArquivo[]; aoVolta
           </table>
         </div>
       )}
+
       {copia && (
-        <p role="status" class={copia.ok ? undefined : 'aviso'}>
-          {copia.ok ? `Assinatura do layout de ${copia.rotulo} copiada. Ela traz só a estrutura, sem valores, nomes nem descrições.` : 'Não foi possível copiar. Tente de novo ou use outro navegador.'}
+        <p
+          role="status"
+          class={`aviso ${copia.ok ? 'aviso-info' : 'aviso-erro'}`}
+          style={{ marginTop: 'var(--esp-3)' }}
+        >
+          {copia.ok
+            ? `Assinatura do layout de ${copia.rotulo} copiada. Ela traz só a estrutura, sem valores, nomes nem descrições.`
+            : 'Não foi possível copiar. Tente de novo ou use outro navegador.'}
         </p>
       )}
-      <button type="button" class="secundario" onClick={aoVoltar}>
-        Voltar
-      </button>
+
+      <div style={{ marginTop: 'var(--esp-4)' }}>
+        <Botao type="button" variante="secundario" aoClicar={aoVoltar}>
+          Voltar
+        </Botao>
+      </div>
     </section>
   );
 }

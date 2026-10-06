@@ -1,0 +1,145 @@
+{
+  "tipo": "atestado_pre_devolucao",
+  "versao": "1.3.0",
+  "timestamp": "2026-10-03T23:38:47.987411Z",
+  "papel": "Coordenador",
+  "etapa_id": "d1-design",
+  "fatia_id": "4",
+  "status": "APROVADO",
+  "verificacoes": {
+    "higiene_pastas": {
+      "ok": true,
+      "erros": []
+    },
+    "build": {
+      "ok": true,
+      "comando": "npm run build",
+      "detalhes": "dist/assets/pdf.worker-DUCzcP-s.js  1,245.50 kB\ndist/assets/index-B1ZwZmOK.css          2.16 kB │ gzip:  0.92 kB\ndist/assets/index-Cpz9JDg3.js          29.59 kB │ gzip: 11.53 kB\n\n✓ built in 616ms",
+      "codigo": 0
+    },
+    "tipos_estaticos": {
+      "ok": true,
+      "comando": "npm run lint",
+      "detalhes": "> aposte-em-voce@0.1.0 lint\n> tsc --noEmit && eslint .",
+      "codigo": 0
+    },
+    "compilacao": {
+      "ok": true,
+      "erros": []
+    },
+    "seguranca_antitoken": {
+      "ok": true,
+      "erros": []
+    },
+    "disjuncao": {
+      "ok": true,
+      "erros": []
+    },
+    "testes": {
+      "ok": true,
+      "detalhes": "app: 154 testes, 0 pulados, 7.0 s | pacote: 734 testes, 1 pulados, 73.8 s",
+      "comando": "app: npm test; pacote: python3 -B -m unittest discover -s tests",
+      "totais": {
+        "total": 888,
+        "pulados": 1,
+        "falhos": 0
+      }
+    },
+    "arvore_limpa": {
+      "ok": true,
+      "suja": []
+    }
+  },
+  "commit": "8032f0394ebfe6862cd5781977572f0f9e0427d4",
+  "base": "c927e5d170d857399b92a3bf051a5fbf0c4c99fb",
+  "origem_arquivos": "git",
+  "total_arquivos_inspecionados": 16,
+  "arquivos_removidos": [],
+  "python": "3.12.3",
+  "hashes_artefatos": {
+    "AGENTS.md": "209fe8b2f76aac19e8371253e99c41100c412898ed887c9a1503bb3a1556ca4f",
+    "sociedade-do-codigo/.claude-plugin/marketplace.json": "3c0f48931919c0a756f7d4e9ac0a63cfdb382bba88729b0449e141a587634233",
+    "sociedade-do-codigo/CHANGELOG.md": "25c3a8e2a86c29cb4a5e26a387195211bd86da2b50e7810fe275a6ba0f90eace",
+    "sociedade-do-codigo/README.md": "60b19815793907aef195ec568f2de69dac868b186fab177ce0560243e868daba",
+    "sociedade-do-codigo/VERSION": "b2f44d3b6e29f8b1b73ea4735f006affc4d198e1fd9c7d50e736159b1ef636c6",
+    "sociedade-do-codigo/pacote.json": "055b5ad7a1b87ae92b3fb1542a5a5cf379936f1d0af7dcae3fa8a5588a97ecd5",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/.claude-plugin/plugin.json": "05b8b1fd28e2dc595eeab98a034019b484a53f943459f935ebe08385590fbb80",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/.codex-plugin/plugin.json": "e46ca162950f7d85cd84fec40c3132b9b69a0e3d6e0121ecbc95a6bc15e90e60",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/plugin.json": "c0edac3bee99bc7cd1b5b6d0c1cf0d68119fda720473bf8dd2230afe4b577dfa",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sc-execucao/SKILL.md": "6dfb352eb372c708ce1dc2571b168fe6a5f162383582a45918f77724295008d2",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sc-papeis/SKILL.md": "917a115eaac940af5dff8287e6cb97f0ccbb127417488b23ba69dc97dd089f26",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sc-revisao/SKILL.md": "27019209b4b0220e29338f2cee6a63711d36717f21cc963781c3d6a1170bed7a",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/SKILL.md": "19ed73ec7002e88e4fc19b69a56f383effe62676f07ab055e2e0fcb70088bddc",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/references/contrato-nucleo-projeto.md": "2329d4e3301930374284bd262e953a49a2333e74f9d4905f91fbda3809ad7315",
+    "sociedade-do-codigo/tests/test_ci_pipefail.py": "46d376de771179084f14a5d0121069033597f03f2206181368fd54b8e8ad6aef",
+    "sociedade-do-codigo/tests/test_metricas.py": "f115b468892e5203152b02ae8b4acb8d63310a9cd822c681437140d705c24d04"
+  },
+  "arquivos_inspecionados": [
+    "AGENTS.md",
+    "sociedade-do-codigo/.claude-plugin/marketplace.json",
+    "sociedade-do-codigo/CHANGELOG.md",
+    "sociedade-do-codigo/README.md",
+    "sociedade-do-codigo/VERSION",
+    "sociedade-do-codigo/pacote.json",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/.claude-plugin/plugin.json",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/.codex-plugin/plugin.json",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/plugin.json",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sc-execucao/SKILL.md",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sc-papeis/SKILL.md",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sc-revisao/SKILL.md",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/SKILL.md",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/references/contrato-nucleo-projeto.md",
+    "sociedade-do-codigo/tests/test_ci_pipefail.py",
+    "sociedade-do-codigo/tests/test_metricas.py"
+  ],
+  "erros": [],
+  "portao": {
+    "modo": "por_area",
+    "perfil": "sociedade/perfil.md",
+    "perfil_sha256": "84e01ca7546aab098dfde5be9c69824825f7d48363e4df838d0a986de08bc648",
+    "commit": "8032f0394ebfe6862cd5781977572f0f9e0427d4",
+    "area_pedida": null,
+    "areas_tocadas": [
+      "app",
+      "pacote"
+    ],
+    "cobertura_completa": true,
+    "areas": [
+      {
+        "area": "app",
+        "pasta": ".",
+        "comando": "npm test",
+        "timeout_s": 900,
+        "ok": true,
+        "codigo": 0,
+        "duracao_s": 7.0,
+        "timeout_estourado": false,
+        "testes": {
+          "total": 154,
+          "pulados": 0,
+          "falhos": 0
+        },
+        "motivos": [],
+        "saida_final": "  ✓  12 tests/e2e/leitura.spec.ts:203:3 › jornada de leitura (T08, T09, T99) em perfil de celular › arquivo que o navegador não consegue ler: não suportado, sem vazar o erro, e pode ser pulado (268ms)\n  ✓   9 tests/e2e/leitura.spec.ts:121:3 › jornada de leitura (T08, T09, T99) em perfil de celular › arquivo corrompido: mensagem clara (519ms)\n  ✓  11 tests/e2e/leitura.spec.ts:164:3 › jornada de leitura (T08, T09, T99) em perfil de celular › falhas na leitura nunca travam a jornada (princípio 8) (350ms)\n  ✓  10 tests/e2e/leitura.spec.ts:132:3 › jornada de leitura (T08, T09, T99) em perfil de celular › PDF com senha: pede a senha, recusa a errada, lê com a certa; a senha não sai do aparelho (777ms)\n\n  13 passed (4.8s)"
+      },
+      {
+        "area": "pacote",
+        "pasta": "sociedade-do-codigo",
+        "comando": "python3 -B -m unittest discover -s tests",
+        "timeout_s": 600,
+        "ok": true,
+        "codigo": 0,
+        "duracao_s": 73.8,
+        "timeout_estourado": false,
+        "testes": {
+          "total": 734,
+          "pulados": 1,
+          "falhos": 0
+        },
+        "motivos": [],
+        "saida_final": "bastão despachado para Legolas: /tmp/tmp0yenlh3n/sociedade/rodada.md\nhistórico: /tmp/tmp0yenlh3n/sociedade/historico.md\nbastão despachado para Legolas: /tmp/tmplq7_ra2p/sociedade/rodada.md\nhistórico: /tmp/tmplq7_ra2p/sociedade/historico.md\nfatia 1 concluída e devolvida: /tmp/tmplq7_ra2p/sociedade/rodada.md\nhistórico: /tmp/tmplq7_ra2p/sociedade/historico.md"
+      }
+    ]
+  },
+  "atestado_hash": "9297199740599f76252a14f308b315e3315d1d78d6b170d209c5897ada7eb338"
+}

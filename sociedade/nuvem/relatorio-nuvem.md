@@ -12,7 +12,7 @@ Três sessões no Claude Code em nuvem, com um único fornecedor ocupando todos 
 - **Revisão interna da Galadriel** nas fatias de alto impacto, e **revisão independente** (Barbárvore) completa na m0 e reduzida na a1 e na fechamento-nuvem.
 
 ## O que funcionou
-- A revisão interna pegou o que o portão não pegaria. Na a1, o `decidir` aceitava atestado avulso; em todas as sessões, houve falhas que travavam a jornada.
+- A revisão interna pegou o que o portão não pegaria. Na a1, o `decidir` aceitava atestado avulso e houve falhas que travavam a jornada.
 - A Q12 funcionou duas vezes: no B12 e na parada da F3 do Jules.
 - A `sociedade/` canônica no worktree (Q166) acabou com a cópia manual de registro entre checkouts.
 - Medir pelo log mostrou onde está o custo: na releitura. O Gandalf aberto do zero a cada rodada, lendo só o arquivo de estado, custou uma fração do especialista retomado por mensagem.

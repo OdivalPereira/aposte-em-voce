@@ -59,8 +59,8 @@ Sem nível numérico; o rigor fica na ordem (Q17). Antes do despacho, Odival con
 
 1. Uma ordem, uma conversa nova. O "leia só" começa com até 5 caminhos; mais que isso, com justificativa (Q21).
 2. Etapa em worktree `~/.sociedade/trabalho/<projeto>/<etapa>`, no ramo `etapa/<ID>`. O candidato nunca altera `sociedade/` (Q60); durante a etapa, a `sociedade/` canônica é a do worktree (Q163, Q166); o portão ignora `sociedade/` e o `.gitignore` na árvore suja e o `decidir` confere o hash do perfil.
-3. Delegar é executar em sessão separada e identificável. Nunca simule; a conferência lê o log (Q28; adaptador Claude, Q156). No Claude Code, a delegação é em revezamento: o Gandalf escreve a subordem e o Círdan a despacha sem edição (Q161). O ajuste de integração do coordenador vai até 30 linhas de produto por etapa, sem lógica nova; acima disso, vira fatia (Q164). Fatias em paralelo: o especialista não comita; o coordenador comita por fatia e roda o portão num checkout limpo; a base da fatia é o commit anterior (Q165).
-4. A Galadriel revisa só as fatias de alto impacto que a ordem marca (Q10, Q92).
+3. Delegar é executar em sessão separada e identificável. Nunca simule; a conferência lê o log (Q28; adaptador Claude, Q156). No Antigravity, a delegação usa o agente instalado do especialista (`TypeName` com o nome do papel), nunca `self` (Q182). No Claude Code, a delegação é em revezamento: o Gandalf escreve a subordem e o Círdan a despacha sem edição (Q161). O ajuste de integração do coordenador vai até 30 linhas de produto por etapa, sem lógica nova; acima disso, vira fatia (Q164). Fatias em paralelo: o especialista não comita; o coordenador comita por fatia e roda o portão num checkout limpo; a base da fatia é o commit anterior (Q165).
+4. A Galadriel revisa só as fatias de alto impacto que a ordem marca (Q10, Q92). **É alto impacto por definição (Q176)** toda fatia que toca registro, conferência, aceite, portão ou permissões: protocolo completo do Barbárvore e revisão interna (da Galadriel, ou de outro especialista quando a autora é ela). Etapa de método não se mistura com etapa de tela.
 5. Jules: só tarefas mecânicas, no máximo 3 abertas, janela de 45 min, com o portão do Jules (Q48, Q129). Dados de teste com estrutura imitada partem de um layout de referência do especialista; o esperado nunca sai do código sob teste (Q167).
 5a. Telas: referência visual aprovada por Odival; fatia com tela é do Legolas; o PR traz capturas de cada tela em 360 px, comparadas na revisão (Q169).
 6. Até 3 tentativas por bloqueio, cada uma com hipótese diferente; depois, parar e devolver (Q12).
@@ -69,6 +69,11 @@ Sem nível numérico; o rigor fica na ordem (Q17). Antes do despacho, Odival con
 9. **Correção por agente novo (Q171):** correção de fatia vai a um agente novo do mesmo papel, que lê o arquivo de retorno e o achado, e não à instância antiga retomada por mensagem.
 10. **Ordem com usos conferidos (Q172):** antes de pedir a aprovação, o Círdan confere por `grep` os usos reais de cada arquivo da lista de escrita.
 11. **Especialista pelo tipo da fatia (Q173):** scripts, dados e lógica determinística: Elrond; métodos, testes e textos do método: Galadriel; telas: Legolas (Q169); fontes externas: Aragorn.
+12. **Estações do Círdan (Q177):** PR, `conferir --registrar`, `revisar` (cópia), `passar` e commits de governança são do Círdan; `decidir` é de Odival. O Gandalf para no `entregar` final e em cada parada da ordem, grava o estado e devolve. Evento gravado em nome de outro papel é atrito e invalida a entrega que dependa dele.
+13. **Contexto por rodada (Q180):** o Gandalf usa uma conversa por rodada (execução até o `entregar` final; cada correção em conversa nova), com teto de cerca de 250 passos: perto dele, grava o estado e devolve. A ordem tem até 8 KB e uma natureza só.
+14. **Coordenador não edita lógica (Q181):** o Gandalf escreve só estado, subordens e o ajuste de integração (Q164); a depuração é do especialista. A subordem de correção traz as sondas do revisor como aceite, e o Gandalf as roda antes de pedir a reconferência.
+15. **Achado não muda a ordem (Q184):** mudar requisito exige ajuste formal aprovado por Odival, registrado como adendo da ordem.
+16. **Método em trilha própria (Q185):** o método é desenvolvido no `sociedade_do_codigo` e chega aos projetos como versão pronta; etapa de app nunca espera método; etapa de método tem até 3 mecanismos novos; correção não acrescenta recurso.
 
 ## 4. Prova e integração
 
@@ -77,25 +82,28 @@ Sem nível numérico; o rigor fica na ordem (Q17). Antes do despacho, Odival con
    - **portão local amarrado:** árvore limpa, comando e timeout do perfil canônico, contagem de testes maior que zero e commit no atestado;
    - **e** o CI verde **no mesmo SHA**.
 3. A `main` protegida exige os status `ci`, `portao` e `aceite`.
-4. **Cauda de governança (Q149).** O SHA revisado é o último commit de produto. Commits posteriores, só de `sociedade/`, entram no mesmo PR.
-5. Integrar é o merge do PR, feito por Odival (Q154; Q32, Q68).
+4. **Cauda de governança (Q149).** O SHA revisado é o último commit de produto. Commits posteriores, só de `sociedade/`, entram no mesmo PR. **Governança no início (Q178):** quando a etapa muda perfil ou regras, o commit de governança sai antes do despacho, para que as cópias e o CI leiam o estado certo. Depois do push, nada de amend, reset ou push forçado no ramo de etapa: erro se corrige com commit novo.
+5. Integrar é o merge do PR, sempre como merge commit, com o "sim" de Odival na conversa: o Círdan roda `gh pr merge <n> --merge`; `--squash`, `--rebase`, `--auto` e `--admin` são negados (Q174, ajusta Q154; Q32, Q68).
 
 ## 5. Revisão
 
 1. Revisão independente é de fornecedor diferente de todos os implementadores. Do mesmo fornecedor, é interna (D-RT-001), salvo o modo emulação, com marca.
-2. Uma revisão por etapa, no candidato consolidado; no máximo uma correção e uma reconferência (Q84, Q85); teste de reversão nos bloqueadores (Q86).
+2. Uma revisão por etapa, no candidato consolidado; no máximo uma correção e uma reconferência (Q84, Q85); teste de reversão nos bloqueadores (Q86). A reconferência é em sessão nova, que lê só os achados e o diff da correção (Q180), e grava parecer próprio, sem sobrescrever o primeiro (Q179).
 3. **Revisão proporcional ao risco (Q150).** A ordem diz a profundidade:
-   - etapas de alto impacto: protocolo completo (passo 0, oito lentes e matriz, Q126);
+   - etapas de alto impacto (inclusive por definição, Q176): protocolo completo (passo 0, oito lentes e matriz, Q126), **dentro do modelo de ameaça da ordem (Q183)**: achado fora dele vira observação;
    - etapas triviais: passo 0 e as lentes pertinentes.
 4. Decide o parecer independente mais recente para a versão atual (Q144). Mudança depois da revisão tem impacto desconhecido até ser classificada; a cauda só de `sociedade/` é `sem_alto` automático (Q145, Q149).
 5. **Revisor indisponível: aceite condicional (Q159).** A etapa fecha e é integrada, mas não é publicada até a revisão chegar. Há no máximo 1 aceite condicional aberto por vez, e uma rejeição posterior reabre a etapa.
 6. Enquanto não houver calibração, o parecer vale marcado "revisor não calibrado" (Q160, Q135 suspensa).
+7. **Cópia do revisor completa (Q186):** `sociedade/` do HEAD, dependências dentro da cópia e o SHA original no cabeçalho do parecer.
 
 ## 6. Paradas e intervenções
 
 1. Param sempre para Odival: integrar, publicar, gastar, mudar credencial, MCP ou modelo, contato externo, dado real e mudança de escopo.
 2. **Metas por etapa (Q153, substitui a Q89):** até 12 comandos do método, 0 edições manuais em arquivos de controle, até 5 intervenções e 30 min de Odival. Acima da meta, vira item de correção.
 3. O Círdan corrige sozinho bug, teste e texto que não muda regra. Mudança de regra vira proposta de decisão, que Odival confirma (Q82).
+4. **Passagem entre ferramentas (Q175):** a cada passo no Antigravity ou no Codex, o Círdan diz a Odival a pasta exata a abrir e a linha exata a colar (`sc.py passar`) e espera o retorno.
+5. **Momentos humanos registrados (Q179):** `corrigir` e `rejeitar` sempre com motivo; a aprovação visual de Odival entra no estado do Gandalf com a frase literal, a data e o SHA da referência.
 
 ## 7. Registro e governança
 

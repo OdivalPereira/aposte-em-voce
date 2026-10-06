@@ -15,28 +15,26 @@ Site gratuito, aberto por link no celular, que ajuda adultos afetados por aposta
 
 | Papel | Nome | Plataforma | Fornecedor | Modelo | Esforço | Estado (ativo/reserva/espera) | Desde | Motivo |
 |---|---|---|---|---|---|---|---|---|
-| Arquiteto | Círdan | Claude Code (nuvem) | Anthropic | Claude Opus 5.5 | high | ativo | 2026-10-03 | sessão principal; emulação (Q147, C09) |
-| Revisor Independente | Barbárvore | Claude Code (nuvem) | Anthropic | Claude Opus 5.5 | xhigh (completa) / high (reduzida) | ativo | 2026-10-03 | subagente isolado; emulação do GPT-6 Sol (C12, C27, C34) |
-| Coordenador | Gandalf | Claude Code (nuvem) | Anthropic | Claude Sonnet 5.5 | high | ativo | 2026-10-03 | subagente por ordem; emulação do Gemini (C11) |
-| Coleta e procedência | Aragorn | Claude Code (nuvem) | Anthropic | Claude Sonnet 5.5 | high | ativo | 2026-10-03 | subagente do Gandalf; emulação |
-| Dados e persistência | Elrond | Claude Code (nuvem) | Anthropic | Claude Sonnet 5.5 | high | ativo | 2026-10-03 | subagente do Gandalf; emulação |
-| Métodos e qualidade | Galadriel | Claude Code (nuvem) | Anthropic | Claude Sonnet 5.5 | high | ativo | 2026-10-03 | subagente do Gandalf; revisão interna de alto impacto (C17) |
-| Interface e acessibilidade | Legolas | Claude Code (nuvem) | Anthropic | Claude Sonnet 5.5 | high | ativo | 2026-10-03 | subagente do Gandalf; emulação |
-| Executor júnior em nuvem | Jules | Claude Code (nuvem) | Anthropic | Claude Haiku 4.5 | padrão | ativo | 2026-10-03 | subagente em segundo plano; emulação do Jules (C15) |
-| Executores locais | Celebrimbor, Radagast, Faramir, Bilbo | Claude Code (nuvem) | Anthropic | Claude Haiku 4.5 | padrão | reserva | 2026-10-03 | uma fatia mecânica emulada (C16) |
+| Arquiteto | Círdan | Claude Code | Anthropic | Claude Opus 5.5 | high | ativo | 2026-10-03 | formação real: fim da emulação em nuvem (andamento, C53) |
+| Revisor Independente | Barbárvore | Codex | OpenAI | GPT-6 Sol | xhigh | ativo | 2026-10-03 | formação real: fim da emulação em nuvem (andamento, C53); revisor não calibrado (Q160) |
+| Coordenador | Gandalf | Antigravity | Google | Gemini 3.8 Flash | high | ativo | 2026-10-03 | formação real: fim da emulação em nuvem (andamento, C53) |
+| Coleta e procedência | Aragorn | Antigravity | Google | Gemini 3.8 Flash | high | ativo | 2026-10-03 | formação real (andamento, C53); edição manual: `papel trocar --papel execucao` não alterou esta linha (lacuna L2, corrigida na d1) |
+| Dados e persistência | Elrond | Antigravity | Google | Gemini 3.8 Flash | high | ativo | 2026-10-03 | formação real (andamento, C53); edição manual: `papel trocar --papel execucao` não alterou esta linha (lacuna L2, corrigida na d1) |
+| Métodos e qualidade | Galadriel | Antigravity | Google | Gemini 3.8 Flash | high | ativo | 2026-10-03 | formação real (andamento, C53); edição manual: `papel trocar --papel execucao` não alterou esta linha (lacuna L2, corrigida na d1) |
+| Interface e acessibilidade | Legolas | Antigravity | Google | Gemini 3.8 Flash | high | ativo | 2026-10-03 | formação real (andamento, C53); edição manual: `papel trocar --papel execucao` não alterou esta linha (lacuna L2, corrigida na d1) |
+| Executor júnior em nuvem | Jules | Jules | Google | a definir | padrão | espera | 2026-10-03 | formação real; sem uso na d1; ocupante a confirmar por Odival (lacuna L2) |
+| Executores locais | Celebrimbor, Radagast, Faramir, Bilbo | máquina local | nenhum | nenhum | padrão | espera | 2026-10-03 | formação real; sem modelo local (lacuna L2) |
 
 ## Modo emulação (Q147)
-- **Emulação:** sim. Nesta sessão em nuvem, um só fornecedor (Anthropic) ocupa todos os papéis (R6, C12).
-- O registro declara Anthropic em tudo. R1–R3 valem como aviso. O parecer do Barbárvore vale como aceite marcado "aceite em emulação", que nunca conta como revisão independente (D-RT-001).
-- A chave é lida pelos scripts (`sc_perfil.emulacao_ligada`, etapa m0-destravar, B02): vale só a linha `- **Emulação:** sim` desta seção.
-- Adaptador: um agente por papel em `.claude/agents/` (Q156).
+- **Emulação:** não. Desligada em 03/10/2026, na abertura da d1-design, com a volta à formação real (andamento, C53). Edição manual, porque ainda não há comando (lacuna L1, corrigida na própria d1).
+- Com a emulação desligada, R1–R3 valem em modo estrito, e o parecer do Barbárvore conta como revisão independente quando o fornecedor dele for diferente do de todos os implementadores (D-RT-001).
+- A chave é lida pelos scripts (`sc_perfil.emulacao_ligada`): vale só a linha `- **Emulação:**` desta seção.
 
 ## Equipe ativa
 *Definição de papéis ativos no projeto (Q95). Papéis inativos não são carregados nem citados nas passagens.*
 
 - **Papéis ativos:** Círdan, Barbárvore, Gandalf, Aragorn, Elrond, Galadriel, Legolas
-- **Papéis ativos também:** Jules (C15)
-- **Papéis em reserva:** executores locais (uma fatia emulada, C16)
+- **Papéis em espera:** Jules e executores locais (sem uso na d1; ocupante a confirmar por Odival)
 
 ## Identificadores de agente
 *Identificadores canônicos para conferência de auto-revisão (A2-P08). Nomes, variantes e identificadores que correspondem à mesma entidade para evitar auto-revisão disfarçada.*
@@ -87,9 +85,9 @@ Stack: TypeScript, Vite, Preact, PDF.js e pdf-lib; site estático na Vercel. Esp
 
 ## Limites e paradas
 - Só dados sintéticos no desenvolvimento. Extrato real nunca entra no repositório nem em prompt (Q24, Q57). Odival testa os extratos dele só no celular, na pré-visualização (N10).
-- Merge na `main` e publicação em produção (Vercel) só com o "vai" de Odival (Q154, C55).
+- Merge na `main` só com o "sim" de Odival na conversa, sempre como merge commit (Q174). Publicação em produção (Vercel) só com o "vai" de Odival (C55).
 - Sem conectores MCP, credenciais nem contratação de serviços na sessão.
-- O agente nunca estima nem relata consumo. Odival confere o saldo nas paradas; com US$ 10 de saldo, só roda a sessão final (C59, C60).
+- Nenhum agente estima consumo; medir pelo log é permitido (`sc.py sessao`, Q170). Odival confere o saldo nas paradas.
 - Treinamento: desligado no Claude (Q120).
 
 ## Comandos

@@ -1,0 +1,154 @@
+{
+  "tipo": "atestado_pre_devolucao",
+  "versao": "1.3.0",
+  "timestamp": "2026-10-04T00:10:26.440692Z",
+  "papel": "Coordenador",
+  "etapa_id": "d1-design",
+  "fatia_id": "3",
+  "status": "APROVADO",
+  "verificacoes": {
+    "higiene_pastas": {
+      "ok": true,
+      "erros": []
+    },
+    "build": {
+      "ok": true,
+      "comando": "npm run build",
+      "detalhes": "dist/assets/estilos-CZrHsNS-.js         13.85 kB │ gzip: 5.92 kB\ndist/assets/main-DUTGmr09.js            15.78 kB │ gzip: 5.76 kB\ndist/assets/referencia-DTzYl-g-.js      30.23 kB │ gzip: 7.93 kB\n\n✓ built in 488ms",
+      "codigo": 0
+    },
+    "tipos_estaticos": {
+      "ok": true,
+      "comando": "npm run lint",
+      "detalhes": "> aposte-em-voce@0.1.0 lint\n> tsc --noEmit && eslint .",
+      "codigo": 0
+    },
+    "compilacao": {
+      "ok": true,
+      "erros": []
+    },
+    "seguranca_antitoken": {
+      "ok": true,
+      "erros": []
+    },
+    "disjuncao": {
+      "ok": true,
+      "erros": []
+    },
+    "testes": {
+      "ok": true,
+      "detalhes": "app: 183 testes, 0 pulados, 6.9 s | pacote: 734 testes, 1 pulados, 73.8 s",
+      "comando": "app: npm test; pacote: python3 -B -m unittest discover -s tests",
+      "totais": {
+        "total": 917,
+        "pulados": 1,
+        "falhos": 0
+      }
+    },
+    "arvore_limpa": {
+      "ok": true,
+      "suja": []
+    }
+  },
+  "commit": "e9b02ae913ed22b47368701955404355bd0796eb",
+  "base": "c2a4a3aee0e5f1db39d4e7b75170f97007120df5",
+  "origem_arquivos": "git",
+  "total_arquivos_inspecionados": 15,
+  "arquivos_removidos": [
+    ".claude/agents/aragorn.md",
+    ".claude/agents/barbarvore-reduzida.md",
+    ".claude/agents/barbarvore.md",
+    ".claude/agents/cirdan.md",
+    ".claude/agents/elrond.md",
+    ".claude/agents/executor-local.md",
+    ".claude/agents/galadriel.md",
+    ".claude/agents/gandalf.md",
+    ".claude/agents/jules.md",
+    ".claude/agents/legolas.md"
+  ],
+  "python": "3.12.3",
+  "hashes_artefatos": {
+    ".claude/settings.json": "a464ebef7e2c46bb30a8d1211adbc77b0607d09823aba2c29f24e99a87052ad8",
+    "CLAUDE.md": "43324278ac8bd9754e46cde1336100bcea6a3c7263d66ddfa895d5c213d48654",
+    "sociedade-do-codigo/adapters/antigravity/LEIA-ME.md": "3013ea45815bef0eb80574929e506eb72798b25bc8316d7e0b3af6cd7e13a5cb",
+    "sociedade-do-codigo/adapters/claude/CLAUDE.md.modelo": "ac63720289afbe5e6f9648e3f0a9c58ff8ad1c4e9a621e71291aef78718bdea8",
+    "sociedade-do-codigo/adapters/claude/LEIA-ME.md": "7a8c78eb3ea77ad8bf384c813338be367196994a84ee53417e3fe2d5b216d512",
+    "sociedade-do-codigo/adapters/claude/settings.json.modelo": "428fcc235b69dfb4f0a512083713b13e1e6996075a28b0f36200da630560d134",
+    "sociedade-do-codigo/adapters/codex/LEIA-ME.md": "211cea44ae42fd319120e11308ffcc7a2cfda4630ced6b03b92b8c68500796cf",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sc-execucao/SKILL.md": "c9e0fef8b18a250f5af7372725803599b82df73899a7cfb1c5f475b7ecad0554",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sc-papeis/SKILL.md": "0ea2b652adcfeb440d678e995601d9d214416adbd3599d7a048ead99f85d3206",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sc-papeis/references/papel-barbarvore.md": "3c18128fceedc4a95f6a3ccbaf677530df0e6da6a498a6f83f9c96ac9e25a945",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sc-papeis/references/papel-cirdan.md": "91797d0f8bef48d5e95f25d581aa648ad846a05b36162bd9918319d6196df7c8",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sc-papeis/references/papel-gandalf.md": "4b52e8f83e2c67b25d5f602e2dee31f237d93e3e9fac9b08fd5eabb66b8b7eb0",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/SKILL.md": "842f47eb94964a8aff671d17faedbedb22324c34744170fba98ce4dd29d2cd16",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/references/comandos.md": "1637e64da176ee1d0db416b66f50a65e0179f307760790e9a8b7258ccb3964e8",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/references/contrato-nucleo-projeto.md": "5683c04acddeb6f5a639fd0f3cfca7eccc41616bafe06a1aa7cc1a2341f33cca"
+  },
+  "arquivos_inspecionados": [
+    ".claude/settings.json",
+    "CLAUDE.md",
+    "sociedade-do-codigo/adapters/antigravity/LEIA-ME.md",
+    "sociedade-do-codigo/adapters/claude/CLAUDE.md.modelo",
+    "sociedade-do-codigo/adapters/claude/LEIA-ME.md",
+    "sociedade-do-codigo/adapters/claude/settings.json.modelo",
+    "sociedade-do-codigo/adapters/codex/LEIA-ME.md",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sc-execucao/SKILL.md",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sc-papeis/SKILL.md",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sc-papeis/references/papel-barbarvore.md",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sc-papeis/references/papel-cirdan.md",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sc-papeis/references/papel-gandalf.md",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/SKILL.md",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/references/comandos.md",
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/references/contrato-nucleo-projeto.md"
+  ],
+  "erros": [],
+  "portao": {
+    "modo": "por_area",
+    "perfil": "sociedade/perfil.md",
+    "perfil_sha256": "84e01ca7546aab098dfde5be9c69824825f7d48363e4df838d0a986de08bc648",
+    "commit": "e9b02ae913ed22b47368701955404355bd0796eb",
+    "area_pedida": null,
+    "areas_tocadas": [
+      "app",
+      "pacote"
+    ],
+    "cobertura_completa": true,
+    "areas": [
+      {
+        "area": "app",
+        "pasta": ".",
+        "comando": "npm test",
+        "timeout_s": 900,
+        "ok": true,
+        "codigo": 0,
+        "duracao_s": 6.9,
+        "timeout_estourado": false,
+        "testes": {
+          "total": 183,
+          "pulados": 0,
+          "falhos": 0
+        },
+        "motivos": [],
+        "saida_final": "  ✓   8 tests/e2e/leitura.spec.ts:106:3 › jornada de leitura (T08, T09, T99) em perfil de celular › PDF só de imagem: mensagem clara e a jornada continua sem o arquivo (579ms)\n  ✓  11 tests/e2e/leitura.spec.ts:164:3 › jornada de leitura (T08, T09, T99) em perfil de celular › falhas na leitura nunca travam a jornada (princípio 8) (464ms)\n  ✓   9 tests/e2e/leitura.spec.ts:121:3 › jornada de leitura (T08, T09, T99) em perfil de celular › arquivo corrompido: mensagem clara (544ms)\n  ✓  10 tests/e2e/leitura.spec.ts:132:3 › jornada de leitura (T08, T09, T99) em perfil de celular › PDF com senha: pede a senha, recusa a errada, lê com a certa; a senha não sai do aparelho (806ms)\n\n  13 passed (4.8s)"
+      },
+      {
+        "area": "pacote",
+        "pasta": "sociedade-do-codigo",
+        "comando": "python3 -B -m unittest discover -s tests",
+        "timeout_s": 600,
+        "ok": true,
+        "codigo": 0,
+        "duracao_s": 73.8,
+        "timeout_estourado": false,
+        "testes": {
+          "total": 734,
+          "pulados": 1,
+          "falhos": 0
+        },
+        "motivos": [],
+        "saida_final": "bastão despachado para Legolas: /tmp/tmp6lb9_hme/sociedade/rodada.md\nhistórico: /tmp/tmp6lb9_hme/sociedade/historico.md\nbastão despachado para Legolas: /tmp/tmp4yw8mkc5/sociedade/rodada.md\nhistórico: /tmp/tmp4yw8mkc5/sociedade/historico.md\nfatia 1 concluída e devolvida: /tmp/tmp4yw8mkc5/sociedade/rodada.md\nhistórico: /tmp/tmp4yw8mkc5/sociedade/historico.md"
+      }
+    ]
+  },
+  "atestado_hash": "8c07b52ae5d597932fc59c4850c1ab994fba3ad249fc833c2f211200fa47ef40"
+}

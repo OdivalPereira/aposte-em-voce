@@ -15,7 +15,8 @@
     "lint": "tsc --noEmit && eslint .",
     "test:unit": "vitest run",
     "test:e2e": "playwright test",
-    "test": "vitest run && playwright test"
+    "test": "vitest run && playwright test",
+    "capturas": "CAPTURAS=1 playwright test tests/e2e/capturas.spec.ts"
   },
   "dependencies": {
     "pdfjs-dist": "^6.4.299",

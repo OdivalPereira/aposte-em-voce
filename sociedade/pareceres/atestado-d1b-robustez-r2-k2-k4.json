@@ -1,0 +1,99 @@
+{
+  "tipo": "atestado_pre_devolucao",
+  "versao": "1.3.0",
+  "timestamp": "2026-10-05T19:09:26.552956Z",
+  "papel": "Coordenador",
+  "etapa_id": "d1b-robustez",
+  "fatia_id": "r2-k2-k4",
+  "status": "APROVADO",
+  "verificacoes": {
+    "higiene_pastas": {
+      "ok": true,
+      "erros": []
+    },
+    "build": {
+      "ok": true,
+      "comando": "npm run build",
+      "detalhes": "dist/assets/main-D1TJGi1R.js            17.49 kB │ gzip: 6.26 kB\ndist/assets/referencia-BC0LVKiy.js      21.08 kB │ gzip: 5.77 kB\ndist/assets/estilos-S66nqa8w.js         23.37 kB │ gzip: 8.58 kB\n\n✓ built in 548ms",
+      "codigo": 0
+    },
+    "tipos_estaticos": {
+      "ok": true,
+      "comando": "npm run lint",
+      "detalhes": "> aposte-em-voce@0.1.0 lint\n> tsc --noEmit && eslint .",
+      "codigo": 0
+    },
+    "compilacao": {
+      "ok": true,
+      "erros": []
+    },
+    "seguranca_antitoken": {
+      "ok": true,
+      "erros": []
+    },
+    "disjuncao": {
+      "ok": true,
+      "erros": []
+    },
+    "testes": {
+      "ok": true,
+      "detalhes": "pacote: 845 testes, 1 pulados, 74.7 s",
+      "comando": "pacote: python3 -B -m unittest discover -s tests",
+      "totais": {
+        "total": 845,
+        "pulados": 1,
+        "falhos": 0
+      }
+    },
+    "arvore_limpa": {
+      "ok": true,
+      "suja": []
+    }
+  },
+  "commit": "02e58dde863495fd78a281e65c9e2913870d701d",
+  "base": "94cc845bd85085ab090fd32733d79ef29051dbdf",
+  "origem_arquivos": "git",
+  "total_arquivos_inspecionados": 2,
+  "arquivos_removidos": [],
+  "python": "3.12.3",
+  "hashes_artefatos": {
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_conferir.py": "8cde4a38da8284a7fcfc3d8372e076585436cfbe4deafab940def766b88437b0",
+    "sociedade-do-codigo/tests/test_conferir_rodada2.py": "214ef12cefe455f729c8cb4d2e9d8b4a91d843dd440344753c8659d853efd4f1"
+  },
+  "arquivos_inspecionados": [
+    "sociedade-do-codigo/plugins/sociedade-do-codigo/skills/sociedade-do-codigo/scripts/sc_conferir.py",
+    "sociedade-do-codigo/tests/test_conferir_rodada2.py"
+  ],
+  "erros": [],
+  "portao": {
+    "modo": "por_area",
+    "perfil": "sociedade/perfil.md",
+    "perfil_sha256": "84e01ca7546aab098dfde5be9c69824825f7d48363e4df838d0a986de08bc648",
+    "commit": "02e58dde863495fd78a281e65c9e2913870d701d",
+    "area_pedida": null,
+    "areas_tocadas": [
+      "pacote"
+    ],
+    "cobertura_completa": true,
+    "areas": [
+      {
+        "area": "pacote",
+        "pasta": "sociedade-do-codigo",
+        "comando": "python3 -B -m unittest discover -s tests",
+        "timeout_s": 600,
+        "ok": true,
+        "codigo": 0,
+        "duracao_s": 74.7,
+        "timeout_estourado": false,
+        "testes": {
+          "total": 845,
+          "pulados": 1,
+          "falhos": 0
+        },
+        "motivos": [],
+        "saida_final": "bastão despachado para Legolas: /tmp/tmpqrwgcvgs/sociedade/rodada.md\nhistórico: /tmp/tmpqrwgcvgs/sociedade/historico.md\nbastão despachado para Legolas: /tmp/tmpvzx8u9a7/sociedade/rodada.md\nhistórico: /tmp/tmpvzx8u9a7/sociedade/historico.md\nfatia 1 concluída e devolvida: /tmp/tmpvzx8u9a7/sociedade/rodada.md\nhistórico: /tmp/tmpvzx8u9a7/sociedade/historico.md"
+      }
+    ]
+  },
+  "atestado_hash": "cde63bde841cd1bb1bce8041f9be0b86e80c97ebbbe8538aa383a1c5adf6b99f"
+}

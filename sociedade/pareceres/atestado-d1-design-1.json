@@ -1,0 +1,137 @@
+{
+  "tipo": "atestado_pre_devolucao",
+  "versao": "1.3.0",
+  "timestamp": "2026-10-04T00:08:34.094513Z",
+  "papel": "Coordenador",
+  "etapa_id": "d1-design",
+  "fatia_id": "1",
+  "status": "APROVADO",
+  "verificacoes": {
+    "higiene_pastas": {
+      "ok": true,
+      "erros": []
+    },
+    "build": {
+      "ok": true,
+      "comando": "npm run build",
+      "detalhes": "dist/assets/estilos-CZrHsNS-.js         13.85 kB │ gzip: 5.92 kB\ndist/assets/main-DUTGmr09.js            15.78 kB │ gzip: 5.76 kB\ndist/assets/referencia-DTzYl-g-.js      30.23 kB │ gzip: 7.93 kB\n\n✓ built in 610ms",
+      "codigo": 0
+    },
+    "tipos_estaticos": {
+      "ok": true,
+      "comando": "npm run lint",
+      "detalhes": "> aposte-em-voce@0.1.0 lint\n> tsc --noEmit && eslint .",
+      "codigo": 0
+    },
+    "compilacao": {
+      "ok": true,
+      "erros": []
+    },
+    "seguranca_antitoken": {
+      "ok": true,
+      "erros": []
+    },
+    "disjuncao": {
+      "ok": true,
+      "erros": []
+    },
+    "testes": {
+      "ok": true,
+      "detalhes": "app: 183 testes, 0 pulados, 6.9 s",
+      "comando": "app: npm test",
+      "totais": {
+        "total": 183,
+        "pulados": 0,
+        "falhos": 0
+      }
+    },
+    "arvore_limpa": {
+      "ok": true,
+      "suja": []
+    }
+  },
+  "commit": "c2a4a3aee0e5f1db39d4e7b75170f97007120df5",
+  "base": "8032f0394ebfe6862cd5781977572f0f9e0427d4",
+  "origem_arquivos": "git",
+  "total_arquivos_inspecionados": 21,
+  "arquivos_removidos": [],
+  "python": "3.12.3",
+  "hashes_artefatos": {
+    "referencia.html": "8d743b7f05b75198682cdfa340e0dbc6d8d4ad73e80bcefa6844bbbb5a4cd810",
+    "src/referencia/PaginaReferencia.tsx": "3278f26987de7b159d36907fc3005c446d5f6ca648987504aa4a910647cb1d23",
+    "src/referencia/main.tsx": "9c20866e0ad9eb5089bb72380e6226ab32eb7d6cc0b61b2753dc26a619c4bcba",
+    "src/referencia/referencia.css": "d1a2de4462fdc5b5981bb44fafee5cfbeb61f1fb529d73eab5b105d37ee48162",
+    "src/ui/Aviso.tsx": "23f70d0a4d4a33a35ef596ec82ec648a56480cbcef6da69fdedc59a2963e3156",
+    "src/ui/Botao.tsx": "19879ce291759af57d231e80c45d6731a20e198a2de78baf0bb2e3e079dcef32",
+    "src/ui/Campo.tsx": "570119fb9dd6b32ae42075d2e28198c37891ea8d5ffad4f0fa7588ed93d5f4b8",
+    "src/ui/Cartao.tsx": "015dcdbbc544bb4d59ea35a998176785972d7b0de1bfa4119061a1c3704cea29",
+    "src/ui/EstadoCarregando.tsx": "1c8dfc53adeb931bf98e4fa9795482769545ff85d941a4b877b8ad8a4c3045a2",
+    "src/ui/EstadoErro.tsx": "6ee33d781aa9258a629c5fe00ea2d3ed5c22bcc164e2c5476a2edaa712fb794d",
+    "src/ui/EstadoVazio.tsx": "c8020716729ff82221c8ebb11794cef8fd69f943198fda0f76d9e2a9029fec25",
+    "src/ui/Lista.tsx": "e2b310b7da6a285c91d421740341854a9b96e85f41bece05bd5e3ce111bb64c1",
+    "src/ui/Progresso.tsx": "ccc3921363d76e0db9166c815e12a97f5f35fb3ab0e3952c6c3cdd0173c34dd3",
+    "src/ui/componentes.css": "949f48c6c4caadc56339ffa558d80a71c8b6a78e9fee96ffe3c647ca0b11a625",
+    "src/ui/contraste.ts": "7e578f9df1f9c271e747d2a25b2a9e672240ec727b24e3f904e9d3695ad2fc37",
+    "src/ui/estilos.css": "922506801d4154439ce8c31cf33da181d965ac5b3f7b41d3ba0ec884c774e566",
+    "src/ui/index.ts": "d1a5aa840fea51721887f7e6ad9f557c954908932db7a3ad9c1b263094e4ea86",
+    "src/ui/tokens.css": "c04e865bd138229717e1f6a3d77ede400049bfebebd16b31b32eb25db74e4d5c",
+    "src/ui/tokens.ts": "a548b015d5563bc530fce140f1948f04368ae5dc787416b532ce1a8aa0234167",
+    "tests/unit/contraste.test.ts": "48791199d5cb2ee2ef3ae0a209a94784e4c92db69ce762ebcbc83240d7ac48fd",
+    "vite.config.ts": "f7173bd6a37eb7664a413120a7de543279b5627cfca537a6e2ad703ff9b0abf1"
+  },
+  "arquivos_inspecionados": [
+    "referencia.html",
+    "src/referencia/PaginaReferencia.tsx",
+    "src/referencia/main.tsx",
+    "src/referencia/referencia.css",
+    "src/ui/Aviso.tsx",
+    "src/ui/Botao.tsx",
+    "src/ui/Campo.tsx",
+    "src/ui/Cartao.tsx",
+    "src/ui/EstadoCarregando.tsx",
+    "src/ui/EstadoErro.tsx",
+    "src/ui/EstadoVazio.tsx",
+    "src/ui/Lista.tsx",
+    "src/ui/Progresso.tsx",
+    "src/ui/componentes.css",
+    "src/ui/contraste.ts",
+    "src/ui/estilos.css",
+    "src/ui/index.ts",
+    "src/ui/tokens.css",
+    "src/ui/tokens.ts",
+    "tests/unit/contraste.test.ts",
+    "vite.config.ts"
+  ],
+  "erros": [],
+  "portao": {
+    "modo": "por_area",
+    "perfil": "sociedade/perfil.md",
+    "perfil_sha256": "84e01ca7546aab098dfde5be9c69824825f7d48363e4df838d0a986de08bc648",
+    "commit": "c2a4a3aee0e5f1db39d4e7b75170f97007120df5",
+    "area_pedida": null,
+    "areas_tocadas": [
+      "app"
+    ],
+    "cobertura_completa": true,
+    "areas": [
+      {
+        "area": "app",
+        "pasta": ".",
+        "comando": "npm test",
+        "timeout_s": 900,
+        "ok": true,
+        "codigo": 0,
+        "duracao_s": 6.9,
+        "timeout_estourado": false,
+        "testes": {
+          "total": 183,
+          "pulados": 0,
+          "falhos": 0
+        },
+        "motivos": [],
+        "saida_final": "  ✓  13 tests/e2e/leitura.spec.ts:229:3 › jornada de leitura (T08, T09, T99) em perfil de celular › alvos de toque de 44 px ou mais nos botões (133ms)\n  ✓  12 tests/e2e/leitura.spec.ts:203:3 › jornada de leitura (T08, T09, T99) em perfil de celular › arquivo que o navegador não consegue ler: não suportado, sem vazar o erro, e pode ser pulado (231ms)\n  ✓   9 tests/e2e/leitura.spec.ts:121:3 › jornada de leitura (T08, T09, T99) em perfil de celular › arquivo corrompido: mensagem clara (543ms)\n  ✓  10 tests/e2e/leitura.spec.ts:132:3 › jornada de leitura (T08, T09, T99) em perfil de celular › PDF com senha: pede a senha, recusa a errada, lê com a certa; a senha não sai do aparelho (797ms)\n\n  13 passed (4.8s)"
+      }
+    ]
+  },
+  "atestado_hash": "a7857f06932e8e9b22754d9699cc7c56f4a225c3f847433175d02ea1dc547baa"
+}
