@@ -16,7 +16,16 @@ function cabecalhosDoVercel(): Record<string, string> {
 
 export default defineConfig({
   plugins: [preact()],
-  build: { target: 'es2022', sourcemap: false },
+  build: {
+    target: 'es2022',
+    sourcemap: false,
+    rollupOptions: {
+      input: {
+        main: new URL('./index.html', import.meta.url).pathname,
+        referencia: new URL('./referencia.html', import.meta.url).pathname,
+      },
+    },
+  },
   worker: { format: 'es' },
   preview: { host: '127.0.0.1', port: 4173, strictPort: true, headers: cabecalhosDoVercel() },
 });

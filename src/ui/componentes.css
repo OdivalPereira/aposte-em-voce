@@ -1,0 +1,495 @@
+/* Componentes do Design System — Aposte em Você */
+/* WCAG 2.2 AA: Acessibilidade, Acolhimento e Sobriedade */
+
+/* ==========================================================================
+   1. BOTÕES (Alvo mínimo >= 24px WCAG 2.2 SC 2.5.8 e >= 44px para toque)
+   ========================================================================== */
+
+button,
+.botao {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+  padding: var(--esp-2) var(--esp-4);
+  margin: var(--esp-1) var(--esp-2) var(--esp-1) 0;
+  border: 2px solid var(--cor-primaria);
+  border-radius: var(--raio-md);
+  background-color: var(--cor-primaria);
+  color: var(--cor-texto-invertido);
+  font-family: inherit;
+  font-size: var(--texto-base);
+  font-weight: var(--peso-semi);
+  line-height: var(--altura-normal);
+  text-decoration: none;
+  cursor: pointer;
+  box-sizing: border-box;
+  text-align: center;
+  touch-action: manipulation;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+button:hover,
+.botao:hover {
+  background-color: var(--cor-primaria-hover);
+  border-color: var(--cor-primaria-hover);
+}
+
+button:active,
+.botao:active {
+  background-color: var(--cor-primaria-ativa);
+  border-color: var(--cor-primaria-ativa);
+}
+
+/* Botão Secundário */
+button.secundario,
+.botao.secundario,
+.botao-secundario {
+  background-color: var(--cor-superficie);
+  color: var(--cor-primaria);
+  border: 2px solid var(--cor-primaria);
+}
+
+button.secundario:hover,
+.botao.secundario:hover,
+.botao-secundario:hover {
+  background-color: var(--cor-primaria-fundo);
+  border-color: var(--cor-primaria-hover);
+  color: var(--cor-primaria-hover);
+}
+
+button.secundario:active,
+.botao.secundario:active,
+.botao-secundario:active {
+  background-color: #dbeafe;
+  border-color: var(--cor-primaria-ativa);
+  color: var(--cor-primaria-ativa);
+}
+
+/* Botão Discreto / Link */
+button.link,
+.botao.link,
+.botao-discreto {
+  background-color: transparent;
+  color: var(--cor-primaria);
+  border: 2px solid transparent;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  min-height: 44px;
+  padding: 0 var(--esp-2);
+}
+
+button.link:hover,
+.botao.link:hover,
+.botao-discreto:hover {
+  background-color: var(--cor-primaria-fundo);
+  border-color: transparent;
+  color: var(--cor-primaria-hover);
+}
+
+button.link:active,
+.botao.link:active,
+.botao-discreto:active {
+  background-color: #dbeafe;
+  border-color: transparent;
+  color: var(--cor-primaria-ativa);
+}
+
+/* Estados Desabilitados */
+button:disabled,
+.botao[aria-disabled='true'],
+.botao.desabilitado {
+  background-color: var(--cor-superficie-secundaria);
+  border-color: var(--cor-borda-suave);
+  color: var(--cor-texto-mudo);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Foco Visível Rigoroso (WCAG 2.2 SC 2.4.7 e 2.4.11) */
+:focus-visible {
+  outline: 3px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   2. CARTÕES
+   ========================================================================== */
+
+.cartao {
+  background-color: var(--cor-superficie);
+  border: 1px solid var(--cor-borda-suave);
+  border-radius: var(--raio-md);
+  padding: var(--esp-4);
+  margin: var(--esp-3) 0;
+  box-sizing: border-box;
+}
+
+.cartao-cabecalho {
+  margin-bottom: var(--esp-3);
+  padding-bottom: var(--esp-2);
+  border-bottom: 1px solid var(--cor-borda-suave);
+}
+
+.cartao-cabecalho h3,
+.cartao h3 {
+  margin: 0 0 var(--esp-2);
+  font-size: var(--texto-lg);
+  font-weight: var(--peso-semi);
+  color: var(--cor-texto);
+  overflow-wrap: anywhere;
+}
+
+.cartao-corpo {
+  color: var(--cor-texto);
+  line-height: var(--altura-normal);
+}
+
+.cartao-rodape {
+  margin-top: var(--esp-4);
+  padding-top: var(--esp-3);
+  border-top: 1px solid var(--cor-borda-suave);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2);
+}
+
+/* ==========================================================================
+   3. CAMPOS DE FORMULÁRIO (WCAG 2.2 SC 1.4.11 borda >= 3:1)
+   ========================================================================== */
+
+.campo {
+  margin: var(--esp-3) 0;
+  display: flex;
+  flex-direction: column;
+}
+
+label,
+.campo-rotulo {
+  display: block;
+  font-weight: var(--peso-semi);
+  color: var(--cor-texto);
+  margin: var(--esp-2) 0 var(--esp-1);
+  font-size: var(--texto-base);
+}
+
+.campo-ajuda {
+  font-size: var(--texto-sm);
+  color: var(--cor-texto-secundario);
+  margin: 0 0 var(--esp-1);
+}
+
+.campo-input,
+input[type='text'],
+input[type='password'],
+input[type='email'],
+input[type='number'],
+textarea,
+select {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 28rem;
+  min-height: 44px;
+  padding: var(--esp-2) var(--esp-3);
+  font-family: inherit;
+  font-size: var(--texto-base);
+  color: var(--cor-texto);
+  background-color: var(--cor-superficie);
+  border: 2px solid var(--cor-borda);
+  border-radius: var(--raio-md);
+}
+
+.campo-input:focus-visible,
+input[type='password']:focus-visible,
+input[type='text']:focus-visible,
+textarea:focus-visible {
+  border-color: var(--cor-borda-foco);
+  outline: 3px solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+.campo-erro {
+  font-size: var(--texto-sm);
+  font-weight: var(--peso-semi);
+  color: var(--cor-erro);
+  margin-top: var(--esp-1);
+  display: flex;
+  align-items: center;
+  gap: var(--esp-1);
+}
+
+.campo-com-erro .campo-input,
+.campo-com-erro input {
+  border-color: var(--cor-erro);
+}
+
+/* ==========================================================================
+   4. AVISOS (Informação, Atenção e Erro)
+   ========================================================================== */
+
+.aviso {
+  border-radius: var(--raio-md);
+  padding: var(--esp-3) var(--esp-4);
+  margin: var(--esp-3) 0;
+  border-left: 4px solid var(--cor-atencao-borda);
+  background-color: var(--cor-atencao-fundo);
+  color: var(--cor-atencao);
+  line-height: var(--altura-normal);
+  box-sizing: border-box;
+}
+
+.aviso-titulo {
+  font-weight: var(--peso-bold);
+  margin-bottom: var(--esp-1);
+  display: block;
+}
+
+.aviso-info {
+  background-color: var(--cor-info-fundo);
+  color: var(--cor-info);
+  border-left: 4px solid var(--cor-info-borda);
+}
+
+.aviso-atencao {
+  background-color: var(--cor-atencao-fundo);
+  color: var(--cor-atencao);
+  border-left: 4px solid var(--cor-atencao-borda);
+}
+
+.aviso-erro {
+  background-color: var(--cor-erro-fundo);
+  color: var(--cor-erro);
+  border-left: 4px solid var(--cor-erro-borda);
+}
+
+/* ==========================================================================
+   5. PROGRESSO (WCAG 2.2 SC 1.4.11 indicador >= 3:1 contra o trilho)
+   ========================================================================== */
+
+.progresso-container {
+  margin: var(--esp-3) 0;
+}
+
+.progresso-cabecalho {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: var(--esp-1);
+  font-size: var(--texto-sm);
+  color: var(--cor-texto-secundario);
+}
+
+progress,
+.progresso-trilho {
+  width: 100%;
+  height: 16px;
+  border-radius: var(--raio-pill);
+  background-color: var(--cor-progresso-trilho);
+  border: 1px solid var(--cor-borda-suave);
+  overflow: hidden;
+  display: block;
+  box-sizing: border-box;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+progress::-webkit-progress-bar {
+  background-color: var(--cor-progresso-trilho);
+  border-radius: var(--raio-pill);
+}
+
+progress::-webkit-progress-value {
+  background-color: var(--cor-progresso-preenchimento);
+  border-radius: var(--raio-pill);
+  transition: width 0.2s ease;
+}
+
+progress::-moz-progress-bar {
+  background-color: var(--cor-progresso-preenchimento);
+  border-radius: var(--raio-pill);
+}
+
+/* ==========================================================================
+   6. LISTA
+   ========================================================================== */
+
+.lista {
+  list-style: none;
+  padding: 0;
+  margin: var(--esp-2) 0;
+  border: 1px solid var(--cor-borda-suave);
+  border-radius: var(--raio-md);
+  background-color: var(--cor-superficie);
+  overflow: hidden;
+}
+
+.lista-item {
+  padding: var(--esp-3) var(--esp-4);
+  border-bottom: 1px solid var(--cor-borda-suave);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--esp-2);
+}
+
+.lista-item:last-child {
+  border-bottom: none;
+}
+
+.lista-item-conteudo {
+  flex: 1 1 200px;
+}
+
+.lista-item-titulo {
+  font-weight: var(--peso-semi);
+  color: var(--cor-texto);
+  margin-bottom: var(--esp-1);
+}
+
+.lista-item-subtitulo {
+  font-size: var(--texto-sm);
+  color: var(--cor-texto-secundario);
+}
+
+.lista-item-valor {
+  font-weight: var(--peso-bold);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.lista-item-saida {
+  color: var(--cor-texto);
+}
+
+.lista-item-entrada {
+  color: var(--cor-sucesso);
+}
+
+/* ==========================================================================
+   7. ESTADOS (Vazio, Carregando e Erro: cada um com texto e ação)
+   ========================================================================== */
+
+.estado {
+  padding: var(--esp-6) var(--esp-4);
+  text-align: center;
+  border-radius: var(--raio-md);
+  background-color: var(--cor-superficie);
+  border: 1px dashed var(--cor-borda);
+  margin: var(--esp-4) 0;
+  box-sizing: border-box;
+}
+
+.estado-icone {
+  font-size: 2.25rem;
+  line-height: 1;
+  margin-bottom: var(--esp-3);
+  display: inline-block;
+}
+
+.estado-titulo {
+  font-size: var(--texto-xl);
+  font-weight: var(--peso-bold);
+  color: var(--cor-texto);
+  margin: 0 0 var(--esp-2);
+}
+
+.estado-texto {
+  font-size: var(--texto-base);
+  color: var(--cor-texto-secundario);
+  max-width: 32rem;
+  margin: 0 auto var(--esp-4);
+  line-height: var(--altura-normal);
+}
+
+.estado-acoes {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--esp-2);
+}
+
+/* Estado Carregando */
+.estado-carregando {
+  border-style: solid;
+  border-color: var(--cor-borda-suave);
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--cor-progresso-trilho);
+  border-top-color: var(--cor-primaria);
+  border-radius: 50%;
+  animation: girar 0.9s linear infinite;
+  margin: 0 auto var(--esp-3);
+}
+
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Estado Erro */
+.estado-erro {
+  border-style: solid;
+  border-color: var(--cor-erro-borda);
+  background-color: var(--cor-erro-fundo);
+}
+
+.estado-erro .estado-titulo {
+  color: var(--cor-erro);
+}
+
+.estado-erro .estado-texto {
+  color: var(--cor-texto);
+}
+
+/* ==========================================================================
+   8. ACESSIBILIDADE WCAG 2.2 AA (Reflow 320px, Reduced Motion, Espaçamento)
+   ========================================================================== */
+
+/* Reflow em 320px (SC 1.4.10): nada transborda horizontalmente */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background-color: var(--cor-fundo);
+  color: var(--cor-texto);
+  overflow-x: hidden;
+}
+
+.pagina {
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: var(--esp-4);
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+/* Espaçamento de texto (SC 1.4.12) */
+p, li, dd, dt, th, td {
+  overflow-wrap: break-word;
+}
+
+/* Prefers-reduced-motion: desativa giros contínuos para conforto vestibular */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .spinner {
+    animation: none;
+    border-top-color: var(--cor-primaria);
+    opacity: 0.8;
+  }
+}

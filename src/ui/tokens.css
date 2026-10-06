@@ -1,0 +1,102 @@
+:root {
+  /* Cores — Fundos e Superfícies */
+  --cor-fundo: #f8fafc;
+  --cor-superficie: #ffffff;
+  --cor-superficie-secundaria: #f1f5f9;
+
+  /* Cores — Textos */
+  --cor-texto: #0f172a;
+  --cor-texto-secundario: #334155;
+  --cor-texto-mudo: #475569;
+  --cor-texto-invertido: #ffffff;
+
+  /* Cores — Primária e Interação */
+  --cor-primaria: #0b4f9c;
+  --cor-primaria-hover: #083b75;
+  --cor-primaria-ativa: #062a54;
+  --cor-primaria-fundo: #eff6ff;
+
+  /* Cores — Foco (WCAG 2.2 SC 2.4.7 e 2.4.11) */
+  --cor-foco: #0b4f9c;
+  --cor-foco-alt: #b45309;
+
+  /* Cores — Feedback Semântico (Sóbrio e Acolhedor) */
+  --cor-sucesso: #14532d;
+  --cor-sucesso-fundo: #f0fdf4;
+  --cor-sucesso-borda: #166534;
+
+  --cor-atencao: #78350f;
+  --cor-atencao-fundo: #fffbeb;
+  --cor-atencao-borda: #854d0e;
+
+  --cor-erro: #8a1c1c;
+  --cor-erro-fundo: #fef2f2;
+  --cor-erro-borda: #991b1b;
+
+  --cor-info: #1e3a8a;
+  --cor-info-fundo: #eff6ff;
+  --cor-info-borda: #2563eb;
+
+  /* Cores — Bordas e Divisores (WCAG 2.2 SC 1.4.11) */
+  --cor-borda: #64748b;
+  --cor-borda-suave: #cbd5e1;
+  --cor-borda-foco: #0b4f9c;
+
+  /* Cores — Progresso */
+  --cor-progresso-trilho: #e2e8f0;
+  --cor-progresso-preenchimento: #0b4f9c;
+
+  /* Tipografia — Família do sistema (sem requisições externas, privacidade e CSP estrita) */
+  --fonte-padrao: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+
+  /* Tipografia — Escala */
+  --texto-xs: 0.75rem;
+  --texto-sm: 0.875rem;
+  --texto-base: 1rem;
+  --texto-lg: 1.125rem;
+  --texto-xl: 1.25rem;
+  --texto-xxl: 1.5rem;
+  --texto-xxxl: 1.875rem;
+
+  /* Tipografia — Alturas de linha (WCAG 2.2 SC 1.4.12) */
+  --altura-apertada: 1.25;
+  --altura-normal: 1.5;
+  --altura-confortavel: 1.7;
+
+  /* Tipografia — Pesos */
+  --peso-normal: 400;
+  --peso-medio: 500;
+  --peso-semi: 600;
+  --peso-bold: 700;
+
+  /* Espaçamento — Escala única baseada em 4px */
+  --esp-1: 0.25rem;  /* 4px */
+  --esp-2: 0.5rem;   /* 8px */
+  --esp-3: 0.75rem;  /* 12px */
+  --esp-4: 1rem;     /* 16px */
+  --esp-5: 1.25rem;  /* 20px */
+  --esp-6: 1.5rem;   /* 24px */
+  --esp-8: 2rem;     /* 32px */
+  --esp-10: 2.5rem;  /* 40px */
+  --esp-12: 3rem;    /* 48px */
+
+  /* Arredondamento */
+  --raio-sm: 4px;
+  --raio-md: 8px;
+  --raio-lg: 12px;
+  --raio-pill: 9999px;
+
+  /* Mapeamento de retrocompatibilidade com o código pré-existente */
+  --fundo: var(--cor-superficie);
+  --texto: var(--cor-texto);
+  --suave: var(--cor-texto-secundario);
+  --linha: var(--cor-borda-suave);
+  --acento: var(--cor-primaria);
+  --aviso: var(--cor-atencao);
+  --aviso-fundo: var(--cor-atencao-fundo);
+  --erro: var(--cor-erro);
+  --ok: var(--cor-sucesso);
+
+  font-family: var(--fonte-padrao);
+  line-height: var(--altura-normal);
+}
