@@ -1,6 +1,7 @@
 {
-  "atualizado_em": "2026-10-05T18:26:07.756386+00:00",
+  "atualizado_em": "2026-10-06T17:51:30.685722+00:00",
   "caminho_canonico": "/home/odival/Documentos/Projetos/aposte-em-voce",
+  "corte_cadeia": 42,
   "criado_em": "2026-10-03T13:50:17.697161+00:00",
   "eventos": [
     {
@@ -1880,10 +1881,105 @@
       "simulacao": false,
       "timestamp": "2026-10-05T18:26:07.756367+00:00",
       "tipo": "passagem"
+    },
+    {
+      "autor": "conferência automática",
+      "dados": {
+        "commit": "261efadbe29aea258228375b87140abff83c8c72",
+        "etapa": "d1b-robustez",
+        "feitos": 6,
+        "itens": [
+          {
+            "detalhe": "02e58dde8634",
+            "estado": "feito",
+            "id": "E1",
+            "tipo": "commit_existe"
+          },
+          {
+            "detalhe": "30 arquivos, todos nos prefixos",
+            "estado": "feito",
+            "id": "E2",
+            "tipo": "arquivos_em"
+          },
+          {
+            "detalhe": "APROVADO, 30 arquivos, commit 02e58dde8634",
+            "estado": "feito",
+            "id": "E3",
+            "tipo": "atestado_aprovado"
+          },
+          {
+            "detalhe": "sociedade-do-codigo/tests/test_registro_cadeia_estrita.py",
+            "estado": "feito",
+            "id": "E4",
+            "tipo": "arquivo_existe"
+          },
+          {
+            "detalhe": "sociedade/subordens/d1b-robustez-revisao-interna.md",
+            "estado": "feito",
+            "id": "E5",
+            "tipo": "arquivo_existe"
+          },
+          {
+            "detalhe": "sem campo estruturado de workspace para a etapa \"d1b-robustez\" no Antigravity",
+            "estado": "não verificado",
+            "id": "E6",
+            "tipo": "delegacoes"
+          },
+          {
+            "detalhe": "sem campo estruturado de workspace para a etapa \"d1b-robustez\" no Antigravity",
+            "estado": "não verificado",
+            "id": "E7",
+            "tipo": "conversa_nova"
+          },
+          {
+            "detalhe": "261efadbe29a",
+            "estado": "feito",
+            "id": "E8",
+            "tipo": "push_feito"
+          },
+          {
+            "detalhe": "sociedade/pareceres/parecer-d1b-robustez.md não existe",
+            "estado": "não feito",
+            "id": "E9",
+            "tipo": "parecer_valido"
+          }
+        ],
+        "ordem": "sociedade/ordens/d1b-robustez.md",
+        "total": 9
+      },
+      "hash": "e81edba88697c1c21acbc27c55223ed258b898b0576bd8edb9fb82c899e35e30",
+      "id": "EVT-000053",
+      "prev_hash": "f3848d751f78e942333fa2242f3cbf925478c337f5f2a8dd9b7e1f0697d32060",
+      "seq": 53,
+      "simulacao": false,
+      "timestamp": "2026-10-06T17:50:38.797611+00:00",
+      "tipo": "conferencia_registrada"
+    },
+    {
+      "autor": "Círdan",
+      "dados": {
+        "data_hora": "2026-10-06T17:51:30.685681+00:00",
+        "esforco": "xhigh",
+        "etapa": "d1b-robustez",
+        "ferramenta": "Codex",
+        "linha": "Para: Barbárvore. Revisão independente da etapa d1b-robustez. Parecer: revisao-saida/parecer.md.",
+        "modelo": "GPT-6 Sol",
+        "papel": "revisor",
+        "para": "barbarvore",
+        "pasta": "/home/odival/.sociedade/trabalho/d1b-robustez/revisao-d1b-robustez",
+        "por": "Círdan"
+      },
+      "hash": "795a3fe75bebdd3c69cebeb882a4e73bd7dc7c37f619e75235d019d797953f06",
+      "id": "EVT-000054",
+      "prev_hash": "e81edba88697c1c21acbc27c55223ed258b898b0576bd8edb9fb82c899e35e30",
+      "seq": 54,
+      "simulacao": false,
+      "timestamp": "2026-10-06T17:51:30.685697+00:00",
+      "tipo": "passagem"
     }
   ],
   "projeto_id": "aposte-em-voc",
   "resumos_externos": {},
-  "revisao": 53,
+  "revisao": 55,
   "versao_formato": "2.1.0"
 }
